@@ -1,74 +1,53 @@
-import React, { useState } from 'react';
-import { Play, Copy, CheckCircle2 } from 'lucide-react';
+'use client'
+
+import React, { useRef, useEffect } from 'react'
+import { useTheme } from '@/lib/hooks/useTheme'
+import { Editor} from '@monaco-editor/react'
+import * as monaco from 'monaco-editor'
 
 interface CodeEditorProps {
-    code: string;
-    onChange: (code: string) => void;
-    onRun: () => void;
-    isRunning: boolean;
+    code: string
+    onChange: (value: string) => void
+    disabled?: boolean
 }
 
-/**
- * Component for editing code with basic editor features
- */
-const CodeEditor: React.FC<CodeEditorProps> = ({
-    code,
-    onChange,
-    onRun,
-    isRunning,
-}) => {
-    const [copySuccess, setCopySuccess] = useState(false);
+const CodeEditor: React.FC<CodeEditorProps> = ({ code, onChange, disabled }) => {
+        const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null)
+        const { isDarkTheme } = useTheme()
+    
+        const handleEditorDidMount = (editor: monaco.editor.IStandaloneCodeEditor) => {
+            editorRef.current = editor
+        }   
 
-    // Copy code to clipboard
-    const copyToClipboard = () => {
-        navigator.clipboard.writeText(code);
-        setCopySuccess(true);
-        setTimeout(() => setCopySuccess(false), 2000);
-    };
+    
+
+    useEffect(() => {
+        if (editorRef.current) {
+            editorRef.current.updateOptions({ readOnly: disabled })
+        }
+    }, [disabled])
 
     return (
-        <div className="flex flex-col h-full">
-            <div className="flex items-center justify-between p-2 border-b border-gray-200 bg-gray-50">
-                <div className="text-sm font-medium">TypeScript Editor</div>
-                <div className="flex items-center space-x-2">
-                    <button
-                        className="p-1.5 text-gray-500 hover:text-gray-700 transition-colors"
-                        onClick={copyToClipboard}
-                        title="Copy code"
-                    >
-                        {copySuccess ? (
-                            <CheckCircle2 size={16} className="text-green-500" />
-                        ) : (
-                            <Copy size={16} />
-                        )}
-                    </button>
-                    <button
-                        className={`flex items-center space-x-1 px-3 py-1.5 rounded bg-blue-600 text-white hover:bg-blue-700 transition-colors ${isRunning ? 'opacity-75 cursor-not-allowed' : ''
-                            }`}
-                        onClick={onRun}
-                        disabled={isRunning}
-                    >
-                        <Play size={14} />
-                        <span className="text-sm">Run</span>
-                    </button>
-                </div>
-            </div>
-            <div className="flex-1 overflow-auto p-0 font-mono text-sm bg-white">
-                <textarea
-                    className="w-full h-full resize-none p-4 outline-none"
-                    value={code}
-                    onChange={(e) => onChange(e.target.value)}
-                    spellCheck={false}
-                    style={{
-                        // Basic styling for readability
-                        fontFamily: 'var(--font-geist-mono), monospace',
-                        lineHeight: '1.5',
-                        tabSize: 2
-                    }}
-                />
-            </div>
+        <div className="flex-1 overflow-hidden rounded-md border border-gray-700 min-h-[300px]">
+            <Editor
+                defaultLanguage="typescript"
+                value={code}
+                theme={isDarkTheme ? 'vs-dark' : 'light'}
+                onChange={(value) => onChange(value || '')}
+                onMount={handleEditorDidMount}
+                options={{
+                    minimap: { enabled: false },
+                    scrollBeyondLastLine: false,
+                    fontSize: 14,
+                    wordWrap: 'on',
+                    readOnly: disabled,
+                    tabSize: 2,
+                    smoothScrolling: true,
+                    cursorBlinking: 'smooth',
+                    automaticLayout: true
+                }}
+            />
         </div>
-    );
-};
-
+    )
+}
 export default CodeEditor;
