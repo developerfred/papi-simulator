@@ -15,7 +15,7 @@ interface ThemeContextType {
 }
 
 const ThemeContext = createContext<ThemeContextType>({
-    isDarkTheme: true,
+    isDarkTheme: false,
     toggleTheme: () => { },
     isLoaded: false,
     currentNetworkId: 'polkadot',
@@ -37,7 +37,9 @@ export function ThemeProvider({ children, initialNetworkId = 'polkadot' }: Theme
     const [isLoaded, setIsLoaded] = useState<boolean>(false);
     const [currentNetworkId, setCurrentNetworkId] = useState<string>(initialNetworkId);
     const [mounted, setMounted] = useState(false);
+    const [storedThemeApplied, setStoredThemeApplied] = useState(false);
 
+    
     const applyTheme = useCallback((isDark: boolean, networkId: string) => {
         if (typeof window === 'undefined') return;
 
@@ -61,17 +63,21 @@ export function ThemeProvider({ children, initialNetworkId = 'polkadot' }: Theme
         });
     }, []);
 
+    
     useEffect(() => {
-        setMounted(true);
+        if (typeof window === 'undefined' || storedThemeApplied) return;
 
+        setMounted(true);
         const storedTheme = localStorage.getItem('theme');
         const storedNetwork = localStorage.getItem('currentNetwork');
-        const networkToUse = storedNetwork || currentNetworkId;
 
+        
+        const networkToUse = storedNetwork || initialNetworkId;
         if (storedNetwork && storedNetwork !== currentNetworkId) {
-            setCurrentNetworkId(storedNetwork);
+            setCurrentNetworkId(networkToUse);
         }
 
+        
         let isDark: boolean;
         if (storedTheme) {
             isDark = storedTheme === 'dark';
@@ -82,7 +88,9 @@ export function ThemeProvider({ children, initialNetworkId = 'polkadot' }: Theme
         setIsDarkTheme(isDark);
         applyTheme(isDark, networkToUse);
         setIsLoaded(true);
+        setStoredThemeApplied(true);
 
+        
         const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
         const handleChange = (e: MediaQueryListEvent) => {
             if (!localStorage.getItem('theme')) {
@@ -93,14 +101,15 @@ export function ThemeProvider({ children, initialNetworkId = 'polkadot' }: Theme
 
         mediaQuery.addEventListener('change', handleChange);
         return () => mediaQuery.removeEventListener('change', handleChange);
-    }, [applyTheme, currentNetworkId]);
+    }, [applyTheme, initialNetworkId, storedThemeApplied]);
 
+    
     useEffect(() => {
-        if (isLoaded && mounted) {
-            applyTheme(isDarkTheme, currentNetworkId);
-            localStorage.setItem('currentNetwork', currentNetworkId);
-        }
-    }, [currentNetworkId, isLoaded, isDarkTheme, applyTheme, mounted]);
+        if (!mounted) return;
+
+        applyTheme(isDarkTheme, currentNetworkId);
+        localStorage.setItem('currentNetwork', currentNetworkId);
+    }, [currentNetworkId, isDarkTheme, applyTheme, mounted]);
 
     const toggleTheme = useCallback(() => {
         const newIsDark = !isDarkTheme;
@@ -148,7 +157,7 @@ export function ThemeProvider({ children, initialNetworkId = 'polkadot' }: Theme
 
     
     if (!mounted) {
-        return null;
+        return <div style={{ visibility: 'hidden' }}>{children}</div>;
     }
 
     return (
