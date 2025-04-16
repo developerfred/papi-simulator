@@ -3,7 +3,7 @@
 import React, { useRef, useEffect, useState } from 'react'
 import { useTheme } from '@/lib/theme/ThemeProvider'
 import { Editor } from '@monaco-editor/react'
-import * as monaco from 'monaco-editor'
+import type * as monaco from 'monaco-editor'
 
 interface CodeEditorProps {
     code: string
@@ -23,27 +23,30 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
     const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null)
     const { isDarkTheme, getColor } = useTheme()
     const [isEditorReady, setIsEditorReady] = useState(false)
+    const [isMounted, setIsMounted] = useState(false)
 
     const handleEditorDidMount = (editor: monaco.editor.IStandaloneCodeEditor) => {
         editorRef.current = editor
         setIsEditorReady(true)
     }
 
-    
+    useEffect(() => {
+        setIsMounted(true)
+        return () => setIsMounted(false)
+    }, [])
+
     useEffect(() => {
         if (editorRef.current) {
             editorRef.current.updateOptions({ readOnly: disabled })
         }
     }, [disabled])
 
-    
     useEffect(() => {
-        if (editorRef.current && code !== editorRef.current.getValue()) {
+        if (editorRef.current && code !== editorRef.current.getValue() && isEditorReady) {
             editorRef.current.setValue(code)
         }
     }, [code, isEditorReady])
 
-    
     const editorContainerStyle = {
         border: `1px solid ${getColor('border')}`,
         borderRadius: '0.375rem',
@@ -51,7 +54,6 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
         height: height
     }
 
-    
     const LoadingPlaceholder = () => (
         <div
             style={{
@@ -72,6 +74,10 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
             </div>
         </div>
     )
+
+    if (!isMounted) {
+        return <div style={editorContainerStyle}><LoadingPlaceholder /></div>
+    }
 
     return (
         <div style={editorContainerStyle}>
@@ -94,7 +100,7 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
                     cursorBlinking: 'smooth',
                     automaticLayout: true,
                     lineNumbers: 'on',
-                    renderLineHighlight: 'all',                    
+                    renderLineHighlight: 'all',
                     folding: true,
                     contextmenu: true,
                     formatOnPaste: true,

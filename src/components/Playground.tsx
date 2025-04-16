@@ -18,7 +18,7 @@ import NetworkBadge from './ui/NetworkBadge'
 import Card from './ui/Card'
 import Badge from './ui/Badge'
 
-
+// Dynamically import components with client-side only rendering
 const CodeEditor = dynamic(() => import('./CodeEditor'), { ssr: false })
 const Console = dynamic(() => import('./Console'), { ssr: false })
 const NetworkSelector = dynamic(() => import('./NetworkSelector'), { ssr: false })
@@ -85,8 +85,9 @@ export default function Playground() {
     return colorMap[level] || colorMap['beginner']
   }
 
+  // SidebarContent component with display name
   const SidebarContent = useMemo(() => {
-    return () => (
+    const SidebarContentComponent = () => (
       <div className="flex flex-col gap-4">
         <NetworkSelector
           networks={Object.values(NETWORKS)}
@@ -139,6 +140,8 @@ export default function Playground() {
         </Card>
       </div>
     );
+    SidebarContentComponent.displayName = 'SidebarContent';
+    return SidebarContentComponent;
   }, [
     selectedNetwork,
     selectedExampleId,
@@ -147,14 +150,17 @@ export default function Playground() {
     isRunning,
     outputs.length,
     runCode,
-    clearOutput
+    clearOutput,
+    setSelectedNetworkId,
+    setSelectedExampleId
   ]);
 
   const NetworkIndicator = () => (
     <div className="fixed top-0 left-0 right-0 h-1 z-50 opacity-80" style={{
       background: `linear-gradient(90deg, ${getNetworkColor()} 0%, rgba(255,255,255,0) 100%)`
     }} />
-  )
+  );
+  NetworkIndicator.displayName = 'NetworkIndicator';
 
   const SidebarToggle = () => (
     <div className="fixed bottom-6 right-6 lg:hidden z-30">
@@ -182,10 +188,12 @@ export default function Playground() {
         </svg>
       </button>
     </div>
-  )
+  );
+  SidebarToggle.displayName = 'SidebarToggle';
 
+  // MainContent component with display name
   const MainContent = useMemo(() => {
-    return () => (
+    const MainContentComponent = () => (
       <div className="flex flex-col gap-4 h-full">
         <TutorialPanel example={selectedExample} network={selectedNetwork} />
 
@@ -225,6 +233,8 @@ export default function Playground() {
         )}
       </div>
     );
+    MainContentComponent.displayName = 'MainContent';
+    return MainContentComponent;
   }, [
     selectedExample,
     selectedNetwork,

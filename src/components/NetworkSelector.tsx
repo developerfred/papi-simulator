@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import React, { useMemo, useState, useEffect } from 'react'
 import { Network } from '@/lib/types/network'
 import { useTheme } from '@/lib/theme/ThemeProvider'
 import Card from '@/components/ui/Card'
@@ -19,14 +19,27 @@ export default function NetworkSelector({
     onNetworkChange
 }: NetworkSelectorProps) {
     const { isDarkTheme, setCurrentNetworkId, getColor, getNetworkColor } = useTheme();
+    const [mounted, setMounted] = useState(false);
 
-    // Handle network change
+    
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+
+    
     const handleNetworkChange = (networkId: string) => {
         onNetworkChange(networkId);
-        setCurrentNetworkId(networkId); // Update global theme with network
+        setCurrentNetworkId(networkId); 
     };
 
-    const selectedNetwork = networks.find(n => n.id === selectedNetworkId);
+    const selectedNetwork = useMemo(() =>
+        networks.find(n => n.id === selectedNetworkId),
+        [networks, selectedNetworkId]
+    );
+
+    if (!mounted) {
+        return <Card className="space-y-2 h-64"><div className="animate-pulse">Loading networks...</div></Card>;
+    }
 
     return (
         <Card className="space-y-2">
@@ -35,9 +48,9 @@ export default function NetworkSelector({
             <div className="grid grid-cols-2 gap-2">
                 {networks.map((network) => {
                     const isSelected = selectedNetworkId === network.id;
-                    
+
                     const networkColor = getNetworkColor('primary');
-                    
+
                     const buttonStyle = {
                         backgroundColor: isSelected
                             ? `${networkColor}${isDarkTheme ? '20' : '10'}` // Hex opacity
@@ -90,7 +103,6 @@ export default function NetworkSelector({
                     );
                 })}
             </div>
-
 
             {selectedNetwork && (
                 <div className="mt-4 text-xs space-y-1">
