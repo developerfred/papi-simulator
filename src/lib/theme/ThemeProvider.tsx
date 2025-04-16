@@ -1,6 +1,6 @@
 'use client'
 
-import React, { createContext, useContext, ReactNode, useState, useEffect, useCallback } from 'react'
+import React, { createContext, useContext, ReactNode, useState, useEffect, useCallback, useMemo } from 'react'
 import { NETWORK_COLORS, SEMANTIC_COLORS, ELEVATION_LEVELS } from './themeConstants'
 
 interface ThemeContextType {
@@ -33,12 +33,14 @@ interface ThemeProviderProps {
 }
 
 export function ThemeProvider({ children, initialNetworkId = 'polkadot' }: ThemeProviderProps) {
-    const [isDarkTheme, setIsDarkTheme] = useState<boolean>(true);
+    const [isDarkTheme, setIsDarkTheme] = useState<boolean>(false);
     const [isLoaded, setIsLoaded] = useState<boolean>(false);
     const [currentNetworkId, setCurrentNetworkId] = useState<string>(initialNetworkId);
+    const [mounted, setMounted] = useState(false);
 
-    
     const applyTheme = useCallback((isDark: boolean, networkId: string) => {
+        if (typeof window === 'undefined') return;
+
         document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
         document.documentElement.setAttribute('data-network', networkId);
 
@@ -59,9 +61,8 @@ export function ThemeProvider({ children, initialNetworkId = 'polkadot' }: Theme
         });
     }, []);
 
-    
     useEffect(() => {
-        if (typeof window === 'undefined') return;
+        setMounted(true);
 
         const storedTheme = localStorage.getItem('theme');
         const storedNetwork = localStorage.getItem('currentNetwork');
@@ -71,19 +72,17 @@ export function ThemeProvider({ children, initialNetworkId = 'polkadot' }: Theme
             setCurrentNetworkId(storedNetwork);
         }
 
+        let isDark: boolean;
         if (storedTheme) {
-            const isDark = storedTheme === 'dark';
-            setIsDarkTheme(isDark);
-            applyTheme(isDark, networkToUse);
+            isDark = storedTheme === 'dark';
         } else {
-            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-            setIsDarkTheme(prefersDark);
-            applyTheme(prefersDark, networkToUse);
+            isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
         }
 
+        setIsDarkTheme(isDark);
+        applyTheme(isDark, networkToUse);
         setIsLoaded(true);
 
-        
         const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
         const handleChange = (e: MediaQueryListEvent) => {
             if (!localStorage.getItem('theme')) {
@@ -94,17 +93,15 @@ export function ThemeProvider({ children, initialNetworkId = 'polkadot' }: Theme
 
         mediaQuery.addEventListener('change', handleChange);
         return () => mediaQuery.removeEventListener('change', handleChange);
-    }, [currentNetworkId, applyTheme]);
+    }, [applyTheme, currentNetworkId]);
 
-    
     useEffect(() => {
-        if (isLoaded) {
+        if (isLoaded && mounted) {
             applyTheme(isDarkTheme, currentNetworkId);
             localStorage.setItem('currentNetwork', currentNetworkId);
         }
-    }, [currentNetworkId, isLoaded, isDarkTheme, applyTheme]);
+    }, [currentNetworkId, isLoaded, isDarkTheme, applyTheme, mounted]);
 
-    
     const toggleTheme = useCallback(() => {
         const newIsDark = !isDarkTheme;
         setIsDarkTheme(newIsDark);
@@ -112,7 +109,6 @@ export function ThemeProvider({ children, initialNetworkId = 'polkadot' }: Theme
         localStorage.setItem('theme', newIsDark ? 'dark' : 'light');
     }, [isDarkTheme, currentNetworkId, applyTheme]);
 
-    
     const getNetworkColor = useCallback((colorType: 'primary' | 'secondary' | 'light' | 'dark'): string => {
         const networkColors = NETWORK_COLORS[currentNetworkId] || NETWORK_COLORS['polkadot'];
         return networkColors[colorType];
@@ -130,17 +126,33 @@ export function ThemeProvider({ children, initialNetworkId = 'polkadot' }: Theme
         return isDarkTheme ? elevationValue.dark : elevationValue.light;
     }, [isDarkTheme]);
 
+    const contextValue = useMemo(() => ({
+        isDarkTheme,
+        toggleTheme,
+        isLoaded,
+        currentNetworkId,
+        setCurrentNetworkId,
+        getNetworkColor,
+        getColor,
+        getElevation
+    }), [
+        isDarkTheme,
+        toggleTheme,
+        isLoaded,
+        currentNetworkId,
+        setCurrentNetworkId,
+        getNetworkColor,
+        getColor,
+        getElevation
+    ]);
+
+    
+    if (!mounted) {
+        return null;
+    }
+
     return (
-        <ThemeContext.Provider value={{
-            isDarkTheme,
-            toggleTheme,
-            isLoaded,
-            currentNetworkId,
-            setCurrentNetworkId,
-            getNetworkColor,
-            getColor,
-            getElevation
-        }}>
+        <ThemeContext.Provider value={contextValue}>
             {children}
         </ThemeContext.Provider>
     );
