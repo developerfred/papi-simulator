@@ -68,6 +68,19 @@ Then open [http://localhost:3000](http://localhost:3000) in your browser to see 
 4. Click "Run Code" to execute
 5. View the output in the console panel
 
+## 💬 Community Engagement
+
+We actively participate in the Polkadot ecosystem by:
+
+### Grant Applications
+- [Polkadot Fast Grants Program](https://github.com/Polkadot-Fast-Grants/apply/pull/4) - Our application to receive funding for continued development and expansion of the playground features.
+
+### Forum Discussions
+- [Introducing PAPI Interactive Console/Playground](https://forum.polkadot.network/t/introducing-papi-interactive-console-playground/12425) - Join our discussion on the Polkadot Forum about the playground and share your feedback.
+
+### Development Tracking
+- Check our [GitHub Issues](https://github.com/developerfred/papi-simulator/issues) to see what we're working on, report bugs, or suggest new features.
+
 ## 📚 Learning Resources
 
 To learn more about Polkadot-API, check these resources:
