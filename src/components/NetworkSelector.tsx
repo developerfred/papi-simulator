@@ -2,6 +2,10 @@
 
 import React from 'react'
 import { Network } from '@/lib/types/network'
+import { useTheme } from '@/lib/theme/ThemeProvider'
+import Card from '@/components/ui/Card'
+import Badge from '@/components/ui/Badge'
+import NetworkBadge from '@/components/ui/NetworkBadge'
 
 interface NetworkSelectorProps {
     networks: Network[]
@@ -14,54 +18,117 @@ export default function NetworkSelector({
     selectedNetworkId,
     onNetworkChange
 }: NetworkSelectorProps) {
+    const { isDarkTheme, setCurrentNetworkId, getColor, getNetworkColor } = useTheme();
+
+    // Handle network change
+    const handleNetworkChange = (networkId: string) => {
+        onNetworkChange(networkId);
+        setCurrentNetworkId(networkId); // Update global theme with network
+    };
+
+    const selectedNetwork = networks.find(n => n.id === selectedNetworkId);
+
     return (
-        <div className="space-y-2">
-            <label className="block text-sm font-medium">
-                Select Network
-            </label>
+        <Card className="space-y-2">
+            <h2 className="text-sm font-medium mb-3">Select Network</h2>
 
             <div className="grid grid-cols-2 gap-2">
-                {networks.map((network) => (
-                    <button
-                        key={network.id}
-                        onClick={() => onNetworkChange(network.id)}
-                        className={`
-              py-2 px-3 text-sm rounded-md flex flex-col items-center justify-center
-              border transition-colors
-              ${selectedNetworkId === network.id
-                                ? 'bg-primary-700 border-primary-600 text-white'
-                                : 'border-gray-700 hover:border-primary-600'
-                            }
-              ${network.isTest ? '' : 'relative overflow-hidden'}
-            `}
-                    >
-                        {!network.isTest && (
-                            <div className="absolute top-0 right-0 bg-yellow-600 text-yellow-100 text-xs px-1 py-0.5 rounded-bl">
-                                Mainnet
-                            </div>
-                        )}
+                {networks.map((network) => {
+                    const isSelected = selectedNetworkId === network.id;
+                    
+                    const networkColor = getNetworkColor('primary');
+                    
+                    const buttonStyle = {
+                        backgroundColor: isSelected
+                            ? `${networkColor}${isDarkTheme ? '20' : '10'}` // Hex opacity
+                            : (isDarkTheme ? 'rgba(255, 255, 255, 0.03)' : 'rgba(0, 0, 0, 0.02)'),
+                        borderColor: isSelected
+                            ? networkColor
+                            : getColor('border'),
+                        boxShadow: isSelected
+                            ? `0 0 0 1px ${networkColor}`
+                            : 'none',
+                        transition: 'all 0.2s ease'
+                    };
 
-                        <span className="font-medium">{network.name}</span>
-                        <span className="text-xs opacity-70">{network.tokenSymbol}</span>
-                    </button>
-                ))}
+                    return (
+                        <button
+                            key={network.id}
+                            onClick={() => handleNetworkChange(network.id)}
+                            className="relative flex flex-col items-center justify-center rounded-md border p-3 hover:brightness-95 active:scale-[0.98]"
+                            style={buttonStyle}
+                        >
+                            {!network.isTest && (
+                                <Badge
+                                    variant="warning"
+                                    className="absolute top-0 right-0 translate-x-1/4 -translate-y-1/4"
+                                    rounded
+                                >
+                                    Mainnet
+                                </Badge>
+                            )}
+
+                            <NetworkBadge
+                                network={network}
+                                size="sm"
+                                showName={false}
+                            />
+
+                            <span
+                                className="font-medium text-sm mt-2"
+                                style={{ color: isSelected ? networkColor : getColor('textPrimary') }}
+                            >
+                                {network.name}
+                            </span>
+                            <span
+                                className="text-xs opacity-70 mt-0.5"
+                                style={{ color: getColor('textSecondary') }}
+                            >
+                                {network.tokenSymbol}
+                            </span>
+                        </button>
+                    );
+                })}
             </div>
 
-            {/* Network details */}
-            {networks.find(n => n.id === selectedNetworkId) && (
-                <div className="text-xs rounded border border-gray-700 p-2 space-y-1">
+
+            {selectedNetwork && (
+                <div className="mt-4 text-xs space-y-1">
                     <div className="flex justify-between">
-                        <span className="text-gray-400">Endpoint:</span>
-                        <span className="font-mono truncate max-w-40" title={networks.find(n => n.id === selectedNetworkId)?.endpoint}>
-                            {networks.find(n => n.id === selectedNetworkId)?.endpoint}
+                        <span style={{ color: getColor('textSecondary') }}>Endpoint:</span>
+                        <span className="font-mono truncate max-w-40" title={selectedNetwork.endpoint}>
+                            {selectedNetwork.endpoint}
                         </span>
                     </div>
                     <div className="flex justify-between">
-                        <span className="text-gray-400">Token Decimals:</span>
-                        <span>{networks.find(n => n.id === selectedNetworkId)?.tokenDecimals}</span>
+                        <span style={{ color: getColor('textSecondary') }}>Token Decimals:</span>
+                        <span>{selectedNetwork.tokenDecimals}</span>
+                    </div>
+                    <div className="flex justify-between">
+                        <span style={{ color: getColor('textSecondary') }}>Resources:</span>
+                        <div className="flex space-x-2">
+                            <a
+                                href={selectedNetwork.explorer}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="hover:underline"
+                                style={{ color: getNetworkColor('primary') }}
+                            >
+                                Explorer
+                            </a>
+                            <a
+                                href={selectedNetwork.faucet}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="hover:underline"
+                                style={{ color: getNetworkColor('primary') }}
+                            >
+                                Faucet
+                            </a>
+                        </div>
                     </div>
                 </div>
             )}
-        </div>
-    )
+        </Card>
+    );
 }

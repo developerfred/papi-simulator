@@ -2,6 +2,10 @@
 
 import React, { useState, useEffect } from 'react'
 import { Example } from '@/lib/types/example'
+import { useTheme } from '@/lib/theme/ThemeProvider'
+import Card from '@/components/ui/Card'
+import Badge from '@/components/ui/Badge'
+import Input from '@/components/ui/Input'
 
 interface ExampleSelectorProps {
     examples: Example[]
@@ -16,13 +20,8 @@ export default function ExampleSelector({
 }: ExampleSelectorProps) {
     const [filter, setFilter] = useState<string>('')
     const [filteredExamples, setFilteredExamples] = useState<Example[]>(examples)
+    const { getColor } = useTheme();
 
-   {/*
-    const exampleCategories = Array.from(
-        new Set(examples.flatMap(example => example.categories))
-    ).sort() */}
-
-    
     useEffect(() => {
         if (!filter) {
             setFilteredExamples(examples)
@@ -41,45 +40,57 @@ export default function ExampleSelector({
         )
     }, [filter, examples])
 
-    // Group examples by level
+    
     const beginnerExamples = filteredExamples.filter(ex => ex.level === 'beginner')
     const intermediateExamples = filteredExamples.filter(ex => ex.level === 'intermediate')
     const advancedExamples = filteredExamples.filter(ex => ex.level === 'advanced')
 
+    
+    const SearchIcon = () => (
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="11" cy="11" r="8" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+        </svg>
+    );
+
+    
+    const ClearIcon = () => (
+        <button
+            onClick={() => setFilter('')}
+            className="absolute right-2 top-1/2 transform -translate-y-1/2 hover:opacity-75 p-1 rounded-full"
+            style={{ color: getColor('textTertiary') }}
+        >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+        </button>
+    );
+
     return (
-        <div className="space-y-2">
-            <label className="block text-sm font-medium">
-                Select Example
-            </label>
+        <Card className="space-y-3">
+            <h2 className="text-sm font-medium mb-1">Select Example</h2>
 
-            {/* Search input */}
-            <div className="relative">
-                <input
-                    type="text"
-                    value={filter}
-                    onChange={(e) => setFilter(e.target.value)}
-                    placeholder="Search examples..."
-                    className="w-full py-2 px-3 bg-transparent border border-gray-700 rounded-md text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
-                />
-                {filter && (
-                    <button
-                        onClick={() => setFilter('')}
-                        className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-200"
-                    >
-                        ×
-                    </button>
-                )}
-            </div>
+            
+            <Input
+                placeholder="Search examples..."
+                value={filter}
+                onChange={(e) => setFilter(e.target.value)}
+                size="sm"
+                fullWidth
+                leftIcon={<SearchIcon />}
+                rightIcon={filter ? <ClearIcon /> : undefined}
+            />
 
-            {/* Examples list */}
-            <div className="border border-gray-700 rounded-md max-h-[300px] overflow-y-auto">
+            
+            <div className="border rounded-md max-h-[280px] overflow-y-auto" style={{ borderColor: getColor('border') }}>
                 {filteredExamples.length === 0 ? (
-                    <div className="p-4 text-center text-sm text-gray-400">
+                    <div className="p-4 text-center text-sm" style={{ color: getColor('textTertiary') }}>
                         No examples match your search
                     </div>
                 ) : (
-                    <div className="divide-y divide-gray-700">
-                        {/* Beginner examples */}
+                    <div className="divide-y" style={{ borderColor: getColor('divider') }}>
+                        
                         {beginnerExamples.length > 0 && (
                             <ExampleGroup
                                 title="Beginner"
@@ -89,7 +100,7 @@ export default function ExampleSelector({
                             />
                         )}
 
-                        {/* Intermediate examples */}
+                        
                         {intermediateExamples.length > 0 && (
                             <ExampleGroup
                                 title="Intermediate"
@@ -99,7 +110,7 @@ export default function ExampleSelector({
                             />
                         )}
 
-                        {/* Advanced examples */}
+                        
                         {advancedExamples.length > 0 && (
                             <ExampleGroup
                                 title="Advanced"
@@ -111,7 +122,7 @@ export default function ExampleSelector({
                     </div>
                 )}
             </div>
-        </div>
+        </Card>
     )
 }
 
@@ -128,40 +139,86 @@ function ExampleGroup({
     selectedExampleId,
     onExampleChange
 }: ExampleGroupProps) {
+    const { getColor, getNetworkColor } = useTheme();
+
+    
+    const getLevelVariant = (level: string): 'success' | 'warning' | 'error' => {
+        switch (level) {
+            case 'beginner': return 'success';
+            case 'intermediate': return 'warning';
+            case 'advanced': return 'error';
+            default: return 'success';
+        }
+    };
+
     return (
         <div>
-            <div className="px-3 py-2 bg-gray-800 text-xs font-medium">
+            <div
+                className="px-3 py-2 text-xs font-medium"
+                style={{ backgroundColor: getColor('surfaceVariant') }}
+            >
                 {title}
             </div>
-            <div className="divide-y divide-gray-800">
-                {examples.map(example => (
-                    <button
-                        key={example.id}
-                        onClick={() => onExampleChange(example.id)}
-                        className={`
-              w-full px-3 py-2 text-left hover:bg-gray-800 transition-colors
-              ${selectedExampleId === example.id ? 'bg-gray-800' : ''}
-            `}
-                    >
-                        <div className="flex justify-between items-center">
-                            <span className="font-medium text-sm">{example.name}</span>
-                            <div className="flex gap-1">
+            <div className="divide-y" style={{ borderColor: getColor('divider') }}>
+                {examples.map(example => {
+                    const isSelected = selectedExampleId === example.id;
+
+                    return (
+                        <button
+                            key={example.id}
+                            onClick={() => onExampleChange(example.id)}
+                            className="w-full px-3 py-2.5 text-left hover:brightness-95 transition-all"
+                            style={{
+                                backgroundColor: isSelected
+                                    ? `${getNetworkColor('primary')}10` // Hex opacity
+                                    : 'transparent',
+                                borderLeft: isSelected
+                                    ? `3px solid ${getNetworkColor('primary')}`
+                                    : '3px solid transparent'
+                            }}
+                        >
+                            <div className="flex justify-between items-center">
+                                <span
+                                    className="font-medium text-sm"
+                                    style={{
+                                        color: isSelected
+                                            ? getNetworkColor('primary')
+                                            : getColor('textPrimary')
+                                    }}
+                                >
+                                    {example.name}
+                                </span>
+
+                                <Badge
+                                    variant={getLevelVariant(example.level)}
+                                    size="sm"
+                                    rounded
+                                >
+                                    {example.level}
+                                </Badge>
+                            </div>
+
+                            <p
+                                className="text-xs mt-1"
+                                style={{ color: getColor('textSecondary') }}
+                            >
+                                {example.description}
+                            </p>
+
+                            <div className="flex flex-wrap gap-1 mt-2">
                                 {example.categories.map(category => (
-                                    <span
+                                    <Badge
                                         key={category}
-                                        className="bg-gray-700 text-xs px-1.5 py-0.5 rounded"
+                                        size="sm"
                                     >
                                         {category}
-                                    </span>
+                                    </Badge>
                                 ))}
                             </div>
-                        </div>
-                        <p className="text-xs text-gray-400 mt-1">
-                            {example.description}
-                        </p>
-                    </button>
-                ))}
+                        </button>
+                    );
+                })}
             </div>
         </div>
-    )
+    );
 }
