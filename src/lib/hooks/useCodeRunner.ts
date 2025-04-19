@@ -1,74 +1,121 @@
-import { useState, useCallback } from 'react';
-import { Example } from '../types/example';
-import { Network } from '../types/network';
-import { ConsoleOutput } from '../types/example';
-import { simulateCodeExecution } from '../utils/simulator';
+import { useCallback, useState } from "react";
+import { simulateCodeExecution } from "../simulation/simulationService";
+import type { Example } from "../types/example";
+import type { ConsoleOutput } from "../types/example";
+import type { Network } from "../types/network";
 
-/**
- * Hook for running code examples and managing their output
- */
-export function useCodeRunner() {
-    const [code, setCode] = useState<string>('');
-    const [outputs, setOutputs] = useState<ConsoleOutput[]>([]);
-    const [isRunning, setIsRunning] = useState<boolean>(false);
+interface UseCodeRunnerOptions {
+	onRunStart?: () => void;
+	onRunComplete?: () => void;
+	onRunError?: (error: Error) => void;
+}
 
-    /**
-     * Updates the code in the editor
-     */
-    const updateCode = useCallback((newCode: string) => {
-        setCode(newCode);
-    }, []);
+export function useCodeRunner(options: UseCodeRunnerOptions = {}) {
+	const [code, setCode] = useState<string>("");
+	const [outputs, setOutputs] = useState<ConsoleOutput[]>([]);
+	const [isRunning, setIsRunning] = useState<boolean>(false);
+	const [progress, setProgress] = useState<number>(0);
+	const [lastRun, setLastRun] = useState<{
+		example: Example;
+		network: Network;
+		timestamp: number;
+	} | null>(null);
 
-    /**
-     * Sets the code based on an example and selected network
-     */
-    const setExampleCode = useCallback((example: Example, network: Network) => {
-        setCode(example.getCode(network));
-        // Clear previous outputs when changing examples
-        setOutputs([]);
-    }, []);
+	const updateCode = useCallback((newCode: string) => {
+		setCode(newCode);
+	}, []);
 
-    /**
-     * Runs the current code and updates the output
-     */
-    const runCode = useCallback(async (example: Example, network: Network) => {
-        setIsRunning(true);
-        setOutputs([{
-            type: 'log',
-            content: 'Running code...',
-            timestamp: Date.now()
-        }]);
+	const setExampleCode = useCallback((example: Example, network: Network) => {
+		setCode(example.getCode(network));
+		setOutputs([]);
+		setProgress(0);
+	}, []);
 
-        try {
-            const simulatedOutputs = await simulateCodeExecution(example, network);
-            setOutputs(simulatedOutputs);
-        } catch (error) {
-            setOutputs([{
-                type: 'error',
-                content: error instanceof Error
-                    ? `Error: ${error.message}`
-                    : 'An unknown error occurred',
-                timestamp: Date.now()
-            }]);
-        } finally {
-            setIsRunning(false);
-        }
-    }, []);
+	const runCode = useCallback(
+		async (example: Example, network: Network) => {
+			setIsRunning(true);
+			setProgress(10);
+			options.onRunStart?.();
 
-    /**
-     * Clears the console output
-     */
-    const clearOutput = useCallback(() => {
-        setOutputs([]);
-    }, []);
+			setOutputs([
+				{
+					type: "log",
+					content: "Running code...",
+					timestamp: Date.now(),
+				},
+			]);
 
-    return {
-        code,
-        outputs,
-        isRunning,
-        updateCode,
-        setExampleCode,
-        runCode,
-        clearOutput
-    };
+			try {
+				setProgress(30);
+				await new Promise((resolve) => setTimeout(resolve, 300));
+				setProgress(50);
+
+				const simulatedOutputs = await simulateCodeExecution(example, network);
+				setProgress(90);
+
+				await new Promise((resolve) => setTimeout(resolve, 200));
+
+				setOutputs(simulatedOutputs);
+				setLastRun({
+					example,
+					network,
+					timestamp: Date.now(),
+				});
+
+				options.onRunComplete?.();
+			} catch (error) {
+				setOutputs([
+					{
+						type: "error",
+						content:
+							error instanceof Error
+								? `Error: ${error.message}`
+								: "An unknown error occurred",
+						timestamp: Date.now(),
+					},
+				]);
+
+				options.onRunError?.(
+					error instanceof Error ? error : new Error("Unknown error"),
+				);
+			} finally {
+				setIsRunning(false);
+				setProgress(100);
+
+				setTimeout(() => setProgress(0), 500);
+			}
+		},
+		[options],
+	);
+
+	const clearOutput = useCallback(() => {
+		setOutputs([]);
+	}, []);
+
+	const addConsoleMessage = useCallback(
+		(message: string, type: "log" | "error" | "warning" = "log") => {
+			setOutputs((prev) => [
+				...prev,
+				{
+					type,
+					content: message,
+					timestamp: Date.now(),
+				},
+			]);
+		},
+		[],
+	);
+
+	return {
+		code,
+		outputs,
+		isRunning,
+		progress,
+		lastRun,
+		updateCode,
+		setExampleCode,
+		runCode,
+		clearOutput,
+		addConsoleMessage,
+	};
 }

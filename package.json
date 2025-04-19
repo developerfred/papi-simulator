@@ -1,6 +1,6 @@
 {
   "name": "papi-simulator",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "author": "codingsh <codinsh@pm.me>",
   "private": true,
   "scripts": {
@@ -11,21 +11,31 @@
   },
   "dependencies": {
     "@monaco-editor/react": "^4.7.0",
+    "@polkadot/api": "^15.9.2",
+    "@types/webpack": "^5.28.5",
+    "biome": "^0.3.3",
     "classnames": "^2.5.1",
     "lucide-react": "^0.487.0",
+    "monaco-editor": "^0.52.2",
+    "monaco-editor-webpack-plugin": "^7.1.0",
     "next": "15.2.4",
+    "polkadot-api": "^1.9.13",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "rxjs": "^7.8.2",
+    "webpack": "^5.99.6"
   },
   "devDependencies": {
-    "typescript": "^5",
+    "@biomejs/biome": "^1.9.4",
+    "@eslint/eslintrc": "^3",
+    "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "@tailwindcss/postcss": "^4",
-    "tailwindcss": "^4",
     "eslint": "^9",
     "eslint-config-next": "15.2.4",
-    "@eslint/eslintrc": "^3"
+    "i": "^0.3.7",
+    "tailwindcss": "^4",
+    "typescript": "^5"
   }
 }

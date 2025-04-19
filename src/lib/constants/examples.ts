@@ -1,18 +1,20 @@
-import { Example } from '../types/example';
-import { Network } from '../types/network';
-import { TEST_ACCOUNTS } from './accounts';
+import type { Example } from "../types/example";
+import type { Network } from "../types/network";
+import { TEST_ACCOUNTS } from "./accounts";
 
 /**
  * Collection of code examples for the playground
  */
 export const EXAMPLES: Example[] = [
-    {
-        id: 'simple-transfer',
-        name: "Simple Transfer on Testnet",
-        description: "Create a basic balance transfer on a test network",
-        level: 'beginner',
-        categories: ['transactions', 'balances'],
-        getCode: (network: Network) => `// Simple transfer example on ${network.name} testnet
+	{
+		id: "simple-transfer",
+		name: "Simple Transfer on Testnet",
+		description: "Create a basic balance transfer on a test network",
+		level: "beginner",
+		categories: ["transactions", "balances"],
+		getCode: (
+			network: Network,
+		) => `// Simple transfer example on ${network.name} testnet
 import { createClient } from "polkadot-api";
 import { MultiAddress, ${network.descriptorKey} } from "@polkadot-api/descriptors";
 import { getWsProvider } from "polkadot-api/ws-provider/web";
@@ -50,16 +52,18 @@ const transfer = async () => {
 };
 
 // Execute the transfer
-transfer().catch(console.error);`
-    },
+transfer().catch(console.error);`,
+	},
 
-    {
-        id: 'query-balance',
-        name: "Query Account Balance",
-        description: "Check an account's balance on testnet",
-        level: 'beginner',
-        categories: ['queries', 'balances'],
-        getCode: (network: Network) => `// Query account balance example on ${network.name}
+	{
+		id: "query-balance",
+		name: "Query Account Balance",
+		description: "Check an account's balance on testnet",
+		level: "beginner",
+		categories: ["queries", "balances"],
+		getCode: (
+			network: Network,
+		) => `// Query account balance example on ${network.name}
 import { createClient } from "polkadot-api";
 import { ${network.descriptorKey} } from "@polkadot-api/descriptors";
 import { getWsProvider } from "polkadot-api/ws-provider/web";
@@ -96,16 +100,18 @@ const checkBalance = async () => {
   console.log("Human readable balance:", formattedBalance.toFixed(4), "${network.tokenSymbol}");
 };
 
-checkBalance().catch(console.error);`
-    },
+checkBalance().catch(console.error);`,
+	},
 
-    {
-        id: 'watch-blocks',
-        name: "Watch Finalized Blocks",
-        description: "Subscribe to finalized blocks on testnet",
-        level: 'beginner',
-        categories: ['subscriptions', 'blocks'],
-        getCode: (network: Network) => `// Watch finalized blocks on ${network.name} testnet
+	{
+		id: "watch-blocks",
+		name: "Watch Finalized Blocks",
+		description: "Subscribe to finalized blocks on testnet",
+		level: "beginner",
+		categories: ["subscriptions", "blocks"],
+		getCode: (
+			network: Network,
+		) => `// Watch finalized blocks on ${network.name} testnet
 import { createClient } from "polkadot-api";
 import { ${network.descriptorKey} } from "@polkadot-api/descriptors";
 import { getWsProvider } from "polkadot-api/ws-provider/web";
@@ -150,31 +156,31 @@ const watchFinalizedBlocks = () => {
   }, 30000);
 };
 
-watchFinalizedBlocks();`
-    },
+watchFinalizedBlocks();`,
+	},
 
-    // Additional examples would continue here...
+	// Additional examples would continue here...
 ];
 
 /**
  * Find an example by its ID
  */
 export function findExampleById(id: string): Example | undefined {
-    return EXAMPLES.find(example => example.id === id);
+	return EXAMPLES.find((example) => example.id === id);
 }
 
 /**
  * Filter examples by category
  */
 export function getExamplesByCategory(category: string): Example[] {
-    return EXAMPLES.filter(example => example.categories.includes(category));
+	return EXAMPLES.filter((example) => example.categories.includes(category));
 }
 
 /**
  * Filter examples by difficulty level
  */
-export function getExamplesByLevel(level: Example['level']): Example[] {
-    return EXAMPLES.filter(example => example.level === level);
+export function getExamplesByLevel(level: Example["level"]): Example[] {
+	return EXAMPLES.filter((example) => example.level === level);
 }
 
 /**

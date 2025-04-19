@@ -1,11 +1,11 @@
-'use client'
+"use client";
 
-import React from 'react';
-import Playground from '@/components/Playground';
+import Playground from "@/components/Playground";
+import React from "react";
 
 /**
  * Main page component
  */
 export default function Home() {
-  return <Playground />;
+	return <Playground />;
 }
