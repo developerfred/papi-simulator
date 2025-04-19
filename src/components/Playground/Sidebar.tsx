@@ -5,7 +5,7 @@ import { useTheme } from '@/lib/theme/ThemeProvider';
 import { ConsoleOutput } from '@/lib/types/example';
 import NetworkSelector from '@/components/NetworkSelector';
 import ExampleSelector from '@/components/ExampleSelector';
-import InfoPanel from '@/components/InfoPanel';
+import InfoPanel from '@/components/Panel';
 import Card from '@/components/ui/Card';
 import ActionButton from '@/components/ui/ActionButton';
 

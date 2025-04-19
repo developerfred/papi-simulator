@@ -15,11 +15,52 @@ interface InfoPanelProps {
   example: Example
 }
 
-export default function InfoPanel({ network}: InfoPanelProps) {
-  const { getColor, getNetworkColor } = useTheme()
+interface InfoRowProps {
+  label: string
+  value: React.ReactNode
+}
 
-  
-  const NetworkInfo = () => (
+interface ExternalLinkProps extends React.AnchorHTMLAttributes<HTMLAnchorElement> {
+  networkColor: string
+}
+
+const ExternalLinkIcon = () => (
+  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+    strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+    <polyline points="15 3 21 3 21 9" />
+    <line x1="10" y1="14" x2="21" y2="3" />
+  </svg>
+)
+
+const InfoRow = ({ label, value }: InfoRowProps) => {
+  const { getColor } = useTheme()
+  return (
+    <div className="flex justify-between items-center">
+      <span style={{ color: getColor('textSecondary') }}>{label}:</span>
+      <div className="text-right">{value}</div>
+    </div>
+  )
+}
+
+const ExternalLink = ({ networkColor, children, ...props }: ExternalLinkProps) => (
+  <a
+    {...props}
+    target="_blank"
+    rel="noopener noreferrer"
+    className="hover:underline truncate max-w-32 inline-flex items-center"
+    style={{ color: networkColor }}
+  >
+    {children}
+    <ExternalLinkIcon />
+  </a>
+)
+
+const NetworkInfo = ({ network }: { network: Network }) => {
+  const { getNetworkColor, getColor } = useTheme()
+  const networkColor = getNetworkColor('primary')
+
+  return (
     <div className="space-y-3">
       <div className="flex items-center space-x-2">
         <NetworkBadge network={network} />
@@ -27,67 +68,59 @@ export default function InfoPanel({ network}: InfoPanelProps) {
       </div>
 
       <div className="text-xs space-y-2">
-        <InfoRow label="Token" value={`${network.tokenSymbol} (${network.tokenDecimals} decimals)`} />
+        <InfoRow
+          label="Token"
+          value={`${network.tokenSymbol} (${network.tokenDecimals} decimals)`}
+        />
 
         <InfoRow
           label="Explorer"
           value={
-            <a
+            <ExternalLink
               href={network.explorer}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:underline truncate max-w-32 inline-flex items-center"
-              style={{ color: getNetworkColor('primary') }}
+              networkColor={networkColor}
             >
               {network.explorer.replace(/^https?:\/\//, '')}
-              <svg width="10" height="10" viewBox="0 0 24 24" className="ml-1" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-                <polyline points="15 3 21 3 21 9"></polyline>
-                <line x1="10" y1="14" x2="21" y2="3"></line>
-              </svg>
-            </a>
+            </ExternalLink>
           }
         />
 
         <InfoRow
           label="Faucet"
           value={
-            <a
+            <ExternalLink
               href={network.faucet}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:underline truncate max-w-32 inline-flex items-center"
-              style={{ color: getNetworkColor('primary') }}
+              networkColor={networkColor}
             >
               Get tokens
-              <svg width="10" height="10" viewBox="0 0 24 24" className="ml-1" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-                <polyline points="15 3 21 3 21 9"></polyline>
-                <line x1="10" y1="14" x2="21" y2="3"></line>
-              </svg>
-            </a>
+            </ExternalLink>
           }
         />
       </div>
 
       <div
         className="mt-3 p-2 rounded-md text-xs flex items-center space-x-2"
-        style={{ backgroundColor: `${getNetworkColor('primary')}10` }}
+        style={{ backgroundColor: `${networkColor}10` }}
       >
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={getNetworkColor('primary')} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="12" cy="12" r="10"></circle>
-          <line x1="12" y1="16" x2="12" y2="12"></line>
-          <line x1="12" y1="8" x2="12.01" y2="8"></line>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+          stroke={networkColor} strokeWidth="2" strokeLinecap="round"
+          strokeLinejoin="round">
+          <circle cx="12" cy="12" r="10" />
+          <line x1="12" y1="16" x2="12" y2="12" />
+          <line x1="12" y1="8" x2="12.01" y2="8" />
         </svg>
         <span style={{ color: getColor('textSecondary') }}>
           Connect to {network.endpoint} to interact with the {network.name} testnet
         </span>
       </div>
     </div>
-  );
+  )
+}
 
-  
-  const TestAccounts = () => (
+const TestAccounts = () => {
+  const { getColor } = useTheme()
+
+  return (
     <div className="space-y-3">
       <p className="text-xs mb-3" style={{ color: getColor('textSecondary') }}>
         These well-known accounts have funds on testnets:
@@ -120,46 +153,30 @@ export default function InfoPanel({ network}: InfoPanelProps) {
         ))}
       </div>
     </div>
-  );
+  )
+}
 
-  
-  const tabs = [
+export default function InfoPanel({ network }: InfoPanelProps) {
+  const tabs = React.useMemo(() => [
     {
       id: 'network',
       label: 'Network Info',
-      content: <NetworkInfo />
+      content: <NetworkInfo network={network} />
     },
     {
       id: 'accounts',
       label: 'Test Accounts',
       content: <TestAccounts />
     }
-  ];
+  ], [network])
 
   return (
     <Card className="overflow-hidden">
       <Tabs
         tabs={tabs}
         variant="boxed"
-        networkColored={true}
+        networkColored
       />
     </Card>
-  );
-}
-
-
-interface InfoRowProps {
-  label: string;
-  value: React.ReactNode;
-}
-
-function InfoRow({ label, value }: InfoRowProps) {
-  const { getColor } = useTheme();
-
-  return (
-    <div className="flex justify-between items-center">
-      <span style={{ color: getColor('textSecondary') }}>{label}:</span>
-      <div className="text-right">{value}</div>
-    </div>
-  );
+  )
 }
