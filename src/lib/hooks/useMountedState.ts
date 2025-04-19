@@ -7,7 +7,7 @@ export function useMountedState(): [boolean, () => boolean] {
         setMounted(true);
         return () => setMounted(false);
     }, []);
-
+    
     const getMounted = useCallback(() => mounted, [mounted]);
 
     return [mounted, getMounted];
