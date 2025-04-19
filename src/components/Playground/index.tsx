@@ -164,7 +164,7 @@ export default function Playground() {
 					description="Learn and experiment with polkadot-api"
 					rightContent={<NetworkBadge network={selectedNetwork} />}
 				>
-					{sidebarCollapsed ? <MainContent /> : <SidebarContent />}
+					{sidebarCollapsed ? MainContent : SidebarContent}
 
 					<MobileSidebarToggle
 						isCollapsed={sidebarCollapsed}
