@@ -4,7 +4,7 @@ import NetworkBadge from "@/components/ui/NetworkBadge";
 import { DEFAULT_NETWORK, NETWORKS } from "@/lib/constants/networks";
 import { DEFAULT_EXAMPLE, EXAMPLES } from "@/lib/examples";
 import { useCodeRunner } from "@/lib/hooks/useCodeRunner";
-import { useLocalStorage } from "@/lib/hooks/useLocalStorage";
+import { useLocalStorageState } from "@/lib/hooks/useLocalStorageState";
 import { useTheme } from "@/lib/theme/ThemeProvider";
 import type { Example } from "@/lib/types/example";
 import type { Network } from "@/lib/types/network";
@@ -25,11 +25,11 @@ export default function Playground() {
 	// Removendo variáveis não utilizadas da desestruturação
 	const { isLoaded, setCurrentNetworkId } = useTheme();
 
-	const [selectedNetworkId, setSelectedNetworkId] = useLocalStorage<string>(
+	const [selectedNetworkId, setSelectedNetworkId] = useLocalStorageState<string>(
 		"selectedNetwork",
 		DEFAULT_NETWORK.id,
 	);
-	const [selectedExampleId, setSelectedExampleId] = useLocalStorage<string>(
+	const [selectedExampleId, setSelectedExampleId] = useLocalStorageState<string>(
 		"selectedExample",
 		DEFAULT_EXAMPLE.id,
 	);

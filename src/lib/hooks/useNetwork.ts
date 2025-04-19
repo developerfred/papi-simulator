@@ -2,11 +2,11 @@ import { useTheme } from "@/lib/theme/ThemeProvider";
 import { useEffect, useState } from "react";
 import { DEFAULT_NETWORK, NETWORKS } from "../constants/networks";
 import type { Network } from "../types/network";
-import { useLocalStorage } from "./useLocalStorage";
+import { useLocalStorageState } from "./useLocalStorageState";
 
 export function useNetwork() {
 	const { setCurrentNetworkId } = useTheme();
-	const [selectedNetworkId, setSelectedNetworkId] = useLocalStorage<string>(
+	const [selectedNetworkId, setSelectedNetworkId] = useLocalStorageState<string>(
 		"selectedNetwork",
 		DEFAULT_NETWORK.id,
 	);

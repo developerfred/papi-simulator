@@ -1,4 +1,4 @@
-export { useLocalStorage } from "./useLocalStorage";
+export { useLocalStorageState } from "./useLocalStorageState";
 export { useCodeRunner } from "./useCodeRunner";
 export { useThemeColors } from "./useThemeColors";
 export { useResponsive } from "./useResponsive";

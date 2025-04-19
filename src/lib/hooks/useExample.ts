@@ -1,18 +1,20 @@
 import { useEffect, useState } from "react";
-import { DEFAULT_EXAMPLE, EXAMPLES, findExampleById } from "../examples";
+import { DEFAULT_EXAMPLE, EXAMPLES } from "../examples";
 import type { Example } from "../types/example";
-import { useLocalStorage } from "./useLocalStorage";
+import { useLocalStorageState } from "./useLocalStorageState";
 
 export function useExample() {
-	const [selectedExampleId, setSelectedExampleId] = useLocalStorage<string>(
+	const [selectedExampleId, setSelectedExampleId] = useLocalStorageState<string>(
 		"selectedExample",
-		DEFAULT_EXAMPLE.id,
+		DEFAULT_EXAMPLE.id
 	);
-	const [selectedExample, setSelectedExample] =
-		useState<Example>(DEFAULT_EXAMPLE);
+
+	const [selectedExample, setSelectedExample] = useState<Example>(() =>
+		EXAMPLES.find(example => example.id === selectedExampleId) || DEFAULT_EXAMPLE
+	);
 
 	useEffect(() => {
-		const example = findExampleById(selectedExampleId) || DEFAULT_EXAMPLE;
+		const example = EXAMPLES.find(example => example.id === selectedExampleId) || DEFAULT_EXAMPLE;
 		setSelectedExample(example);
 	}, [selectedExampleId]);
 
