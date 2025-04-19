@@ -30,10 +30,10 @@ interface ThemeContextType {
 
 const ThemeContext = createContext<ThemeContextType>({
 	isDarkTheme: false,
-	toggleTheme: () => { },
+	toggleTheme: () => {},
 	isLoaded: false,
 	currentNetworkId: "polkadot",
-	setCurrentNetworkId: () => { },
+	setCurrentNetworkId: () => {},
 	getNetworkColor: () => "#000000",
 	getColor: () => "#000000",
 	getElevation: () => "none",
