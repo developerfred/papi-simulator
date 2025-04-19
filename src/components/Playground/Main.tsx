@@ -1,4 +1,4 @@
-import CodeEditor from "@/components/CodeEditor";
+import { CodeEditor, SupportedNetwork } from "@/lib/editor";
 import Console from "@/components/Console";
 import TutorialPanel from "@/components/TutorialPanel";
 import Badge from "@/components/ui/Badge";
@@ -73,6 +73,7 @@ export default function Main({
 							onChange={updateCode}
 							disabled={isRunning}
 							height="400px"
+							network={selectedNetwork.id as SupportedNetwork}
 						/>
 					)}
 				</div>
