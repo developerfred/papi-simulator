@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import type React from "react";
 import { Editor } from "@monaco-editor/react";
 import { useTheme } from "@/lib/theme/ThemeProvider";
 import {
@@ -14,9 +14,9 @@ import {
 	useMountedState,
 } from "./hooks";
 import {
-	CodeEditorProps,
+	type CodeEditorProps,
 	DEFAULT_EDITOR_OPTIONS,
-	SupportedNetwork,
+	type SupportedNetwork,
 } from "./types";
 
 const CodeEditor: React.FC<CodeEditorProps> = ({

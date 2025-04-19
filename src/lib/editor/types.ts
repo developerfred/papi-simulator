@@ -47,7 +47,7 @@ export interface EditorOptions {
 	cursorBlinking?: string;
 	automaticLayout?: boolean;
 	lineNumbers?: "on" | "off";
-	renderLineHighlight?: string;
+    renderLineHighlight?: "none" | "line" | "gutter" | "all";
 	folding?: boolean;
 	contextmenu?: boolean;
 	formatOnPaste?: boolean;
@@ -83,7 +83,7 @@ export const DEFAULT_EDITOR_OPTIONS: EditorOptions = {
 	cursorBlinking: "smooth",
 	automaticLayout: true,
 	lineNumbers: "on",
-	renderLineHighlight: "all",
+	renderLineHighlight: "all" as const,
 	folding: true,
 	contextmenu: true,
 	formatOnPaste: true,
