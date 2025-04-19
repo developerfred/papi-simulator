@@ -1,19 +1,19 @@
-import { Network } from '../types/network';
-import { BaseExampleFactory } from './baseExampleFactory';
+import type { Network } from "../types/network";
+import { BaseExampleFactory } from "./baseExampleFactory";
 
 export class WatchBlocksExample extends BaseExampleFactory {
-    constructor() {
-        super({
-            id: 'watch-blocks',
-            name: "Watch Finalized Blocks",
-            description: "Subscribe to finalized blocks on testnet",
-            level: 'beginner',
-            categories: ['subscriptions', 'blocks']
-        });
-    }
+	constructor() {
+		super({
+			id: "watch-blocks",
+			name: "Watch Finalized Blocks",
+			description: "Subscribe to finalized blocks on testnet",
+			level: "beginner",
+			categories: ["subscriptions", "blocks"],
+		});
+	}
 
-    generateCode(network: Network): string {
-        return `// Watch finalized blocks on ${network.name} testnet
+	generateCode(network: Network): string {
+		return `// Watch finalized blocks on ${network.name} testnet
 ${this.generateImports(network)}
 
 ${this.generateClientSetup(network)}
@@ -48,5 +48,5 @@ const watchFinalizedBlocks = () => {
 };
 
 watchFinalizedBlocks();`;
-    }
+	}
 }

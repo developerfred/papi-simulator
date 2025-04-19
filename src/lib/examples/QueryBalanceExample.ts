@@ -1,19 +1,19 @@
-import { Network } from '../types/network';
-import { BaseExampleFactory } from './baseExampleFactory';
+import type { Network } from "../types/network";
+import { BaseExampleFactory } from "./baseExampleFactory";
 
 export class QueryBalanceExample extends BaseExampleFactory {
-    constructor() {
-        super({
-            id: 'query-balance',
-            name: "Query Account Balance",
-            description: "Check an account's balance on testnet",
-            level: 'beginner',
-            categories: ['queries', 'balances']
-        });
-    }
+	constructor() {
+		super({
+			id: "query-balance",
+			name: "Query Account Balance",
+			description: "Check an account's balance on testnet",
+			level: "beginner",
+			categories: ["queries", "balances"],
+		});
+	}
 
-    generateCode(network: Network): string {
-        return `// Query account balance example on ${network.name}
+	generateCode(network: Network): string {
+		return `// Query account balance example on ${network.name}
 ${this.generateImports(network)}
 
 ${this.generateClientSetup(network)}
@@ -21,7 +21,7 @@ ${this.generateClientSetup(network)}
 // Query an account's balance
 const checkBalance = async () => {
   // Alice's address (for demonstration)
-  const ALICE = "${this.getTestAccount('alice')}";
+  const ALICE = "${this.getTestAccount("alice")}";
   
   // Get account information
   const accountInfo = await typedApi.query.System.Account.getValue(ALICE);
@@ -40,5 +40,5 @@ const checkBalance = async () => {
 };
 
 checkBalance().catch(console.error);`;
-    }
+	}
 }

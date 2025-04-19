@@ -1,19 +1,19 @@
-import { Network } from '../types/network';
-import { BaseExampleFactory } from './baseExampleFactory';
+import type { Network } from "../types/network";
+import { BaseExampleFactory } from "./baseExampleFactory";
 
 export class SimpleTransferExample extends BaseExampleFactory {
-    constructor() {
-        super({
-            id: 'simple-transfer',
-            name: "Simple Transfer on Testnet",
-            description: "Create a basic balance transfer on a test network",
-            level: 'beginner',
-            categories: ['transactions', 'balances']
-        });
-    }
+	constructor() {
+		super({
+			id: "simple-transfer",
+			name: "Simple Transfer on Testnet",
+			description: "Create a basic balance transfer on a test network",
+			level: "beginner",
+			categories: ["transactions", "balances"],
+		});
+	}
 
-    generateCode(network: Network): string {
-        return `// Simple transfer example on ${network.name} testnet
+	generateCode(network: Network): string {
+		return `// Simple transfer example on ${network.name} testnet
 ${this.generateImports(network)}
 import { MultiAddress } from "@polkadot-api/descriptors";
 
@@ -22,7 +22,7 @@ ${this.generateClientSetup(network)}
 // Create a balance transfer transaction
 const transfer = async () => {
   // We'll use the Bob test address 
-  const BOB = "${this.getTestAccount('bob')}";
+  const BOB = "${this.getTestAccount("bob")}";
   
   const tx = typedApi.tx.Balances.transfer_keep_alive({
     dest: MultiAddress.Id(BOB),
@@ -42,5 +42,5 @@ const transfer = async () => {
 
 // Execute the transfer
 transfer().catch(console.error);`;
-    }
+	}
 }

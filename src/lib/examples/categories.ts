@@ -1,12 +1,12 @@
 export const EXAMPLE_CATEGORIES = [
-    'transactions',
-    'balances',
-    'storage',
-    'queries',
-    'blocks',
-    'events',
-    'subscriptions',
-    'compatibility'
+	"transactions",
+	"balances",
+	"storage",
+	"queries",
+	"blocks",
+	"events",
+	"subscriptions",
+	"compatibility",
 ] as const;
 
-export type ExampleCategory = typeof EXAMPLE_CATEGORIES[number];
+export type ExampleCategory = (typeof EXAMPLE_CATEGORIES)[number];
