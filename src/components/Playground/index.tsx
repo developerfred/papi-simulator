@@ -79,22 +79,27 @@ export default function Playground() {
 			setExampleCode(selectedExample, selectedNetwork);
 		}
 	}, [selectedExample, selectedNetwork, setExampleCode]);
-
-	// Envolvendo as funções handler em useCallback
+	
 	const handleRunCode = useCallback(() => {
 		runCode(selectedExample, selectedNetwork);
 	}, [runCode, selectedExample, selectedNetwork]);
 
-	const handleNetworkChange = useCallback((networkId: string) => {
-		setSelectedNetworkId(networkId);
-	}, [setSelectedNetworkId]);
+	const handleNetworkChange = useCallback(
+		(networkId: string) => {
+			setSelectedNetworkId(networkId);
+		},
+		[setSelectedNetworkId],
+	);
 
-	const handleExampleChange = useCallback((exampleId: string) => {
-		setSelectedExampleId(exampleId);
-	}, [setSelectedExampleId]);
+	const handleExampleChange = useCallback(
+		(exampleId: string) => {
+			setSelectedExampleId(exampleId);
+		},
+		[setSelectedExampleId],
+	);
 
 	const toggleSidebar = useCallback(() => {
-		setSidebarCollapsed(prev => !prev);
+		setSidebarCollapsed((prev) => !prev);
 	}, []);
 
 	const SidebarContent = useMemo(
@@ -153,8 +158,7 @@ export default function Playground() {
 	if (!isLoaded || !isMounted) {
 		return <LoadingState />;
 	}
-
-	// Mobile layout
+	
 	if (typeof window !== "undefined" && window.innerWidth < 1024) {
 		return (
 			<>

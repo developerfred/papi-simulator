@@ -1,7 +1,7 @@
 import type { Network } from "../types/network";
-import { BaseExampleFactory } from "./baseExampleFactory";
+import { ExampleFactory } from "./factory";
 
-export class QueryBalanceExample extends BaseExampleFactory {
+export class QueryBalanceExample extends ExampleFactory {
 	constructor() {
 		super({
 			id: "query-balance",
@@ -14,9 +14,9 @@ export class QueryBalanceExample extends BaseExampleFactory {
 
 	generateCode(network: Network): string {
 		return `// Query account balance example on ${network.name}
-${this.generateImports(network)}
+${this.getImports(network)}
 
-${this.generateClientSetup(network)}
+${this.getClientSetup(network)}
 
 // Query an account's balance
 const checkBalance = async () => {

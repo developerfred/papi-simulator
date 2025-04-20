@@ -1,7 +1,7 @@
 import type { Network } from "../types/network";
-import { BaseExampleFactory } from "./baseExampleFactory";
+import { ExampleFactory } from "./factory";
 
-export class SimpleTransferExample extends BaseExampleFactory {
+export class SimpleTransferExample extends ExampleFactory {
 	constructor() {
 		super({
 			id: "simple-transfer",
@@ -14,10 +14,9 @@ export class SimpleTransferExample extends BaseExampleFactory {
 
 	generateCode(network: Network): string {
 		return `// Simple transfer example on ${network.name} testnet
-${this.generateImports(network)}
-import { MultiAddress } from "@polkadot-api/descriptors";
+${this.getImports(network, true)}
 
-${this.generateClientSetup(network)}
+${this.getClientSetup(network)}
 
 // Create a balance transfer transaction
 const transfer = async () => {

@@ -1,7 +1,7 @@
 import type { Network } from "../types/network";
-import { BaseExampleFactory } from "./baseExampleFactory";
+import { ExampleFactory } from "./factory";
 
-export class WatchBlocksExample extends BaseExampleFactory {
+export class WatchBlocksExample extends ExampleFactory {
 	constructor() {
 		super({
 			id: "watch-blocks",
@@ -14,9 +14,9 @@ export class WatchBlocksExample extends BaseExampleFactory {
 
 	generateCode(network: Network): string {
 		return `// Watch finalized blocks on ${network.name} testnet
-${this.generateImports(network)}
+${this.getImports(network)}
 
-${this.generateClientSetup(network)}
+${this.getClientSetup(network)}
 
 // Watch finalized blocks
 const watchFinalizedBlocks = () => {
