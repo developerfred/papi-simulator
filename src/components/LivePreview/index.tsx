@@ -1,4 +1,3 @@
-// biome-ignore lint/style/useImportType: <explanation>
 import React, {
   useState,
   useEffect,
@@ -58,7 +57,7 @@ const transformImports = (code: string): string => {
       }
       const parts = [];
       if (namedImports) {
-        const names = namedImports.split(",").map((n) => n.trim());
+        const names = namedImports.split(",").map((n: string) => n.trim());
         parts.push(`const { ${names.join(", ")} } = require('${modulePath}');`);
       }
       if (defaultImport) {
@@ -179,12 +178,10 @@ const normalizeComponent = (
       ) {
         return defaultExport as ComponentType;
       }
-
       if (defaultExport.prototype?.isReactComponent) {
         return defaultExport as ComponentType;
       }
     }
-
     if (defaultExport?.$$typeof) {
       const type = defaultExport.$$typeof.toString();
       if (
@@ -197,7 +194,6 @@ const normalizeComponent = (
     }
   }
 
-  
   for (const [, value] of Object.entries(exports)) {
     if (typeof value === "function") {
       if (
