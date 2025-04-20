@@ -37,29 +37,23 @@ export default function Main({
 	const [editorHeight, setEditorHeight] = useState("auto");
 	const editorRef = useRef<HTMLDivElement>(null);
 
-	
 	const handleToggleLivePreview = () => {
 		setIsLivePreviewMode((prev) => !prev);
 	};
 
-	
 	useEffect(() => {
 		const adjustHeight = () => {
 			if (editorRef.current) {
-				
 				const actualHeight = editorRef.current.scrollHeight;
 
-				
 				const height = Math.min(Math.max(actualHeight, 200), 600);
 
 				setEditorHeight(`${height}px`);
 			}
 		};
 
-		
 		const timeoutId = setTimeout(adjustHeight, 50);
 
-		
 		window.addEventListener("resize", adjustHeight);
 
 		return () => {
@@ -121,11 +115,6 @@ export default function Main({
 								code={code}
 								onChange={updateCode}
 								disabled={isRunning}
-								style={{
-									height: "100%",
-									minHeight: "200px",
-									maxHeight: "600px",
-								}}
 								network={selectedNetwork.id as SupportedNetwork}
 							/>
 						)}

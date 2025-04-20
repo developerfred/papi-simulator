@@ -79,7 +79,7 @@ export default function Playground() {
 			setExampleCode(selectedExample, selectedNetwork);
 		}
 	}, [selectedExample, selectedNetwork, setExampleCode]);
-	
+
 	const handleRunCode = useCallback(() => {
 		runCode(selectedExample, selectedNetwork);
 	}, [runCode, selectedExample, selectedNetwork]);
@@ -158,7 +158,7 @@ export default function Playground() {
 	if (!isLoaded || !isMounted) {
 		return <LoadingState />;
 	}
-	
+
 	if (typeof window !== "undefined" && window.innerWidth < 1024) {
 		return (
 			<>

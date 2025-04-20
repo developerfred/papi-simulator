@@ -6,7 +6,7 @@ import { TEST_ACCOUNTS } from "../constants/accounts";
  * Base class for example factories
  * This makes it easier to create new examples with consistent structure
  */
-export abstract class ExampleFactory {	
+export abstract class ExampleFactory {
 	protected id: string;
 	protected name: string;
 	protected description: string;
@@ -27,10 +27,8 @@ export abstract class ExampleFactory {
 		this.categories = config.categories;
 	}
 
-	
 	abstract generateCode(network: Network): string;
 
-	
 	createExample(): Example {
 		return {
 			id: this.id,
@@ -42,7 +40,6 @@ export abstract class ExampleFactory {
 		};
 	}
 
-	
 	protected getClientSetup(network: Network): string {
 		return `
 // Connect to ${network.name} using WebSocket
@@ -76,54 +73,45 @@ export class ExampleRegistry {
 	private examples: Example[] = [];
 	private defaultExampleId: string | null = null;
 
-	
 	register(factory: ExampleFactory): void {
 		const example = factory.createExample();
 		this.examples.push(example);
 	}
 
-	
 	registerMany(factories: ExampleFactory[]): void {
 		// biome-ignore lint/complexity/noForEach: <explanation>
 		factories.forEach((factory) => this.register(factory));
 	}
 
-	
 	setDefaultExample(id: string): void {
 		this.defaultExampleId = id;
 	}
 
-	
 	getAll(): Example[] {
 		return [...this.examples];
 	}
 
-	
 	findById(id: string): Example | undefined {
 		return this.examples.find((example) => example.id === id);
 	}
 
-	
 	getByCategory(category: string): Example[] {
 		return this.examples.filter((example) =>
 			example.categories.includes(category),
 		);
 	}
 
-	
 	getByLevel(level: "beginner" | "intermediate" | "advanced"): Example[] {
 		return this.examples.filter((example) => example.level === level);
 	}
 
-	
 	getDefaultExample(): Example | undefined {
 		if (this.defaultExampleId) {
 			return this.findById(this.defaultExampleId);
 		}
-		
+
 		return this.examples[0];
 	}
 }
-
 
 export const exampleRegistry = new ExampleRegistry();

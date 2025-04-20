@@ -26,5 +26,4 @@ export const getExamplesByLevel = (level: ExampleLevel): Example[] =>
 // biome-ignore lint/style/noNonNullAssertion: <explanation>
 export const DEFAULT_EXAMPLE: Example = exampleRegistry.getDefaultExample()!;
 
-
 export type { Example, ExampleLevel } from "../types/example";

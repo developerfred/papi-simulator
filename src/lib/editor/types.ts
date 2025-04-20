@@ -158,7 +158,7 @@ export interface LivePreviewOptions {
 	/**
 	 * Additional props to pass to the previewed component
 	 */
-	
+
 	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 	componentProps?: Record<string, unknown>;
 
