@@ -1,6 +1,11 @@
 import type { Network } from "./network";
 
 /**
+ * Represents the difficulty level of an example
+ */
+export type ExampleLevel = "beginner" | "intermediate" | "advanced";
+
+/**
  * Represents a code example in the playground
  */
 export interface Example {
@@ -13,7 +18,7 @@ export interface Example {
 	/** Function that generates code based on the selected network */
 	getCode: (network: Network) => string;
 	/** Difficulty level of the example */
-	level: "beginner" | "intermediate" | "advanced";
+	level: ExampleLevel;
 	/** Categories this example belongs to */
 	categories: string[];
 	/** Dependencies required for this example */

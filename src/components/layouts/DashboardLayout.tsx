@@ -240,7 +240,7 @@ export default function DashboardLayout({
 						{/* Footer right section */}
 						<div className="flex gap-6 justify-start md:justify-end mt-3 md:mt-0">
 							<FooterLink
-								href="https://github.com/polkadot-api/polkadot-api"
+								href="https://github.com/developerfred/papi-simulator"
 								label="GitHub"
 							/>
 							<FooterLink href="https://polkadot.network/" label="Polkadot" />
