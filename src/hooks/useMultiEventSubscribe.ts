@@ -5,13 +5,13 @@ import { useTypedApi } from "@/store/useChainStore";
  * Interface for blockchain events
  */
 export interface EventData {
-	id: string; // Unique ID for the event
-	section: string; // Section (module) that emitted the event
-	method: string; // Method name
-	timestamp: number; // When the event was received
-	data: unknown[]; // Event data (using unknown for type safety)
-	blockNumber?: number; // Optional block number
-	blockHash?: string; // Optional block hash
+	id: string; 
+	section: string; 
+	method: string; 
+	timestamp: number; 
+	data: unknown[]; 
+	blockNumber?: number; 
+	blockHash?: string; 
 }
 
 /**
@@ -46,16 +46,12 @@ interface ApiEventsSubscription {
 	};
 }
 
-/**
- * Define an interface for the TypedApi
- */
+
 interface TypedApi {
 	events?: ApiEventsSubscription;
 }
 
-/**
- * Hook to subscribe to chain events with proper cleanup and memory management
- */
+
 export function useMultiEventSubscribe(options: SubscriptionOptions = {}) {
 	const { api, loading: apiLoading } = useTypedApi() as {
 		api: TypedApi | null;
@@ -65,27 +61,25 @@ export function useMultiEventSubscribe(options: SubscriptionOptions = {}) {
 	const [isSubscribed, setIsSubscribed] = useState(false);
 	const [error, setError] = useState<Error | null>(null);
 
-	// Use refs to prevent dependency changes triggering re-subscriptions
+	
 	const optionsRef = useRef(options);
 	const eventsRef = useRef<EventData[]>([]);
 	const subscriptionRef = useRef<{ unsubscribe: () => void } | null>(null);
 
-	// Update refs when options change (without triggering effect)
+	
 	useEffect(() => {
 		optionsRef.current = options;
 	}, [options]);
 
-	// Update ref when events change (without triggering effect)
+	
 	useEffect(() => {
 		eventsRef.current = events;
 	}, [events]);
 
-	// Setup subscription when API is ready
-	useEffect(() => {
-		// Don't proceed if API is not ready
+	
+	useEffect(() => {	
 		if (apiLoading || !api || !api.events) return;
-
-		// Prevent multiple subscriptions
+		
 		if (subscriptionRef.current) return;
 
 		let isMounted = true;
@@ -95,16 +89,21 @@ export function useMultiEventSubscribe(options: SubscriptionOptions = {}) {
 				setError(null);
 
 				// Create subscription
-				subscriptionRef.current = api.events.subscribe((records) => {
+				// We've already checked that api.events exists above, but TypeScript
+				// needs an additional check here to be certain
+				const apiEvents = api.events;
+				if (!apiEvents) {
+					throw new Error("API events not available");
+				}
+
+				subscriptionRef.current = apiEvents.subscribe((records) => {
 					if (!isMounted) return;
 
 					const newEvents: EventData[] = [];
 
-					// Process events
 					records.forEach((record, index) => {
 						const { section, method, data } = record.event;
-
-						// Apply filters if specified
+						
 						if (
 							(optionsRef.current.sections &&
 								!optionsRef.current.sections.includes(section)) ||
@@ -113,8 +112,7 @@ export function useMultiEventSubscribe(options: SubscriptionOptions = {}) {
 						) {
 							return;
 						}
-
-						// Create event object
+						
 						const eventData: EventData = {
 							id: `${Date.now()}-${index}`,
 							section,
@@ -129,11 +127,9 @@ export function useMultiEventSubscribe(options: SubscriptionOptions = {}) {
 					});
 
 					if (newEvents.length === 0 || !isMounted) return;
-
-					// Update events using functional update pattern to avoid stale state
+					
 					setEvents((currentEvents) => {
-						const combined = [...newEvents, ...currentEvents];
-						// Apply limit if specified
+						const combined = [...newEvents, ...currentEvents];						
 						return optionsRef.current.maxItems
 							? combined.slice(0, optionsRef.current.maxItems)
 							: combined;
@@ -153,8 +149,7 @@ export function useMultiEventSubscribe(options: SubscriptionOptions = {}) {
 		};
 
 		setupSubscription();
-
-		// Cleanup subscription on unmount
+		
 		return () => {
 			isMounted = false;
 
@@ -167,7 +162,7 @@ export function useMultiEventSubscribe(options: SubscriptionOptions = {}) {
 				}
 			}
 		};
-	}, [api, apiLoading]); // Only depend on API availability
+	}, [api, apiLoading]);
 
 	return {
 		events,
