@@ -1,3 +1,5 @@
+/* eslint-disable  @typescript-eslint/no-explicit-any */
+
 /**
  * TypeScript type definitions for Polkadot API integration with Monaco Editor
  */
@@ -12,7 +14,9 @@ import {
  * Get the correct descriptor name for a network
  */
 export function getNetworkDescriptorName(network: SupportedNetwork): string {
-	return NETWORK_DESCRIPTORS[network] || NETWORK_DESCRIPTORS.westend;
+	const descriptor =
+		NETWORK_DESCRIPTORS[network] || NETWORK_DESCRIPTORS.westend;
+	return (descriptor as any).name || String(network);
 }
 
 /**
@@ -321,12 +325,9 @@ export function configurePolkadotApiTypes(
 	monaco: typeof import("monaco-editor"),
 	network: SupportedNetwork = "westend",
 ): void {
-	// Add base definitions
 	addTypeDefinition(monaco, createBaseDefinition());
 
-	// Add network-specific definitions
 	addTypeDefinition(monaco, createNetworkDefinition(network));
 
-	// Add example snippets
 	addTypeDefinition(monaco, createExamplesDefinition(network));
 }

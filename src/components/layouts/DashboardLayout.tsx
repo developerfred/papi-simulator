@@ -4,6 +4,7 @@ import { useTheme } from "@/lib/theme/ThemeProvider";
 import React, { type ReactNode, useState, useEffect } from "react";
 import Button from "../ui/Button";
 import ThemeToggle from "../ui/ThemeToggle";
+import Link from "next/link";
 
 interface DashboardLayoutProps {
 	children: ReactNode;
@@ -51,6 +52,24 @@ export default function DashboardLayout({
 			/>
 			<path d="M11 7h2v6h-2z" fill={getNetworkColor("primary")} />
 			<path d="M11 15h2v2h-2z" fill={getNetworkColor("primary")} />
+		</svg>
+	);
+
+	const DashboardIcon = () => (
+		<svg
+			width="16"
+			height="16"
+			viewBox="0 0 24 24"
+			fill="none"
+			stroke="currentColor"
+			strokeWidth="2"
+			strokeLinecap="round"
+			strokeLinejoin="round"
+		>
+			<rect x="3" y="3" width="7" height="7"></rect>
+			<rect x="14" y="3" width="7" height="7"></rect>
+			<rect x="14" y="14" width="7" height="7"></rect>
+			<rect x="3" y="14" width="7" height="7"></rect>
 		</svg>
 	);
 
@@ -139,6 +158,11 @@ export default function DashboardLayout({
 						{/* Desktop navigation */}
 						<div className="hidden md:flex items-center gap-4">
 							{rightContent && <div className="mr-2">{rightContent}</div>}
+							<Link href="/dashboard">
+								<Button variant="ghost" size="sm" icon={<DashboardIcon />}>
+									Dashboard
+								</Button>
+							</Link>
 							<Button
 								variant="ghost"
 								size="sm"
@@ -154,6 +178,11 @@ export default function DashboardLayout({
 
 						{/* Mobile menu button */}
 						<div className="md:hidden flex items-center">
+							<Link href="/dashboard">
+								<Button variant="ghost" size="sm" icon={<DashboardIcon />}>
+									Dashboard
+								</Button>
+							</Link>
 							<button
 								onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
 								className="p-2 rounded-md transition-colors"

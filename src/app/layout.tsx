@@ -2,6 +2,10 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/lib/theme/ThemeProvider";
+import { Suspense } from "react";
+import LoadingIndicator from "@/components/LoadingIndicator";
+import { PolkadotProvider } from "@/components/PolkadotProvider";
+import { WasmPreloader } from "@/components/WasmPreloader";
 
 const geistSans = Geist({
 	variable: "--font-geist-sans",
@@ -28,7 +32,12 @@ export default function RootLayout({
 			<body
 				className={`${geistSans.variable} ${geistMono.variable} antialiased`}
 			>
-				<ThemeProvider>{children}</ThemeProvider>
+				<WasmPreloader />
+				<PolkadotProvider>
+					<Suspense fallback={<LoadingIndicator />}>
+						<ThemeProvider>{children}</ThemeProvider>
+					</Suspense>
+				</PolkadotProvider>
 			</body>
 		</html>
 	);

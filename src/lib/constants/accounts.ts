@@ -3,6 +3,7 @@
  * These accounts have funds on testnets and can be imported with well-known mnemonics.
  */
 export const TEST_ACCOUNTS: Record<string, string> = {
+	codingsh: "5Ei1XfC53EZr7DEhYTk7KRAzneiVppyxz7mr3upQgQw58u7G",
 	alice: "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
 	bob: "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty",
 	charlie: "5FLSigC9HGRKVhB9FiEo4Y3koPsNmBmLJbpXg2mp1hXcS59Y",
