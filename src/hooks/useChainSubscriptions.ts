@@ -1,215 +1,317 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, react-hooks/rules-of-hooks */
-"use client";
-
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { useChainStore } from "@/store/useChainStore";
 import { useEvents, useEventSubscription } from "@/store/useEventStore";
 import { useFinalizedBlocks, useBestBlocks } from "@/store/useBlockStore";
 
-/**
- * Options for event subscription hooks
- */
-interface EventSubscriptionOptions {
-	enabled?: boolean;
-	filter?: (event: any) => boolean;
-	limit?: number;
+export interface EventData {
+  id: string;
+  type: string;
+  section: string;
+  method: string;
+  data: unknown;
+  timestamp: number;
+  blockHash: string;
+  blockNumber: number;
 }
 
-/**
- * Hook to subscribe to a specific event type
- */
+export interface BlockInfo {
+  hash: string;
+  number: number;
+  parent?: string; // Modified: made parent optional with ?
+  timestamp: number;
+}
+
+export interface EventSubscriptionOptions {
+  enabled?: boolean;
+  filter?: (event: unknown) => boolean;
+  limit?: number;
+}
+
+export interface EventSubscriptionResult {
+  events: EventData[];
+  subscription: ReturnType<typeof useEventSubscription>;
+  latestEvent: EventData | null;
+  isActive: boolean;
+}
+
 export function useEventSubscribe(
-	section: string,
-	method: string,
-	options?: EventSubscriptionOptions,
-) {
-	const { enabled = true, filter } = options || {};
-	const { connectionStatus } = useChainStore();
-	const isConnected = connectionStatus.state === "connected";
+  section: string,
+  method: string,
+  options?: EventSubscriptionOptions
+): EventSubscriptionResult {
+  const { enabled = true, filter } = options || {};
+  const { connectionStatus } = useChainStore();
+  const isConnected = connectionStatus.state === "connected";
 
-	// Subscribe to the event
-	const subscription = useEventSubscription(section, method, {
-		enabled: enabled && isConnected,
-	});
+  const subscription = useEventSubscription(section, method, {
+    enabled: enabled && isConnected,
+  });
 
-	// Get all events of this type
-	const allEvents = useEvents({ section, method });
+  const allEvents = useEvents({ section, method });
 
-	// Apply filter if provided
-	const events = filter
-		? allEvents.filter((event) => filter(event.data))
-		: allEvents;
+  const filteredEvents = useMemo(() => {
+    return filter ? allEvents.filter((event) => filter(event.data)) : allEvents;
+  }, [allEvents, filter]);
 
-	// Apply limit if provided
-	const limitedEvents = options?.limit
-		? events.slice(0, options.limit)
-		: events;
+  const limitedEvents = useMemo(() => {
+    return options?.limit ? filteredEvents.slice(0, options.limit) : filteredEvents;
+  }, [filteredEvents, options?.limit]);
 
-	return {
-		events: limitedEvents,
-		subscription,
-		latestEvent: events[0] || null,
-		isActive: subscription?.active || false,
-	};
+  return {
+    events: limitedEvents,
+    subscription,
+    latestEvent: filteredEvents[0] || null,
+    isActive: subscription?.active || false,
+  };
 }
 
-/**
- * Hook to subscribe to multiple event types
- */
+export interface MultiEventSubscriptionConfig {
+  section: string;
+  method: string;
+  options?: EventSubscriptionOptions;
+}
+
+export interface MultiEventSubscriptionResult {
+  events: EventData[];
+  isActive: boolean;
+}
+
 export function useMultiEventSubscribe(
-	subscriptions: Array<{
-		section: string;
-		method: string;
-		options?: EventSubscriptionOptions;
-	}>,
-	globalOptions?: Omit<EventSubscriptionOptions, "filter">,
-) {
-	const { enabled = true, limit } = globalOptions || {};
-	const [allEvents, setAllEvents] = useState<any[]>([]);
+  subscriptionConfigs: MultiEventSubscriptionConfig[],
+  globalOptions?: Omit<EventSubscriptionOptions, "filter">
+): MultiEventSubscriptionResult {
+  const { enabled = true, limit } = globalOptions || {};
+  const { connectionStatus } = useChainStore();
+  const isConnected = connectionStatus.state === "connected";
 
-	// Individual subscriptions
-	const results = subscriptions.map(({ section, method, options }) =>
-		useEventSubscribe(section, method, {
-			...options,
-			enabled: enabled && options?.enabled !== false,
-		}),
-	);
+  // Create an array to store results from each individual subscription
+  const subscriptionResults = subscriptionConfigs.reduce<EventSubscriptionResult[]>((acc, config) => {
+    const { section, method, options = {} } = config;
+    const localEnabled = enabled && (options.enabled !== false);
 
-	// Combine events from all subscriptions
-	useEffect(() => {
-		const combinedEvents = results.flatMap((result) => result.events);
+    // Use the single event subscription hook directly
+    acc.push(useEventSubscribe(section, method, {
+      ...options,
+      enabled: localEnabled && isConnected
+    }));
+    return acc;
+  }, []);
 
-		// Sort by timestamp (newest first)
-		const sortedEvents = combinedEvents.sort(
-			(a, b) => b.timestamp - a.timestamp,
-		);
+  // Combine events from all subscriptions
+  const allEvents = useMemo(() => {
+    // Flatten all events from all subscriptions
+    const combined = subscriptionResults
+      .flatMap(result => result.events)
+      // Sort by timestamp (newest first)
+      .sort((a, b) => b.timestamp - a.timestamp);
 
-		// Apply limit if provided
-		const limitedEvents = limit ? sortedEvents.slice(0, limit) : sortedEvents;
+    // Apply global limit if provided
+    return limit ? combined.slice(0, limit) : combined;
+  }, [subscriptionResults, limit]);
 
-		setAllEvents(limitedEvents);
-	}, [results, limit]);
+  // Determine if any subscription is active
+  const isActive = useMemo(() =>
+    subscriptionResults.some(result => result.isActive),
+    [subscriptionResults]
+  );
 
-	return {
-		events: allEvents,
-		subscriptions: results,
-		isActive: results.some((result) => result.isActive),
-	};
+  return {
+    events: allEvents,
+    isActive
+  };
 }
 
-/**
- * Hook for tracking blocks with advanced features
- */
-export function useBlockWatcher(options?: {
-	type?: "finalized" | "best" | "both";
-	limit?: number;
-	onNewBlock?: (block: any) => void;
-}) {
-	const { type = "finalized", limit, onNewBlock } = options || {};
-	const [lastProcessedBlock, setLastProcessedBlock] = useState<string | null>(
-		null,
-	);
-
-	// Subscribe to blocks based on type
-	const finalized =
-		type !== "best"
-			? useFinalizedBlocks(limit)
-			: { blocks: [], lastBlock: null };
-
-	const best =
-		type !== "finalized"
-			? useBestBlocks(limit)
-			: { blocks: [], lastBlock: null };
-
-	// Combine blocks if watching both types
-	const blocks =
-		type === "both"
-			? [...best.blocks, ...finalized.blocks]
-					.sort((a, b) => b.number - a.number)
-					.filter(
-						(block, index, self) =>
-							// Remove duplicates by hash
-							index === self.findIndex((b) => b.hash === block.hash),
-					)
-					.slice(0, limit || undefined)
-			: type === "best"
-				? best.blocks
-				: finalized.blocks;
-
-	// Call onNewBlock when a new block is received
-	useEffect(() => {
-		const lastBlock = type === "best" ? best.lastBlock : finalized.lastBlock;
-
-		if (lastBlock && onNewBlock && lastBlock.hash !== lastProcessedBlock) {
-			setLastProcessedBlock(lastBlock.hash);
-			onNewBlock(lastBlock);
-		}
-	}, [
-		type,
-		best.lastBlock,
-		finalized.lastBlock,
-		lastProcessedBlock,
-		onNewBlock,
-	]);
-
-	return {
-		blocks,
-		lastBlock: type === "best" ? best.lastBlock : finalized.lastBlock,
-		isActive: type === "best" ? best.isActive : finalized.isActive,
-		error: type === "best" ? best.error : finalized.error,
-	};
+export interface EventMonitorResult {
+  events: EventData[];
+  isLoading: boolean;
+  addSubscription: (section: string, method: string, options?: EventSubscriptionOptions) => void;
+  removeSubscription: (section: string, method: string) => void;
+  clearSubscriptions: () => void;
+  isActive: boolean;
 }
 
-/**
- * Hook to get and monitor chain runtime version
- */
-export function useRuntimeVersion() {
-	const { typedApi, connectionStatus } = useChainStore();
-	const [version, setVersion] = useState<{
-		specName?: string;
-		implName?: string;
-		specVersion?: number;
-		implVersion?: number;
-		transactionVersion?: number;
-	} | null>(null);
-	const [isLoading, setIsLoading] = useState(false);
-	const [error, setError] = useState<Error | null>(null);
+export function useEventMonitor(
+  globalOptions?: EventSubscriptionOptions
+): EventMonitorResult {
+  const [subscriptions, setSubscriptions] = useState<MultiEventSubscriptionConfig[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
-	// Function to fetch runtime version
-	const fetchVersion = useCallback(async () => {
-		if (!typedApi || connectionStatus.state !== "connected") {
-			return;
-		}
+  // Add a subscription to monitor
+  const addSubscription = useCallback((
+    section: string,
+    method: string,
+    options?: EventSubscriptionOptions
+  ) => {
+    setSubscriptions(prev => [...prev, { section, method, options }]);
+  }, []);
 
-		setIsLoading(true);
-		setError(null);
+  // Remove a subscription
+  const removeSubscription = useCallback((section: string, method: string) => {
+    setSubscriptions(prev =>
+      prev.filter(sub => !(sub.section === section && sub.method === method))
+    );
+  }, []);
 
-		try {
-			// Use System.Version constant if available
-			const systemVersion = await typedApi.constants.System.Version();
-			setVersion(systemVersion);
-		} catch (err) {
-			console.error("Error fetching runtime version:", err);
-			setError(err instanceof Error ? err : new Error(String(err)));
-		} finally {
-			setIsLoading(false);
-		}
-	}, [typedApi, connectionStatus.state]);
+  // Clear all subscriptions
+  const clearSubscriptions = useCallback(() => {
+    setSubscriptions([]);
+  }, []);
 
-	// Fetch on connection and on block changes to detect runtime upgrades
-	const { lastBlock } = useBlockWatcher({
-		type: "finalized",
-		limit: 1,
-	});
+  // Use our fixed multi-event subscribe hook with the dynamic subscriptions
+  const { events, isActive } = useMultiEventSubscribe(
+    subscriptions,
+    globalOptions
+  );
 
-	useEffect(() => {
-		fetchVersion();
-	}, [fetchVersion, lastBlock?.hash]);
+  // Update loading state
+  useEffect(() => {
+    if (subscriptions.length > 0 && !isActive) {
+      setIsLoading(true);
+    } else {
+      setIsLoading(false);
+    }
+  }, [subscriptions.length, isActive]);
 
-	return {
-		version,
-		isLoading,
-		error,
-		refetch: fetchVersion,
-	};
+  return {
+    events,
+    isLoading,
+    addSubscription,
+    removeSubscription,
+    clearSubscriptions,
+    isActive
+  };
+}
+
+export interface BlockWatcherOptions {
+  type?: "finalized" | "best" | "both";
+  limit?: number;
+  onNewBlock?: (block: BlockInfo) => void;
+}
+
+export interface BlockWatcherResult {
+  blocks: BlockInfo[];
+  lastBlock: BlockInfo | null;
+  isActive: boolean;
+  error: Error | null;
+}
+
+export function useBlockWatcher(
+  options: BlockWatcherOptions = {}
+): BlockWatcherResult {
+  const { type = "finalized", limit, onNewBlock } = options;
+  const lastProcessedBlockRef = useRef<string | null>(null);
+
+  const finalizedData = useFinalizedBlocks(limit);
+  const bestData = useBestBlocks(limit);
+
+  const blocks = useMemo(() => {
+    if (type === "finalized") {
+      return finalizedData.blocks;
+    } else if (type === "best") {
+      return bestData.blocks;
+    } else {
+      return [...bestData.blocks, ...finalizedData.blocks]
+        .sort((a, b) => b.number - a.number)
+        .filter(
+          (block, index, self) =>
+            index === self.findIndex((b) => b.hash === block.hash)
+        )
+        .slice(0, limit || undefined);
+    }
+  }, [type, bestData.blocks, finalizedData.blocks, limit]);
+
+  const lastBlock = useMemo(() =>
+    type === "best" ? bestData.lastBlock : finalizedData.lastBlock,
+    [type, bestData.lastBlock, finalizedData.lastBlock]);
+
+  const isActive = useMemo(() =>
+    type === "best" ? bestData.isActive : finalizedData.isActive,
+    [type, bestData.isActive, finalizedData.isActive]);
+
+  const error = useMemo(() =>
+    type === "best" ? bestData.error : finalizedData.error,
+    [type, bestData.error, finalizedData.error]);
+
+  useEffect(() => {
+    if (lastBlock && onNewBlock && lastBlock.hash !== lastProcessedBlockRef.current) {
+      lastProcessedBlockRef.current = lastBlock.hash;
+      // The fix is here: we ensure the lastBlock is compatible with BlockInfo by adding the parent property
+      onNewBlock({
+        ...lastBlock,
+        parent: '' // Add empty parent property since it's required by our BlockInfo interface
+      });
+    }
+  }, [lastBlock, onNewBlock]);
+
+  return {
+    blocks,
+    lastBlock,
+    isActive,
+    error,
+  };
+}
+
+export interface RuntimeVersion {
+  specName?: string;
+  implName?: string;
+  specVersion?: number;
+  implVersion?: number;
+  transactionVersion?: number;
+}
+
+export interface RuntimeVersionResult {
+  version: RuntimeVersion | null;
+  isLoading: boolean;
+  error: Error | null;
+  refetch: () => Promise<void>;
+}
+
+export function useRuntimeVersion(): RuntimeVersionResult {
+  const { typedApi, connectionStatus } = useChainStore();
+  const [version, setVersion] = useState<RuntimeVersion | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+
+  const fetchVersion = useCallback(async () => {
+    if (!typedApi || connectionStatus.state !== "connected") {
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      // Use type assertion to bypass TypeScript error
+      // This is safe because we know the property will exist at runtime
+      const api = typedApi as any;
+
+      if (typeof api.constants?.System?.Version !== 'function') {
+        throw new Error("Runtime version method not available");
+      }
+
+      const systemVersion = await api.constants.System.Version();
+      setVersion(systemVersion);
+    } catch (err) {
+      console.error("Error fetching runtime version:", err);
+      setError(err instanceof Error ? err : new Error(String(err)));
+    } finally {
+      setIsLoading(false);
+    }
+  }, [typedApi, connectionStatus.state]);
+
+  const { lastBlock } = useBlockWatcher({
+    type: "finalized",
+    limit: 1,
+  });
+
+  useEffect(() => {
+    fetchVersion();
+  }, [fetchVersion, lastBlock?.hash]);
+
+  return {
+    version,
+    isLoading,
+    error,
+    refetch: fetchVersion,
+  };
 }

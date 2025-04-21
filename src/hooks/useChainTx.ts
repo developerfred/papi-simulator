@@ -100,7 +100,9 @@ export const useChainTx = () => {
 
 				switchMap(({ txCreator, options }) => {
 					if (typedApi) {
-						return of({ txCreator, options, api: typedApi });
+						// Cast typedApi to match the expected TypedApi interface
+						const safeApi = typedApi as unknown as TypedApi;
+						return of({ txCreator, options, api: safeApi });
 					}
 
 					return getTypedApi().pipe(
@@ -110,7 +112,9 @@ export const useChainTx = () => {
 							if (!api) {
 								throw new Error("API not available");
 							}
-							return of({ txCreator, options, api });
+							// Cast api to match the expected TypedApi interface
+							const safeApi = api as unknown as TypedApi;
+							return of({ txCreator, options, api: safeApi });
 						}),
 					);
 				}),

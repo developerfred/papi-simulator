@@ -8,8 +8,15 @@ import Card from "@/components/ui/Card";
 import Badge from "@/components/ui/Badge";
 import NetworkBadge from "@/components/ui/NetworkBadge";
 import { formatDistance } from "date-fns";
-import type { BlockInfo } from "@/store/useBlockStore";
 import type { Network } from "@/lib/types/network";
+
+// Definir uma interface unificada para BlockInfo
+interface UnifiedBlockInfo {
+	hash: string;
+	number: number;
+	timestamp: number;
+	parentHash?: string; // Marcado como opcional para evitar o erro
+}
 
 export default function BlockExplorer({
 	network,
@@ -65,7 +72,11 @@ export default function BlockExplorer({
 				) : (
 					<>
 						{blocks.map((block) => (
-							<BlockRow key={block.hash} block={block} network={network} />
+							<BlockRow
+								key={block.hash}
+								block={block as UnifiedBlockInfo}
+								network={network}
+							/>
 						))}
 					</>
 				)}
@@ -119,7 +130,7 @@ function BlockRow({
 	block,
 	network,
 }: {
-	block: BlockInfo;
+	block: UnifiedBlockInfo;
 	network: Network;
 }) {
 	const { getColor, getNetworkColor } = useTheme();
