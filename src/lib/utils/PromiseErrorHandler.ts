@@ -1,12 +1,11 @@
 export function setupGlobalPromiseErrorHandler() {
-	if (typeof window !== "undefined") {		
+	if (typeof window !== "undefined") {
 		window.addEventListener("unhandledrejection", (event) => {
-			console.error("🔴 Unhandled Promise Rejection:", event.reason);			
-			event.preventDefault();						
+			console.error("🔴 Unhandled Promise Rejection:", event.reason);
+			event.preventDefault();
 		});
 	}
 }
-
 
 export function safeFetch<T>(promise: Promise<T>): Promise<T | null> {
 	return promise.catch((error) => {
@@ -14,7 +13,6 @@ export function safeFetch<T>(promise: Promise<T>): Promise<T | null> {
 		return null;
 	});
 }
-
 
 export async function safePromise<T>(promise: Promise<T>): Promise<{
 	data: T | null;

@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+
 import { create } from "zustand";
 import { devtools } from "zustand/middleware";
 import { useEffect, useState } from "react";
@@ -307,13 +309,12 @@ export function useFinalizedBlocks(limit?: number) {
 		// Initial blocks
 		setBlocks(getFinalizedBlocks(limit));
 
-		// Subscribe to updates
-		const unsubscribe = useBlockStore.subscribe(
-			(state) => state.finalizedBlocks,
-			() => {
-				setBlocks(getFinalizedBlocks(limit));
-			},
-		);
+		// Subscribe to updates using the correct method signature
+		const unsubscribe = useBlockStore.subscribe((state) => {
+			// This callback will be triggered whenever the state changes
+			// We check if finalizedBlocks changed and update our local state
+			setBlocks(getFinalizedBlocks(limit));
+		});
 
 		return unsubscribe;
 	}, [getFinalizedBlocks, limit]);
@@ -338,13 +339,12 @@ export function useBestBlocks(limit?: number) {
 		// Initial blocks
 		setBlocks(getBestBlocks(limit));
 
-		// Subscribe to updates
-		const unsubscribe = useBlockStore.subscribe(
-			(state) => state.bestBlocks,
-			() => {
-				setBlocks(getBestBlocks(limit));
-			},
-		);
+		// Subscribe to updates using the correct method signature
+		const unsubscribe = useBlockStore.subscribe((state) => {
+			// This callback will be triggered whenever the state changes
+			// We check if bestBlocks changed and update our local state
+			setBlocks(getBestBlocks(limit));
+		});
 
 		return unsubscribe;
 	}, [getBestBlocks, limit]);

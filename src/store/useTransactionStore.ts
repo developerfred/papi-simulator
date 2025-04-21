@@ -1,7 +1,15 @@
+/* eslint-disable @typescript-eslint/no-explicit-any,  @typescript-eslint/no-unused-vars, @typescript-eslint/ban-ts-comment  */
+// @ts-ignore
 import { create } from "zustand";
-import { devtools, persist } from "zustand/middleware";
+import { devtools, persist, subscribeWithSelector } from "zustand/middleware";
 import { useChainStore } from "./useChainStore";
 import { useState, useEffect, useMemo, useCallback } from "react";
+import type { SubmittableExtrinsic } from "@polkadot/api/types";
+import type { ISubmittableResult } from "@polkadot/types/types";
+import type { KeyringPair } from "@polkadot/keyring/types";
+import type { SignerOptions } from "@polkadot/api/types";
+import { BN } from "@polkadot/util";
+import type { u32 } from "@polkadot/types";
 
 export type TransactionStatus =
 	| "idle"
@@ -11,24 +19,6 @@ export type TransactionStatus =
 	| "inBlock"
 	| "finalized"
 	| "error";
-
-export type TxEvent =
-	| { type: "signed"; txHash: string }
-	| { type: "broadcasted"; txHash: string }
-	| { type: "txBestBlocksState"; txHash: string; found: boolean }
-	| {
-			type: "finalized";
-			txHash: string;
-			ok: boolean;
-			events: unknown[];
-			block: BlockInfo;
-	  };
-
-interface BlockInfo {
-	hash: string;
-	number: number;
-	index: number;
-}
 
 export interface TransactionResult {
 	txHash: string | null;
@@ -59,7 +49,7 @@ interface TransactionMetadata {
 export interface TransactionOptions {
 	txOptions?: {
 		tip?: bigint;
-		mortality?: { mortal: boolean; period?: number };
+		era?: number;
 		nonce?: number;
 	};
 	metadata?: TransactionMetadata;
@@ -71,10 +61,10 @@ interface TransactionState {
 
 	executeTransaction: <T extends unknown[]>(
 		id: string,
-		txCreator: (...args: T) => unknown,
+		txCreator: (...args: T) => SubmittableExtrinsic<"promise">,
 		args: T,
-		signer: unknown,
-		options?: TransactionOptions,
+		signer: KeyringPair,
+		options?: TransactionOptions
 	) => Promise<string>;
 
 	getTransaction: (id: string) => TransactionResult | null;
@@ -100,141 +90,186 @@ const DEFAULT_TRANSACTION_RESULT: TransactionResult = {
 };
 
 export const useTransactionStore = create<TransactionState>()(
-	persist(
-		devtools(
-			(set, get) => ({
-				transactions: {},
-				currentTransactionId: null,
+	subscribeWithSelector(
+		persist(
+			devtools(
+				(set, get) => ({
+					transactions: {},
+					currentTransactionId: null,
 
-				executeTransaction: async <T extends unknown[]>(
-					id: string,
-					txCreator: (...args: T) => unknown,
-					args: T,
-					signer: unknown,
-					options?: TransactionOptions,
-				): Promise<string> => {
-					const { typedApi } = useChainStore.getState();
+					executeTransaction: async <T extends unknown[]>(
+						id: string,
+						txCreator: (...args: T) => SubmittableExtrinsic<"promise">,
+						args: T,
+						signer: KeyringPair,
+						options?: TransactionOptions
+					): Promise<string> => {
+						const { typedApi } = useChainStore.getState();
 
-					if (!typedApi) {
-						throw new Error("Chain not connected");
-					}
-
-					set((state) => ({
-						transactions: {
-							...state.transactions,
-							[id]: {
-								id,
-								...DEFAULT_TRANSACTION_RESULT,
-								status: "preparing",
-								timestamp: Date.now(),
-								metadata: options?.metadata,
-							},
-						},
-						currentTransactionId: id,
-					}));
-
-					try {
-						const tx = txCreator(...args);
-
-						if (!tx) {
-							throw new Error("Transaction creation failed");
+						if (!typedApi) {
+							throw new Error("Chain not connected");
 						}
 
-						return new Promise((resolve, reject) => {
-							const timeoutId = setTimeout(() => {
-								reject(new Error("Transaction timed out"));
+						const api = typedApi as unknown as import("@polkadot/api").ApiPromise;
 
-								set((state) => {
-									const currentTx = state.transactions[id];
-									if (currentTx && currentTx.status !== "finalized") {
-										return {
-											transactions: {
-												...state.transactions,
-												[id]: {
-													...currentTx,
-													status: "error",
-													error: new Error("Transaction timed out"),
-													timestamp: Date.now(),
-												},
-											},
-										};
-									}
-									return state;
-								});
-							}, 60000);
+						set((state) => ({
+							transactions: {
+								...state.transactions,
+								[id]: {
+									id,
+									...DEFAULT_TRANSACTION_RESULT,
+									status: "preparing",
+									timestamp: Date.now(),
+									metadata: options?.metadata,
+								},
+							},
+							currentTransactionId: id,
+						}));
 
-							const subscription = tx
-								.signSubmitAndWatch(signer, options?.txOptions)
-								.subscribe({
-									next: (event: TxEvent) => {
-										set((state) => {
-											const currentTx = state.transactions[id] || {
-												id,
-												...DEFAULT_TRANSACTION_RESULT,
-												metadata: options?.metadata,
-											};
+						try {
+							const tx = txCreator(...args);
 
-											let updates: Partial<TransactionResult> = {};
+							if (!tx) {
+								throw new Error("Transaction creation failed");
+							}
 
-											switch (event.type) {
-												case "signed":
-													updates = {
-														status: "signed",
-														txHash: event.txHash,
-													};
-													break;
-
-												case "broadcasted":
-													updates = {
-														status: "broadcasting",
-														txHash: event.txHash,
-													};
-													break;
-
-												case "txBestBlocksState":
-													if (event.found) {
-														updates = {
-															status: "inBlock",
-														};
-													}
-													break;
-
-												case "finalized":
-													clearTimeout(timeoutId);
-
-													updates = {
-														status: "finalized",
-														txHash: event.txHash,
-														events: event.events,
-														isSuccessful: event.ok,
-														blockInfo: {
-															blockHash: event.block.hash,
-															blockNumber: event.block.number,
-															txIndex: event.block.index,
-														},
-														timestamp: Date.now(),
-													};
-
-													subscription.unsubscribe();
-
-													resolve(id);
-													break;
-											}
-
+							return new Promise<string>((resolve, reject) => {
+								const timeoutId = setTimeout(() => {
+									reject(new Error("Transaction timed out"));
+									set((state) => {
+										const currentTx = state.transactions[id];
+										if (currentTx && currentTx.status !== "finalized") {
 											return {
 												transactions: {
 													...state.transactions,
 													[id]: {
 														...currentTx,
-														...updates,
+														status: "error",
+														error: new Error("Transaction timed out"),
+														timestamp: Date.now(),
 													},
 												},
 											};
-										});
-									},
-									error: (error: Error) => {
-										clearTimeout(timeoutId);
+										}
+										return state;
+									});
+								}, 60000);
 
+								const signerOptions: Partial<SignerOptions> = {};
+
+								(async () => {
+									try {
+										if (options?.txOptions) {
+											const { nonce, tip, era } = options.txOptions;
+
+											if (nonce !== undefined) {
+												signerOptions.nonce = new BN(nonce);
+											}
+											if (tip !== undefined) {
+												signerOptions.tip = tip;
+											}
+											if (era !== undefined) {
+												const blockNumber = await api.query.system.number();
+												const currentBlockNumber = (blockNumber as u32).toNumber();
+												const { GenericExtrinsicEra } = await import("@polkadot/types");
+
+												const extrinsicEra = new GenericExtrinsicEra(api.registry, {
+													current: currentBlockNumber,
+													period: era,
+												});
+
+												signerOptions.era = api.registry.createType(
+													"ExtrinsicEra",
+													extrinsicEra.toU8a()
+												);
+											}
+										}
+
+										const unsubscribe = await tx.signAndSend(
+											signer,
+											signerOptions,
+											(result: ISubmittableResult) => {
+												const currentTx = get().transactions[id] || {
+													id,
+													...DEFAULT_TRANSACTION_RESULT,
+													metadata: options?.metadata,
+												};
+
+												let updates: Partial<TransactionResult> = {};
+
+												if (result.status.isReady) {
+													updates = {
+														status: "signed",
+														txHash: result.txHash?.toString(),
+													};
+												}
+
+												if (result.status.isBroadcast) {
+													updates = {
+														status: "broadcasting",
+														txHash: result.txHash?.toString(),
+													};
+												}
+
+												if (result.status.isInBlock) {
+													updates = {
+														status: "inBlock",
+														txHash: result.txHash?.toString(),
+														events: result.events,
+														blockInfo: {
+															blockHash: result.status.asInBlock.toString(),
+															blockNumber: null,
+															txIndex: null,
+														},
+													};
+												}
+
+
+												if (result.status.isFinalized) {
+													clearTimeout(timeoutId);
+													const finalized = result.status.asFinalized;
+
+													updates = {
+														status: "finalized",
+														txHash: finalized.toString(),
+														events: result.events,
+														isSuccessful: !result.dispatchError,
+														blockInfo: {
+															blockHash: finalized.toString(),
+															blockNumber: null,
+															txIndex: null,
+														},
+														timestamp: Date.now(),
+													};
+
+													unsubscribe();
+													resolve(id);
+												}
+
+												if (result.isError) {
+													updates = {
+														status: "error",
+														error: new Error(
+															result.dispatchError?.toString() ??
+																"Unknown error",
+														),
+														timestamp: Date.now(),
+													};
+												}
+
+												set((state) => ({
+													transactions: {
+														...state.transactions,
+														[id]: {
+															...currentTx,
+															...updates,
+														},
+													},
+												}));
+											},
+										);
+									} catch (error) {
+										clearTimeout(timeoutId);
 										set((state) => {
 											const currentTx = state.transactions[id] || {
 												id,
@@ -248,112 +283,95 @@ export const useTransactionStore = create<TransactionState>()(
 													[id]: {
 														...currentTx,
 														status: "error",
-														error,
+														error:
+															error instanceof Error
+																? error
+																: new Error(String(error)),
 														timestamp: Date.now(),
 													},
 												},
 											};
 										});
-
 										reject(error);
+									}
+								})();
+							});
+						} catch (error) {
+							set((state) => {
+								const currentTx = state.transactions[id] || {
+									id,
+									...DEFAULT_TRANSACTION_RESULT,
+									metadata: options?.metadata,
+								};
+
+								return {
+									transactions: {
+										...state.transactions,
+										[id]: {
+											...currentTx,
+											status: "error",
+											error:
+												error instanceof Error
+													? error
+													: new Error(String(error)),
+											timestamp: Date.now(),
+										},
 									},
-								});
-						});
-					} catch (error) {
+								};
+							});
+
+							throw error;
+						}
+					},
+
+					getTransaction: (id: string): TransactionResult | null => {
+						const tx = get().transactions[id];
+						return tx ? (({ id: _id, metadata, ...rest }) => rest)(tx) : null;
+					},
+
+					getAllTransactions: () => {
+						const transactions = Object.values(get().transactions);
+						return [...transactions].sort(
+							(a, b) => (b.timestamp || 0) - (a.timestamp || 0),
+						);
+					},
+
+					clearTransaction: (id: string) => {
 						set((state) => {
-							const currentTx = state.transactions[id] || {
-								id,
-								...DEFAULT_TRANSACTION_RESULT,
-								metadata: options?.metadata,
-							};
-
+							const { [id]: _, ...remaining } = state.transactions;
 							return {
-								transactions: {
-									...state.transactions,
-									[id]: {
-										...currentTx,
-										status: "error",
-										error:
-											error instanceof Error ? error : new Error(String(error)),
-										timestamp: Date.now(),
-									},
-								},
+								transactions: remaining,
+								currentTransactionId:
+									state.currentTransactionId === id
+										? null
+										: state.currentTransactionId,
 							};
 						});
+					},
 
-						throw error;
-					}
-				},
+					clearAllTransactions: () => {
+						set({ transactions: {}, currentTransactionId: null });
+					},
 
-				getTransaction: (id: string): TransactionResult | null => {
-					const tx = get().transactions[id];
-					if (!tx) return null;
-
-					// Return without the ID and metadata fields
-					// eslint-disable-next-line @typescript-eslint/no-unused-vars
-					const { id: txId, metadata, ...result } = tx;
-					return result;
-				},
-
-				getAllTransactions: () => {
-					const transactions = Object.values(get().transactions);
-
-					if (transactions.length <= 1) {
-						return transactions;
-					}
-
-					return [...transactions].sort(
-						(a, b) => (b.timestamp || 0) - (a.timestamp || 0),
-					);
-				},
-
-				clearTransaction: (id: string) => {
-					set((state) => {
-						// eslint-disable-next-line @typescript-eslint/no-unused-vars
-						const { [id]: _, ...remainingTransactions } = state.transactions;
-
-						const currentTransaction =
-							state.currentTransactionId === id
-								? null
-								: state.currentTransactionId;
-
-						return {
-							transactions: remainingTransactions,
-							currentTransactionId: currentTransaction,
-						};
-					});
-				},
-
-				clearAllTransactions: () => {
-					set({
-						transactions: {},
-						currentTransactionId: null,
-					});
-				},
-
-				setCurrentTransaction: (id: string | null) => {
-					set({ currentTransactionId: id });
-				},
-			}),
-			{ name: "transaction-store" },
-		),
-		{
-			name: "chain-transactions",
-			partialize: (state) => {
-				const filteredTransactions: Record<string, TrackedTransaction> = {};
-
-				Object.entries(state.transactions).forEach(([key, tx]) => {
-					if (tx.status === "finalized") {
-						filteredTransactions[key] = tx;
-					}
-				});
-
-				return {
-					transactions: filteredTransactions,
+					setCurrentTransaction: (id: string | null) => {
+						set({ currentTransactionId: id });
+					},
+				}),
+				{ name: "transaction-store" },
+			),
+			{
+				name: "chain-transactions",
+				partialize: (state: { transactions: { [s: string]: unknown; } | ArrayLike<unknown>; currentTransactionId: any; }) => ({
+					transactions: Object.fromEntries(
+						Object.entries(state.transactions).filter(
+							// @ts-ignore
+							([_, tx]) => tx.status === "finalized",
+						),
+					),
 					currentTransactionId: state.currentTransactionId,
-				};
+				}),
 			},
-		},
+		),
 	),
 );
 
@@ -376,27 +394,26 @@ export function useTransaction(id: string) {
 	useEffect(() => {
 		setTransactionState(getTransaction(id) || DEFAULT_TRANSACTION_RESULT);
 
-		const unsubscribe = useTransactionStore.subscribe(
-			(state) => state.transactions[id],
-			(transaction) => {
-				if (transaction) {
-					// eslint-disable-next-line @typescript-eslint/no-unused-vars
-					const { id: txId, metadata, ...result } = transaction;
-					setTransactionState(result);
-				} else {
-					setTransactionState(DEFAULT_TRANSACTION_RESULT);
-				}
-			},
-		);
+		const unsubscribe = useTransactionStore.subscribe((state) => {
+			const transaction = state.transactions[id];
+			if (transaction) {
+				const { id: txId, metadata, ...result } = transaction;
+				setTransactionState(result);
+			} else {
+				setTransactionState(DEFAULT_TRANSACTION_RESULT);
+			}
+		});
 
 		return unsubscribe;
 	}, [id, getTransaction]);
 
 	const execute = useCallback(
 		<T extends unknown[]>(
-			txCreator: (...args: T) => unknown,
+			txCreator: (
+				...args: T
+			) => SubmittableExtrinsic<"promise", ISubmittableResult>,
 			args: T,
-			signer: unknown,
+			signer: KeyringPair,
 			options?: TransactionOptions,
 		) => {
 			setCurrentTransaction(id);
@@ -457,7 +474,6 @@ export function useCurrentTransaction() {
 			}),
 			(current) => {
 				if (current.tx) {
-					// eslint-disable-next-line @typescript-eslint/no-unused-vars
 					const { id: txId, metadata, ...result } = current.tx;
 					setTransaction(result);
 				} else {

@@ -5,39 +5,40 @@
  */
 
 import {
-  NETWORK_DESCRIPTORS,
-  type TypeDefinition,
-  type SupportedNetwork,
+	NETWORK_DESCRIPTORS,
+	type TypeDefinition,
+	type SupportedNetwork,
 } from "./types";
 
 /**
  * Get the correct descriptor name for a network
  */
 export function getNetworkDescriptorName(network: SupportedNetwork): string {
-  const descriptor = NETWORK_DESCRIPTORS[network] || NETWORK_DESCRIPTORS.westend;
-  return (descriptor as any).name || String(network);
+	const descriptor =
+		NETWORK_DESCRIPTORS[network] || NETWORK_DESCRIPTORS.westend;
+	return (descriptor as any).name || String(network);
 }
 
 /**
  * Add a type definition to Monaco's TypeScript compiler
  */
 export function addTypeDefinition(
-  monaco: typeof import("monaco-editor"),
-  definition: TypeDefinition,
+	monaco: typeof import("monaco-editor"),
+	definition: TypeDefinition,
 ): void {
-  monaco.languages.typescript.typescriptDefaults.addExtraLib(
-    definition.content,
-    definition.path,
-  );
+	monaco.languages.typescript.typescriptDefaults.addExtraLib(
+		definition.content,
+		definition.path,
+	);
 }
 
 /**
  * Creates the base Polkadot API type definitions
  */
 export function createBaseDefinition(): TypeDefinition {
-  return {
-    path: "ts:polkadot-api.d.ts",
-    content: `
+	return {
+		path: "ts:polkadot-api.d.ts",
+		content: `
     declare module "polkadot-api" {
       export interface JsonRpcProvider {
         (onMessage: (message: string) => void): JsonRpcConnection;
@@ -201,20 +202,20 @@ export function createBaseDefinition(): TypeDefinition {
       decodedCall: any;
     }
     `,
-  };
+	};
 }
 
 /**
  * Creates network-specific type definitions
  */
 export function createNetworkDefinition(
-  network: SupportedNetwork,
+	network: SupportedNetwork,
 ): TypeDefinition {
-  const descriptorName = getNetworkDescriptorName(network);
+	const descriptorName = getNetworkDescriptorName(network);
 
-  return {
-    path: `ts:${network}-specific.d.ts`,
-    content: `
+	return {
+		path: `ts:${network}-specific.d.ts`,
+		content: `
     // Network-specific typings for ${network}
     declare module "@polkadot-api/descriptors" {
       export interface ${descriptorName}Queries {
@@ -256,20 +257,20 @@ export function createNetworkDefinition(
       }
     }
     `,
-  };
+	};
 }
 
 /**
  * Creates example code snippets for autocompletion
  */
 export function createExamplesDefinition(
-  network: SupportedNetwork,
+	network: SupportedNetwork,
 ): TypeDefinition {
-  const descriptorName = getNetworkDescriptorName(network);
+	const descriptorName = getNetworkDescriptorName(network);
 
-  return {
-    path: "ts:polkadot-api-examples.d.ts",
-    content: `
+	return {
+		path: "ts:polkadot-api-examples.d.ts",
+		content: `
     // Example snippets for autocompletion
     
     // Client creation
@@ -314,19 +315,19 @@ export function createExamplesDefinition(
       remark: Binary.fromText("Some remark")
     });
     `,
-  };
+	};
 }
 
 /**
  * Configure Monaco editor with Polkadot API type definitions
  */
 export function configurePolkadotApiTypes(
-  monaco: typeof import("monaco-editor"),
-  network: SupportedNetwork = "westend",
+	monaco: typeof import("monaco-editor"),
+	network: SupportedNetwork = "westend",
 ): void {
-  addTypeDefinition(monaco, createBaseDefinition());
+	addTypeDefinition(monaco, createBaseDefinition());
 
-  addTypeDefinition(monaco, createNetworkDefinition(network));
-  
-  addTypeDefinition(monaco, createExamplesDefinition(network));
+	addTypeDefinition(monaco, createNetworkDefinition(network));
+
+	addTypeDefinition(monaco, createExamplesDefinition(network));
 }

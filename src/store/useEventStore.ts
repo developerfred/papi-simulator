@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { create } from "zustand";
 import { devtools } from "zustand/middleware";
 import { useChainStore } from "./useChainStore";
@@ -40,6 +42,11 @@ interface EventState {
 	clearEvents: () => void;
 	setMaxEvents: (count: number) => void;
 	addEvent: (event: BlockchainEvent) => void;
+}
+
+// Define interface for TypedApi
+interface TypedApi {
+	event: Record<string, Record<string, { watch: () => any }>>;
 }
 
 const DEFAULT_SUBSCRIPTION: Omit<
@@ -156,7 +163,7 @@ export function useEventSubscription(
 ) {
 	const { enabled = true } = options || {};
 
-	const typedApi = useChainStore((state) => state.typedApi);
+	const typedApi = useChainStore((state) => state.typedApi) as TypedApi | null;
 	const subscriptionId = useMemo(
 		() => `${section}:${method}`,
 		[section, method],
@@ -177,27 +184,37 @@ export function useEventSubscription(
 		try {
 			subscribe(subscriptionId, section, method);
 
-			const watchObservable = typedApi.event[section][method].watch();
+			// Check if the section and method exist before trying to access them
+			if (
+				typedApi.event &&
+				typedApi.event[section] &&
+				typedApi.event[section][method] &&
+				typeof typedApi.event[section][method].watch === "function"
+			) {
+				const watchObservable = typedApi.event[section][method].watch();
 
-			eventSubscriptionRef.current = watchObservable.subscribe({
-				next: (event) => {
-					const blockchainEvent: BlockchainEvent = {
-						id: `${event.meta.block.hash}:${section}:${method}`,
-						type: "event",
-						section,
-						method,
-						data: event.payload,
-						timestamp: Date.now(),
-						blockHash: event.meta.block.hash,
-						blockNumber: event.meta.block.number,
-					};
+				eventSubscriptionRef.current = watchObservable.subscribe({
+					next: (event: any) => {
+						const blockchainEvent: BlockchainEvent = {
+							id: `${event.meta.block.hash}:${section}:${method}`,
+							type: "event",
+							section,
+							method,
+							data: event.payload,
+							timestamp: Date.now(),
+							blockHash: event.meta.block.hash,
+							blockNumber: event.meta.block.number,
+						};
 
-					addEvent(blockchainEvent);
-				},
-				error: (error) => {
-					console.error(`Error in ${section}.${method} subscription:`, error);
-				},
-			});
+						addEvent(blockchainEvent);
+					},
+					error: (error: any) => {
+						console.error(`Error in ${section}.${method} subscription:`, error);
+					},
+				});
+			} else {
+				console.error(`Event ${section}.${method} is not available in the API`);
+			}
 		} catch (error) {
 			console.error(`Failed to subscribe to ${section}.${method}:`, error);
 		}
@@ -237,30 +254,22 @@ export function useEvents(filter?: { section?: string; method?: string }) {
 	useEffect(() => {
 		setEvents(getEvents(memoizedFilter));
 
-		const unsubscribe = useEventStore.subscribe(
-			(state) => state.events,
-			(events) => {
-				if (memoizedFilter) {
-					const filteredEvents = events.filter((event) => {
+		const unsubscribe = useEventStore.subscribe((state) => {
+			const filteredEvents = memoizedFilter
+				? state.events.filter((event) => {
 						let match = true;
-
 						if (memoizedFilter.section) {
 							match = match && event.section === memoizedFilter.section;
 						}
-
 						if (memoizedFilter.method) {
 							match = match && event.method === memoizedFilter.method;
 						}
-
 						return match;
-					});
+					})
+				: state.events;
 
-					setEvents(filteredEvents);
-				} else {
-					setEvents(events);
-				}
-			},
-		);
+			setEvents(filteredEvents);
+		});
 
 		return unsubscribe;
 	}, [getEvents, memoizedFilter]);

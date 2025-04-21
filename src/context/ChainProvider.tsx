@@ -19,10 +19,10 @@ import { createPolkadotClient } from "@/lib/utils/polkadotClientFactory";
 
 // Define the connection states more precisely
 type ConnectionState =
-	| { state: 'idle' }
-	| { state: 'connecting' }
-	| { state: 'connected', client: PolkadotClient }
-	| { state: 'error', error: Error };
+	| { state: "idle" }
+	| { state: "connecting" }
+	| { state: "connected"; client: PolkadotClient }
+	| { state: "error"; error: Error };
 
 interface ChainContextType {
 	connectionState: ConnectionState;
@@ -38,14 +38,15 @@ export const ChainProvider: React.FC<{
 	initialNetwork?: Network;
 }> = ({ children, initialNetwork = DEFAULT_NETWORK }) => {
 	const [connectionState, setConnectionState] = useState<ConnectionState>({
-		state: 'idle'
+		state: "idle",
 	});
-	const [selectedNetwork, setSelectedNetwork] = useState<Network>(initialNetwork);
+	const [selectedNetwork, setSelectedNetwork] =
+		useState<Network>(initialNetwork);
 
 	const connect = useCallback(async (networkToConnect: Network) => {
 		try {
 			// Set connecting state
-			setConnectionState({ state: 'connecting' });
+			setConnectionState({ state: "connecting" });
 			setSelectedNetwork(networkToConnect);
 
 			// Create the client
@@ -53,18 +54,17 @@ export const ChainProvider: React.FC<{
 
 			// Set connected state with the client
 			setConnectionState({
-				state: 'connected',
-				client
+				state: "connected",
+				client,
 			});
 		} catch (err) {
 			// Handle connection errors
-			const error = err instanceof Error
-				? err
-				: new Error('Failed to connect to network');
+			const error =
+				err instanceof Error ? err : new Error("Failed to connect to network");
 
 			setConnectionState({
-				state: 'error',
-				error
+				state: "error",
+				error,
 			});
 
 			// Rethrow to allow caller to handle
@@ -73,17 +73,17 @@ export const ChainProvider: React.FC<{
 	}, []);
 
 	const disconnect = useCallback(() => {
-		if (connectionState.state === 'connected') {
+		if (connectionState.state === "connected") {
 			try {
 				// Properly destroy the client if possible
 				connectionState.client.destroy();
 			} catch (err) {
-				console.error('Error during disconnection:', err);
+				console.error("Error during disconnection:", err);
 			}
 		}
 
 		// Reset to idle state
-		setConnectionState({ state: 'idle' });
+		setConnectionState({ state: "idle" });
 	}, [connectionState]);
 
 	// Cleanup on unmount
@@ -99,12 +99,15 @@ export const ChainProvider: React.FC<{
 	}, []);
 
 	// Memoize context value to prevent unnecessary re-renders
-	const contextValue = useMemo<ChainContextType>(() => ({
-		connectionState,
-		selectedNetwork,
-		connect,
-		disconnect
-	}), [connectionState, selectedNetwork, connect, disconnect]);
+	const contextValue = useMemo<ChainContextType>(
+		() => ({
+			connectionState,
+			selectedNetwork,
+			connect,
+			disconnect,
+		}),
+		[connectionState, selectedNetwork, connect, disconnect],
+	);
 
 	return (
 		<ChainContext.Provider value={contextValue}>
@@ -126,9 +129,10 @@ export const useChain = () => {
 
 	return {
 		...context,
-		isConnecting: connectionState.state === 'connecting',
-		isConnected: connectionState.state === 'connected',
-		error: connectionState.state === 'error' ? connectionState.error : null,
-		client: connectionState.state === 'connected' ? connectionState.client : null,
+		isConnecting: connectionState.state === "connecting",
+		isConnected: connectionState.state === "connected",
+		error: connectionState.state === "error" ? connectionState.error : null,
+		client:
+			connectionState.state === "connected" ? connectionState.client : null,
 	};
 };

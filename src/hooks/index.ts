@@ -1,10 +1,6 @@
-export {
-	useChainMetadata,
-} from "./useChainState";
+export { useChainMetadata } from "./useChainState";
 
-export {
-	useChainTx,	
-} from "./useChainTx";
+export { useChainTx } from "./useChainTx";
 
 export {
 	useEventSubscribe,
@@ -13,9 +9,7 @@ export {
 	useRuntimeVersion,
 } from "./useChainSubscriptions";
 
-export { useBlockNumber } from './useBlockNumber'
-export {
-	useAccountBalance
-} from "./useAccountBalance";
+export { useBlockNumber } from "./useBlockNumber";
+export { useAccountBalance } from "./useAccountBalance";
 
 export { useChain } from "@/context/ChainProvider";

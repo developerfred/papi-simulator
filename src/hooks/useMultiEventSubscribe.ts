@@ -5,13 +5,13 @@ import { useTypedApi } from "@/store/useChainStore";
  * Interface for blockchain events
  */
 export interface EventData {
-	id: string; 
-	section: string; 
-	method: string; 
-	timestamp: number; 
-	data: unknown[]; 
-	blockNumber?: number; 
-	blockHash?: string; 
+	id: string;
+	section: string;
+	method: string;
+	timestamp: number;
+	data: unknown[];
+	blockNumber?: number;
+	blockHash?: string;
 }
 
 /**
@@ -46,11 +46,9 @@ interface ApiEventsSubscription {
 	};
 }
 
-
 interface TypedApi {
 	events?: ApiEventsSubscription;
 }
-
 
 export function useMultiEventSubscribe(options: SubscriptionOptions = {}) {
 	const { api, loading: apiLoading } = useTypedApi() as {
@@ -61,25 +59,21 @@ export function useMultiEventSubscribe(options: SubscriptionOptions = {}) {
 	const [isSubscribed, setIsSubscribed] = useState(false);
 	const [error, setError] = useState<Error | null>(null);
 
-	
 	const optionsRef = useRef(options);
 	const eventsRef = useRef<EventData[]>([]);
 	const subscriptionRef = useRef<{ unsubscribe: () => void } | null>(null);
 
-	
 	useEffect(() => {
 		optionsRef.current = options;
 	}, [options]);
 
-	
 	useEffect(() => {
 		eventsRef.current = events;
 	}, [events]);
 
-	
-	useEffect(() => {	
+	useEffect(() => {
 		if (apiLoading || !api || !api.events) return;
-		
+
 		if (subscriptionRef.current) return;
 
 		let isMounted = true;
@@ -103,7 +97,7 @@ export function useMultiEventSubscribe(options: SubscriptionOptions = {}) {
 
 					records.forEach((record, index) => {
 						const { section, method, data } = record.event;
-						
+
 						if (
 							(optionsRef.current.sections &&
 								!optionsRef.current.sections.includes(section)) ||
@@ -112,7 +106,7 @@ export function useMultiEventSubscribe(options: SubscriptionOptions = {}) {
 						) {
 							return;
 						}
-						
+
 						const eventData: EventData = {
 							id: `${Date.now()}-${index}`,
 							section,
@@ -127,9 +121,9 @@ export function useMultiEventSubscribe(options: SubscriptionOptions = {}) {
 					});
 
 					if (newEvents.length === 0 || !isMounted) return;
-					
+
 					setEvents((currentEvents) => {
-						const combined = [...newEvents, ...currentEvents];						
+						const combined = [...newEvents, ...currentEvents];
 						return optionsRef.current.maxItems
 							? combined.slice(0, optionsRef.current.maxItems)
 							: combined;
@@ -149,7 +143,7 @@ export function useMultiEventSubscribe(options: SubscriptionOptions = {}) {
 		};
 
 		setupSubscription();
-		
+
 		return () => {
 			isMounted = false;
 

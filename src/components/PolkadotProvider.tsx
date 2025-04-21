@@ -6,7 +6,6 @@ import { useChainStore } from "@/store/useChainStore";
 import { DEFAULT_NETWORK } from "@/lib/constants/networks";
 import type { Network } from "@/lib/types/network";
 
-
 export const PolkadotContext = createContext<{
 	isConnecting: boolean;
 	isConnected: boolean;
@@ -32,16 +31,13 @@ export const PolkadotProvider = ({
 	const disconnect = useChainStore((state) => state.disconnect);
 	const network = useChainStore((state) => state.network);
 
-	
 	const isConnected = connectionStatus.state === "connected";
 
-	
 	useEffect(() => {
 		handleConnect();
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
-	
 	const handleConnect = (customNetwork?: Network) => {
 		setIsConnecting(true);
 		setError(null);
@@ -79,6 +75,5 @@ export const PolkadotProvider = ({
 		</PolkadotContext.Provider>
 	);
 };
-
 
 export const usePolkadot = () => useContext(PolkadotContext);

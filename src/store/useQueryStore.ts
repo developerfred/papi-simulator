@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { create } from "zustand";
 import { useChainStore } from "./useChainStore";
 import { devtools, persist } from "zustand/middleware";
@@ -17,9 +18,9 @@ interface CachedQuery<T> extends QueryResult<T> {
 }
 
 interface CacheConfig {
-	ttl: number; // Time to live in milliseconds
-	maxSize: number; // Maximum size of cache
-	timeout: number; // Query timeout in milliseconds
+	ttl: number;
+	maxSize: number;
+	timeout: number;
 }
 
 interface QueryState {
@@ -42,9 +43,9 @@ interface QueryState {
 }
 
 const DEFAULT_CACHE_CONFIG: CacheConfig = {
-	ttl: 30000, // 30 seconds
+	ttl: 30000,
 	maxSize: 100,
-	timeout: 180000, // 3 minutes
+	timeout: 180000,
 };
 
 const activeQueries = new Map<string, Promise<unknown>>();
@@ -67,18 +68,17 @@ const withTimeout = async <T>(
 		return promise;
 	}
 
-	const timeoutPromise = new Promise<T>((_, reject) => {
-		const id = setTimeout(() => {
+	return new Promise<T>((resolve, reject) => {
+		const timeoutId = setTimeout(() => {
 			reject(new Error(errorMessage));
 		}, timeoutMs);
 
-		// Limpamos o timeout quando a promise original for resolvida ou rejeitada
-		promise.finally(() => clearTimeout(id));
+		promise
+			.then(resolve)
+			.catch(reject)
+			.finally(() => clearTimeout(timeoutId));
 	});
-
-	return Promise.race([promise, timeoutPromise]);
 };
-
 
 export const useQueryStore = create<QueryState>()(
 	persist(
@@ -215,16 +215,14 @@ export const useQueryStore = create<QueryState>()(
 				getQueryResult: <T>(key: string): QueryResult<T> => {
 					const query = get().queries[key] as CachedQuery<T> | undefined;
 
-					if (!query) {
-						return {
-							data: null,
-							status: "idle",
-							error: null,
-							timestamp: null,
-						};
-					}
-
-					return query;
+					return query
+						? query
+						: {
+								data: null,
+								status: "idle",
+								error: null,
+								timestamp: null,
+							};
 				},
 
 				invalidateQuery: (key: string) => {
@@ -291,7 +289,7 @@ export function useQuery<T>(
 
 	const { enabled = true, refetchInterval, timeout } = options || {};
 
-	const intervalRef = useRef<NodeJS.Timeout | null>(null);
+	const intervalRef = useRef<number | null>(null);
 	const queryFnRef = useRef(queryFn);
 	const mountedRef = useRef(true);
 
@@ -309,10 +307,7 @@ export function useQuery<T>(
 	const memoizedKey = useMemo(() => key, [key]);
 
 	const safeSetState = useCallback(
-		<S>(
-			setter: React.Dispatch<React.SetStateAction<S>>,
-			value: React.SetStateAction<S>,
-		) => {
+		(setter: React.Dispatch<React.SetStateAction<any>>, value: any) => {
 			if (mountedRef.current) {
 				setter(value);
 			}
@@ -350,11 +345,6 @@ export function useQuery<T>(
 	);
 
 	useEffect(() => {
-		if (intervalRef.current) {
-			clearInterval(intervalRef.current);
-			intervalRef.current = null;
-		}
-
 		if (!enabled || !isConnected) return;
 
 		const runQuery = async () => {
@@ -368,14 +358,14 @@ export function useQuery<T>(
 		runQuery();
 
 		if (refetchInterval && refetchInterval > 0) {
-			intervalRef.current = setInterval(() => {
+			intervalRef.current = window.setInterval(() => {
 				runQuery();
 			}, refetchInterval);
 		}
 
 		return () => {
 			if (intervalRef.current) {
-				clearInterval(intervalRef.current);
+				window.clearInterval(intervalRef.current);
 				intervalRef.current = null;
 			}
 		};
@@ -384,7 +374,6 @@ export function useQuery<T>(
 	const result = getQueryResult<T>(memoizedKey);
 
 	const combinedError = result.error || localError;
-
 	const combinedStatus: QueryStatus = isRefetching ? "loading" : result.status;
 
 	const safeRefetch = useCallback(async () => {
@@ -420,7 +409,6 @@ export function useStorageQuery<T>(
 
 	const memoizedPath = useMemo(() => path, [path]);
 	const paramsString = useMemo(() => JSON.stringify(params), [params]);
-	// Include params in dependency array since we're memoizing based on it
 	const memoizedParams = useMemo(() => params, [params]);
 
 	const queryKey = useMemo(
@@ -441,13 +429,14 @@ export function useStorageQuery<T>(
 			);
 		}
 
-		if (!typedApi.query?.[pallet]?.[storage]) {
+		const api = typedApi as any;
+		if (!api.query?.[pallet]?.[storage]) {
 			throw new Error(`Storage not found: ${pallet}.${storage}`);
 		}
 
 		const executeWithRetry = async (attempt = 0): Promise<T> => {
 			try {
-				return (await typedApi.query[pallet][storage].getValue(
+				return (await api.query[pallet][storage].getValue(
 					...memoizedParams,
 				)) as T;
 			} catch (error) {

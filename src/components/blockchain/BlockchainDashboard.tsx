@@ -117,7 +117,9 @@ function ErrorDisplay({ error }: { error: Error }) {
 	);
 }
 
-function ConnectedDashboardContent({ selectedNetwork }: { selectedNetwork: Network }) {
+function ConnectedDashboardContent({
+	selectedNetwork,
+}: { selectedNetwork: Network }) {
 	return (
 		<div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 			<div className="space-y-6">

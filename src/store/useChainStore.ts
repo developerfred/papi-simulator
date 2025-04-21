@@ -105,11 +105,9 @@ const createChainClient = (network: Network): Observable<ConnectionResult> => {
 		let destroyed = false;
 
 		try {
-			// Create provider with compatibility layer
 			const provider = withPolkadotSdkCompat(getWsProvider(network.endpoint));
 
-			// Create the client and set up cleanup
-			client = createClient(provider) as ChainClient;
+			client = createClient(provider) as unknown as ChainClient;
 
 			if (!client) {
 				throw new Error("Failed to create client");
@@ -168,8 +166,11 @@ const createChainClient = (network: Network): Observable<ConnectionResult> => {
 				)
 				.subscribe({
 					next: (value) => {
-						if (!destroyed) {
-							subscriber.next(value);
+						if (!destroyed && value.client) {
+							subscriber.next({
+								client: value.client,
+								typedApi: value.typedApi,
+							});
 							subscriber.complete();
 						}
 					},
@@ -285,7 +286,9 @@ export const useChainStore = create<ChainState>((set, get) => {
 			// Create an observable that tracks the connection
 			return new Observable<void>((subscriber) => {
 				// Subscribe to the shared connection observable
-				const subscription = (get().connection$ || of(null)).subscribe({
+				const subscription = (
+					get().connection$ || of<ConnectionResult | null>(null)
+				).subscribe({
 					next: (result) => {
 						if (result) {
 							set({

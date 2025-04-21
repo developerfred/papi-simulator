@@ -15,7 +15,6 @@ interface LoadingIndicatorProps {
 	showProgress?: boolean;
 }
 
-
 export default function LoadingIndicator({
 	message = "Loading...",
 	showConnectionStatus = false,
@@ -30,13 +29,11 @@ export default function LoadingIndicator({
 	const [timeoutReached, setTimeoutReached] = useState(false);
 	const [elapsedTime, setElapsedTime] = useState(0);
 
-
 	const sizes = {
 		sm: { container: "h-4 w-4", text: "text-xs" },
 		md: { container: "h-8 w-8", text: "text-sm" },
 		lg: { container: "h-12 w-12", text: "text-base" },
 	};
-
 
 	useEffect(() => {
 		if (!timeout || timeout <= 0) return;
@@ -56,7 +53,6 @@ export default function LoadingIndicator({
 		return () => clearInterval(interval);
 	}, [timeout, timeoutReached, onTimeout]);
 
-
 	const getStatusMessage = () => {
 		if (!showConnectionStatus) return message;
 
@@ -73,7 +69,6 @@ export default function LoadingIndicator({
 				return message;
 		}
 	};
-
 
 	const getStatusColor = () => {
 		if (!showConnectionStatus) return "text-blue-600";
@@ -92,9 +87,7 @@ export default function LoadingIndicator({
 		}
 	};
 
-
 	const progress = timeout > 0 ? (elapsedTime / timeout) * 100 : 0;
-
 
 	const renderIndicator = () => {
 		switch (variant) {
@@ -165,12 +158,9 @@ export default function LoadingIndicator({
 		}
 	};
 
-
 	const content = (
 		<div className="flex flex-col items-center justify-center">
-
 			{renderIndicator()}
-
 
 			<AnimatePresence mode="wait">
 				<motion.div
@@ -183,7 +173,6 @@ export default function LoadingIndicator({
 					{getStatusMessage()}
 				</motion.div>
 			</AnimatePresence>
-
 
 			{timeout > 0 && showProgress && (
 				<div className="mt-2 w-full max-w-xs">
@@ -211,7 +200,6 @@ export default function LoadingIndicator({
 				</div>
 			)}
 
-
 			<AnimatePresence>
 				{timeoutReached && onTimeout && (
 					<motion.button
@@ -233,7 +221,6 @@ export default function LoadingIndicator({
 		</div>
 	);
 
-
 	if (fullScreen) {
 		return (
 			<AnimatePresence>
@@ -252,11 +239,9 @@ export default function LoadingIndicator({
 	return content;
 }
 
-
 export function BlockchainLoader() {
 	return <LoadingIndicator showConnectionStatus size="md" variant="dots" />;
 }
-
 
 export function TransactionLoader({
 	hash,
@@ -278,7 +263,6 @@ export function TransactionLoader({
 		/>
 	);
 }
-
 
 export function ComponentLoader() {
 	return (
