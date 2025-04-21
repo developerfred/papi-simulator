@@ -8,6 +8,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "prebuild": "papi",
     "update-chains": "node scripts/update-chains.js"
   },
   "dependencies": {
