@@ -347,7 +347,7 @@ interface LivePreviewProps {
 	width?: string | number;
 	height?: string | number;
 	fallbackMessage?: string;
-  network?: Network;
+	network?: Network;
 }
 
 const LivePreview: React.FC<LivePreviewProps> = ({

@@ -4,7 +4,7 @@ import { useTheme } from "@/lib/theme/ThemeProvider";
 import type React from "react";
 import type { ReactNode } from "react";
 
-type BadgeVariant =
+export type BadgeVariant =
 	| "default"
 	| "primary"
 	| "success"
@@ -12,6 +12,7 @@ type BadgeVariant =
 	| "warning"
 	| "info"
 	| "network";
+
 type BadgeSize = "sm" | "md";
 
 interface BadgeProps {

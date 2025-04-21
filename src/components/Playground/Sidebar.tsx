@@ -8,6 +8,8 @@ import type { Example } from "@/lib/types/example";
 import type { ConsoleOutput } from "@/lib/types/example";
 import type { Network } from "@/lib/types/network";
 import React from "react";
+import Button from "../ui/Button";
+import Link from "next/link";
 
 interface SidebarProps {
 	networks: Network[];
@@ -35,7 +37,7 @@ export default function Sidebar({
 	onRunCode,
 	onClearOutput,
 }: SidebarProps) {
-	const { isDarkTheme } = useTheme();
+	const { isDarkTheme, getColor, getNetworkColor } = useTheme();
 
 	const getDifficultyColor = (
 		level: "beginner" | "intermediate" | "advanced",
@@ -86,6 +88,38 @@ export default function Sidebar({
 					>
 						Clear Console
 					</ActionButton>
+
+					<div
+						className="border-t my-2 pt-2"
+						style={{ borderColor: getColor("divider") }}
+					>
+						<Link href="/dashboard">
+							<Button
+								variant="outline"
+								fullWidth
+								size="md"
+								className="flex items-center justify-center"
+							>
+								<svg
+									width="16"
+									height="16"
+									viewBox="0 0 24 24"
+									className="mr-2"
+									fill="none"
+									stroke={getNetworkColor("primary")}
+									strokeWidth="2"
+									strokeLinecap="round"
+									strokeLinejoin="round"
+								>
+									<rect x="3" y="3" width="7" height="7"></rect>
+									<rect x="14" y="3" width="7" height="7"></rect>
+									<rect x="14" y="14" width="7" height="7"></rect>
+									<rect x="3" y="14" width="7" height="7"></rect>
+								</svg>
+								Blockchain Dashboard
+							</Button>
+						</Link>
+					</div>
 
 					<div
 						className="flex items-center justify-center mt-2 text-xs"

@@ -1,0 +1,122 @@
+name: Update Blockchain Descriptors
+
+on:
+  schedule:
+    # Run weekly on Monday at 00:00 UTC
+    - cron: '0 0 * * 1'
+  # Allow manual triggering
+  workflow_dispatch:
+    inputs:
+      specific_chain:
+        description: 'Specific chain to update (leave empty for all)'
+        required: false
+        default: ''
+
+jobs:
+  update-chains:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+          
+      - name: Install dependencies
+        run: bun install
+      
+      - name: Setup metadata directory
+        run: mkdir -p .papi/metadata
+        
+      # Define the chains to update
+      - name: Define chains list
+        id: chains
+        run: |
+          if [ -n "${{ github.event.inputs.specific_chain }}" ]; then
+            # Use the specific chain if provided in manual trigger
+            echo "CHAINS=${{ github.event.inputs.specific_chain }}" >> $GITHUB_ENV
+          else
+            # Otherwise use the full list of chains
+            echo "CHAINS=polkadot kusama westend2 rococo_v2_2 paseo polkadot_asset_hub kusama_asset_hub westend_asset_hub rococo_asset_hub polkadot_bridge_hub kusama_bridge_hub westend_bridge_hub rococo_bridge_hub polkadot_collectives pendulum amplitude hydradx basilisk mangata" >> $GITHUB_ENV
+          fi
+      
+      # Update all chains in the list
+      - name: Update chains
+        run: |
+          # Process each chain
+          for chain in $CHAINS; do
+            # Convert chain name to descriptor key (kebab-case to camelCase, remove non-alphanumeric)
+            descriptor_key=$(echo $chain | sed -r 's/-([a-z])/\U\1/g' | sed 's/[^a-zA-Z0-9]//g')
+            
+            # Special case for relay chains to map them to common names
+            case $chain in
+              polkadot)
+                descriptor_key="dot"
+                ;;
+              kusama)
+                descriptor_key="ksm"
+                ;;
+              westend2)
+                descriptor_key="wnd"
+                ;;
+              rococo_v2_2)
+                descriptor_key="roc"
+                ;;
+              paseo)
+                descriptor_key="paseo"
+                ;;
+            esac
+            
+            echo "Updating chain: $chain with descriptor key: $descriptor_key"
+            
+            # Run papi add command
+            npx papi add $descriptor_key -n $chain --skip-codegen
+            
+            # Check for errors
+            if [ $? -ne 0 ]; then
+              echo "Error updating $chain"
+              # Continue with other chains even if this one fails
+              continue
+            fi
+            
+            echo "Successfully updated $chain"
+          done
+          
+          # Run codegen once at the end to include all chains
+          echo "Running final codegen"
+          npx papi
+          
+          # Install the updated descriptors
+          bun install
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "chore: update blockchain descriptors"
+          title: "Update Blockchain Descriptors"
+          body: |
+            # Blockchain Descriptors Update
+            
+            This automated PR updates the blockchain descriptors for all supported chains in the Polkadot ecosystem.
+            
+            ## Updated Chains
+            
+            ```
+            ${{ env.CHAINS }}
+            ```
+            
+            ## What Changed
+            
+            - Updated chain metadata
+            - Updated descriptors with latest type definitions
+            - Updated dependencies
+            
+            > This is an automated PR created by the `update-chains` GitHub Action.
+          branch: chore/update-blockchain-descriptors
+          base: main
+          labels: automation, dependencies
+          delete-branch: true
