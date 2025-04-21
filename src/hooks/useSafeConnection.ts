@@ -25,8 +25,19 @@ export function useSafeConnection() {
         };
     }, []);
 
-    const safeSetState = useCallback(
-        <T,>(setter: React.Dispatch<React.SetStateAction<T>>, value: T) => {
+    // Use a generic type that works with boolean values
+    const safeBooleanSetState = useCallback(
+        (setter: React.Dispatch<React.SetStateAction<boolean>>, value: boolean) => {
+            if (isMountedRef.current) {
+                setter(value);
+            }
+        },
+        []
+    );
+
+    // Use a separate function for setting null values
+    const safeErrorSetState = useCallback(
+        (setter: React.Dispatch<React.SetStateAction<Error | null>>, value: Error | null) => {
             if (isMountedRef.current) {
                 setter(value);
             }
@@ -45,41 +56,40 @@ export function useSafeConnection() {
 
     const safeConnect = useCallback(async () => {
         try {
-            safeSetState(setIsLocalConnecting, true);
+            safeBooleanSetState(setIsLocalConnecting, true);
             connectionRef.current.isAttemptingConnection = true;
-            safeSetState(setConnectionError, null);
+            safeErrorSetState(setConnectionError, null);
             await safePromise(connect(selectedNetwork));
         } catch (err) {
             let errorMessage = 'Erro desconhecido';
             if (err instanceof Error) {
                 errorMessage = err.message;
             } else if (typeof err === 'object' && err !== null) {
-                if (err.message) {
-                    errorMessage = err.message;
-                } else if (err.error && err.error.message) {
-                    errorMessage = err.error.message;
+                if ('message' in err) {
+                    errorMessage = String(err.message);
+                } else if ('error' in err && err.error && typeof err.error === 'object' && 'message' in err.error) {
+                    errorMessage = String(err.error.message);
                 } else {
                     errorMessage = JSON.stringify(err);
                 }
             } else {
                 errorMessage = String(err);
             }
-            safeSetState(setConnectionError, new Error(errorMessage));
+            safeErrorSetState(setConnectionError, new Error(errorMessage));
         } finally {
             connectionRef.current.isAttemptingConnection = false;
-            safeSetState(setIsLocalConnecting, false);
+            safeBooleanSetState(setIsLocalConnecting, false);
         }
-    }, [connect, selectedNetwork, isConnecting, isLocalConnecting, safeSetState]);
+    }, [connect, selectedNetwork, safeBooleanSetState, safeErrorSetState]);
 
     const safeDisconnect = useCallback(() => {
         try {
             disconnect();
         } catch (err) {
             const e = err instanceof Error ? err : new Error(String(err));
-            safeSetState(setConnectionError, e);
+            safeErrorSetState(setConnectionError, e);
         }
-    }, [disconnect, safeSetState]);
-
+    }, [disconnect, safeErrorSetState]);
 
     return {
         isConnecting: isConnecting || isLocalConnecting,

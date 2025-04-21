@@ -1,20 +1,51 @@
-import { useEffect, useRef, useState } from "react";
+import { useState, useEffect, useRef, useCallback, Dispatch, SetStateAction } from "react";
 
-export function useAutoConnectOnMount(connectFn: () => void, isConnecting: boolean) {
-	const [autoConnectAttempted, setAutoConnectAttempted] = useState(false);
-	const isMountedRef = useRef(true);
+export function useAutoConnectOnMount(
+    connectFn: () => Promise<void> | void,
+    isConnecting: boolean
+) {
+    const [autoConnectAttempted, setAutoConnectAttempted] = useState<boolean>(false);
+    const isMountedRef = useRef(true);
 
-	useEffect(() => {
-		isMountedRef.current = true;
-		return () => {
-			isMountedRef.current = false;
-		};
-	}, []);
+    const safeSetState = useCallback(
+        <T,>(
+            setter: Dispatch<SetStateAction<T>>,
+            value: T
+        ) => {
+            if (isMountedRef.current) {
+                setter(value);
+            }
+        },
+        []
+    );
 
-	useEffect(() => {
-		if (isConnecting || autoConnectAttempted) return;
+    useEffect(() => {
+        isMountedRef.current = true;
+        return () => {
+            isMountedRef.current = false;
+        };
+    }, []);
 
-		connectFn();
-		setAutoConnectAttempted(true);
-	}, [connectFn, isConnecting, autoConnectAttempted]);
+    useEffect(() => {
+        if (isConnecting || autoConnectAttempted) return;
+
+        const attemptConnect = async () => {
+            try {
+                await connectFn();
+                // Usar um cast explícito para SetStateAction<boolean>
+                safeSetState<boolean>(
+                    setAutoConnectAttempted as Dispatch<SetStateAction<boolean>>,
+                    true
+                );
+            } catch (error) {
+                console.error('Auto connect failed:', error);
+                safeSetState<boolean>(
+                    setAutoConnectAttempted as Dispatch<SetStateAction<boolean>>,
+                    false
+                );
+            }
+        };
+
+        attemptConnect();
+    }, [connectFn, isConnecting, autoConnectAttempted, safeSetState]);
 }

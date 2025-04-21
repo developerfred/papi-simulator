@@ -1,3 +1,6 @@
+import { dot, wnd, paseo, roc } from '@polkadot-api/descriptors';
+import type { ChainDefinition } from 'polkadot-api';
+
 /**
  * Supported networks for Polkadot API
  */
@@ -5,18 +8,16 @@ export type SupportedNetwork =
 	| "westend"
 	| "polkadot"
 	| "paseo"
-	| "rococo"
-	| "kusama";
+	| "rococo";
 
 /**
  * Network descriptor mapping
  */
-export const NETWORK_DESCRIPTORS: Record<SupportedNetwork, string> = {
-	westend: "Wnd",
-	polkadot: "Dot",
-	paseo: "Paseo",
-	rococo: "Roc",
-	kusama: "Ksm",
+export const NETWORK_DESCRIPTORS: Record<SupportedNetwork, ChainDefinition> = {
+	westend: wnd,
+	polkadot: dot,
+	paseo: paseo,
+	rococo: roc
 };
 
 /**

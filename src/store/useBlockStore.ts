@@ -321,7 +321,7 @@ export function useFinalizedBlocks(limit?: number) {
 	return {
 		blocks,
 		lastBlock: finalizedSubscription.lastBlock,
-		isActive: finalizedSubscription.active,
+		isActive: finalizedSubscription.active ?? false,
 		error: finalizedSubscription.error,
 	};
 }
@@ -352,7 +352,7 @@ export function useBestBlocks(limit?: number) {
 	return {
 		blocks,
 		lastBlock: bestSubscription.lastBlock,
-		isActive: bestSubscription.active,
+		isActive: bestSubscription.active ?? false,
 		error: bestSubscription.error,
 	};
 }

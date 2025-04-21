@@ -1,7 +1,4 @@
 export {
-	useChainState,
-	useAccountBalance,
-	useBlockNumber,
 	useChainMetadata,
 } from "./useChainState";
 
@@ -15,5 +12,10 @@ export {
 	useBlockWatcher,
 	useRuntimeVersion,
 } from "./useChainSubscriptions";
+
+export { useBlockNumber } from './useBlockNumber'
+export {
+	useAccountBalance
+} from "./useAccountBalance";
 
 export { useChain } from "@/context/ChainProvider";
