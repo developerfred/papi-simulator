@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any, react-hooks/exhaustive-deps */
-// @ts-expect-error
-// come back here when do integratin polkadot api
+// @ts-expect-error: integration polkadot-api in future
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useChain } from "@/context/ChainProvider"; 
 import type { PolkadotClient, ChainDefinition } from "polkadot-api";

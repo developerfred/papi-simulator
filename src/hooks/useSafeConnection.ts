@@ -14,7 +14,6 @@ export function useSafeConnection() {
     const [connectionError, setConnectionError] = useState<Error | null>(null);
     const [isLocalConnecting, setIsLocalConnecting] = useState(false);
 
-    const hasAttemptedAutoConnect = useRef(false);
     const isMountedRef = useRef(true);
 
     const connectionRef = useRef({ isAttemptingConnection: false });

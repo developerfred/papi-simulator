@@ -70,7 +70,7 @@ export function useChainState<T>(
             setError(processedError);
             setStatus('error');
         }
-    }, [client, path, params, isConnected, selectedNetwork]);
+    }, [connectionState.state, path, params, isConnected, selectedNetwork]);
 
     useEffect(() => {
         if (enabled && isConnected) {
