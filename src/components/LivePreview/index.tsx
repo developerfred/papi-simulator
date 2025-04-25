@@ -15,6 +15,10 @@ import React, {
 import { ErrorBoundary } from "react-error-boundary";
 import * as ts from "typescript";
 import type { Network } from "@/lib/types/network";
+import { MultiAddress, paseo, roc, wnd } from "@polkadot-api/descriptors";
+import { getWsProvider } from "polkadot-api/ws-provider/web";
+import { withPolkadotSdkCompat } from "polkadot-api/polkadot-sdk-compat";
+import { createClient } from "polkadot-api";
 
 const ALLOWED_MODULES: Record<string, unknown> = {
 	react: React,
@@ -23,6 +27,10 @@ const ALLOWED_MODULES: Record<string, unknown> = {
 		jsx: React.createElement,
 		jsxs: React.createElement,
 	},
+	"polkadot-api/ws-provider/web": { getWsProvider },
+	"polkadot-api/polkadot-sdk-compat": { withPolkadotSdkCompat },
+	"@polkadot-api/descriptors": { paseo, roc, wnd, MultiAddress },	
+	"polkadot-api": { createClient },
 };
 
 const COMPILER_OPTIONS: ts.CompilerOptions = {
@@ -284,7 +292,7 @@ const evaluateComponent = (code: string) => {
 		const component = normalizeComponent(result as Record<string, unknown>);
 		if (!component) {
 			throw new Error(
-				`No valid component found. Exports analysis:\n${analyzeExports(result as Record<string, unknown>)}`,
+				`No valid React component found. Please ensure your code exports a valid React component.\n\nExport analysis:\n${analyzeExports(result as Record<string, unknown>)}\n\nA valid React component can be:\n- A function component: const MyComponent = () => <div>Hello</div>\n- A class component: class MyComponent extends React.Component { ... }\n- Exported as default: export default MyComponent\n- A memo, forwardRef, or lazy component`,
 			);
 		}
 		return { component, originalCode };
@@ -301,41 +309,84 @@ const ErrorFallback: React.FC<{ error: Error; originalCode?: string }> = ({
 	<div
 		style={{
 			padding: "20px",
-			backgroundColor: "rgba(255, 0, 0, 0.1)",
-			borderRadius: "8px",
+			backgroundColor: "rgba(255, 59, 48, 0.05)",
+			borderRadius: "12px",
+			border: "1px solid rgba(255, 59, 48, 0.2)",
 			color: "#333",
 		}}
 	>
-		<h3 style={{ color: "#d32f2f", marginTop: 0 }}>Erro no Componente</h3>
+		<h3 style={{ 
+			color: "#ff3b30", 
+			marginTop: 0,
+			marginBottom: "12px",
+			fontSize: "18px",
+			fontWeight: 600,
+		}}>
+			Component Error
+		</h3>
 		<pre
 			style={{
-				backgroundColor: "#f5f5f5",
-				padding: "15px",
-				borderRadius: "6px",
+				backgroundColor: "#f8f9fa",
+				padding: "16px",
+				borderRadius: "8px",
 				overflowX: "auto",
+				margin: "0 0 16px",
+				fontSize: "14px",
+				lineHeight: "1.5",
+				fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
 			}}
 		>
 			<code>{error.message}</code>
 		</pre>
 		{originalCode && (
-			<details>
-				<summary>Código Original</summary>
+			<details style={{ marginTop: "16px" }}>
+				<summary style={{ 
+					cursor: "pointer",
+					color: "#007aff",
+					fontWeight: 500,
+					padding: "8px 0",
+				}}>
+					View Original Code
+				</summary>
 				<pre
 					style={{
-						backgroundColor: "#f5f5f5",
-						padding: "15px",
-						borderRadius: "6px",
+						backgroundColor: "#f8f9fa",
+						padding: "16px",
+						borderRadius: "8px",
 						maxHeight: "300px",
 						overflow: "auto",
+						marginTop: "8px",
+						fontSize: "14px",
+						lineHeight: "1.5",
+						fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
 					}}
 				>
 					<code>{originalCode}</code>
 				</pre>
 			</details>
 		)}
-		<details style={{ marginTop: "15px" }}>
-			<summary>Pilha de Erro Completa</summary>
-			<pre style={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
+		<details style={{ marginTop: "16px" }}>
+			<summary style={{ 
+				cursor: "pointer",
+				color: "#007aff",
+				fontWeight: 500,
+				padding: "8px 0",
+			}}>
+				View Stack Trace
+			</summary>
+			<pre 
+				style={{ 
+					whiteSpace: "pre-wrap", 
+					wordBreak: "break-word",
+					backgroundColor: "#f8f9fa",
+					padding: "16px",
+					borderRadius: "8px",
+					marginTop: "8px",
+					fontSize: "14px",
+					lineHeight: "1.5",
+					fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+				}}
+			>
 				{error.stack}
 			</pre>
 		</details>
@@ -354,7 +405,7 @@ const LivePreview: React.FC<LivePreviewProps> = ({
 	code,
 	width = "100%",
 	height = "auto",
-	fallbackMessage = "Carregando Componente...",
+	fallbackMessage = "Loading component...",
 }) => {
 	const [componentData, setComponentData] = useState<{
 		Component: ComponentType;
@@ -388,12 +439,14 @@ const LivePreview: React.FC<LivePreviewProps> = ({
 	const containerStyle: React.CSSProperties = {
 		width,
 		height,
-		border: "1px solid #ddd",
-		borderRadius: "8px",
+		border: "1px solid #e0e0e0",
+		borderRadius: "12px",
 		padding: "20px",
-		backgroundColor: "rgba(255, 255, 255, 0.7)",
+		backgroundColor: "rgba(255, 255, 255, 0.8)",
+		backdropFilter: "blur(10px)",
 		overflow: "auto",
 		position: "relative",
+		boxShadow: "0 2px 8px rgba(0, 0, 0, 0.05)",
 	};
 
 	return (
@@ -408,14 +461,30 @@ const LivePreview: React.FC<LivePreviewProps> = ({
 				)}
 			>
 				{loading ? (
-					<div>{fallbackMessage}</div>
+					<div style={{ 
+						textAlign: "center", 
+						color: "#666",
+						padding: "20px",
+						fontFamily: "system-ui, -apple-system, sans-serif",
+					}}>
+						{fallbackMessage}
+					</div>
 				) : error ? (
 					<ErrorFallback
 						error={error}
 						originalCode={componentData?.originalCode}
 					/>
 				) : componentData?.Component ? (
-					<Suspense fallback={<div>{fallbackMessage}</div>}>
+					<Suspense fallback={
+						<div style={{ 
+							textAlign: "center", 
+							color: "#666",
+							padding: "20px",
+							fontFamily: "system-ui, -apple-system, sans-serif",
+						}}>
+							{fallbackMessage}
+						</div>
+					}>
 						{createElement(componentData.Component)}
 					</Suspense>
 				) : null}
