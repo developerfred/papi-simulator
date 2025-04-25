@@ -10,6 +10,7 @@ import type { ConsoleOutput } from "@/lib/types/example";
 import type { Network } from "@/lib/types/network";
 import { CodeEditor, type SupportedNetwork } from "@/lib/editor";
 import LivePreviewContainer from "@/components/LivePreview";
+import Button from "@/components/ui/Button";
 
 interface MainProps {
 	code: string;
@@ -32,7 +33,7 @@ export default function Main({
 	clearOutput,
 	isMounted,
 }: MainProps) {
-	const { isDarkTheme } = useTheme();
+	const { isDarkTheme, getColor } = useTheme();
 	const [isLivePreviewMode, setIsLivePreviewMode] = useState(false);
 	const [editorHeight, setEditorHeight] = useState("auto");
 	const editorRef = useRef<HTMLDivElement>(null);
@@ -45,15 +46,12 @@ export default function Main({
 		const adjustHeight = () => {
 			if (editorRef.current) {
 				const actualHeight = editorRef.current.scrollHeight;
-
 				const height = Math.min(Math.max(actualHeight, 200), 600);
-
 				setEditorHeight(`${height}px`);
 			}
 		};
 
 		const timeoutId = setTimeout(adjustHeight, 50);
-
 		window.addEventListener("resize", adjustHeight);
 
 		return () => {
@@ -70,16 +68,19 @@ export default function Main({
 				className="flex-1"
 				header={
 					<div className="flex justify-between items-center">
-						<div className="font-medium flex items-center">
+						<div className="font-medium flex items-center gap-3">
 							<span>Code Editor</span>
-							<div
-								className="ml-2 cursor-pointer"
+							<Button
+								variant={isLivePreviewMode ? "primary" : "outline"}
+								size="sm"
 								onClick={handleToggleLivePreview}
+								networkColored={isLivePreviewMode}
 							>
-								<Badge variant="default">
-									{isLivePreviewMode ? "Live Preview" : "TypeScript"}
-								</Badge>
-							</div>
+								{isLivePreviewMode ? "Live Preview ON" : "Live Preview OFF"}
+							</Button>
+							{isLivePreviewMode && selectedExample.categories.includes("components") && (
+								<Badge variant="success">Component rendering enabled</Badge>
+							)}
 						</div>
 						<div
 							className="text-xs px-2 py-1 rounded flex items-center"
@@ -122,8 +123,11 @@ export default function Main({
 
 					{isLivePreviewMode && (
 						<div
-							className="w-1/2 pl-2 border-l "
-							style={{ transition: "width 0.3s ease" }}
+							className="w-1/2 pl-2 border-l"
+							style={{
+								transition: "width 0.3s ease",
+								borderColor: getColor("border")
+							}}
 						>
 							<LivePreviewContainer code={code} network={selectedNetwork} />
 						</div>
