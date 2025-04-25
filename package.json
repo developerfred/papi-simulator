@@ -5,11 +5,13 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "next build",
+    "build": "node scripts/update-version.js && next build",
     "start": "next start",
     "lint": "next lint",
     "prebuild": "papi",
-    "update-chains": "node scripts/update-chains.js"
+    "update-chains": "node scripts/update-chains.js",
+    "update-version": "node scripts/update-version.js",
+    "postversion": "node scripts/update-version.js"
   },
   "dependencies": {
     "@babel/standalone": "^7.27.0",

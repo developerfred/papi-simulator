@@ -5,6 +5,7 @@ import React, { type ReactNode, useState, useEffect } from "react";
 import Button from "../ui/Button";
 import ThemeToggle from "../ui/ThemeToggle";
 import Link from "next/link";
+import { useVersion } from "@/hooks/useVersion";
 
 interface DashboardLayoutProps {
 	children: ReactNode;
@@ -20,10 +21,11 @@ export default function DashboardLayout({
 	rightContent,
 }: DashboardLayoutProps) {
 	const { getColor, getNetworkColor } = useTheme();
+	const { version, gitHash, buildTime } = useVersion();
 	const [scrolled, setScrolled] = useState(false);
 	const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-	// Track scroll position for header effects
+	
 	useEffect(() => {
 		const handleScroll = () => {
 			setScrolled(window.scrollY > 10);
@@ -32,11 +34,10 @@ export default function DashboardLayout({
 		return () => window.removeEventListener("scroll", handleScroll);
 	}, []);
 
-	const headerClasses = `sticky top-0 z-10 border-b p-4 transition-all duration-200 ${
-		scrolled ? "shadow-sm backdrop-blur-md bg-opacity-90" : ""
-	}`;
+	const headerClasses = `sticky top-0 z-10 border-b p-4 transition-all duration-200 ${scrolled ? "shadow-sm backdrop-blur-md bg-opacity-90" : ""
+		}`;
 
-	// SVG components extracted for better readability
+	
 	const LogoIcon = () => (
 		<svg
 			width="28"
@@ -122,6 +123,21 @@ export default function DashboardLayout({
 			<line x1="6" y1="6" x2="18" y2="18"></line>
 		</svg>
 	);
+
+	const formatBuildTime = (timeString: string) => {
+		try {
+			const date = new Date(timeString);
+			return date.toLocaleDateString('en-US', {
+				year: 'numeric',
+				month: 'short',
+				day: 'numeric',
+				hour: '2-digit',
+				minute: '2-digit',
+			});
+		} catch {
+			return timeString;
+		}
+	};
 
 	return (
 		<div className="flex flex-col min-h-screen bg-[var(--background)]">
@@ -250,14 +266,28 @@ export default function DashboardLayout({
 									Polkadot API Playground
 								</span>
 								<span
-									className="px-1.5 py-0.5 text-xs rounded-full"
+									className="px-1.5 py-0.5 text-xs rounded-full mr-2"
 									style={{
 										backgroundColor: getNetworkColor("primary"),
 										color: "#FFFFFF",
 									}}
 								>
-									v1.0.0
+									v{version}
 								</span>
+								<a
+									href={`https://github.com/developerfred/papi-simulator/commit/${gitHash}`}
+									target="_blank"
+									rel="noopener noreferrer"
+									className="px-1.5 py-0.5 text-xs rounded font-mono hover:underline"
+									style={{
+										backgroundColor: getColor("background"),
+										color: getColor("textSecondary"),
+										border: `1px solid ${getColor("border")}`,
+									}}
+									title={`Built at ${formatBuildTime(buildTime)}`}
+								>
+									#{gitHash}
+								</a>
 							</div>
 							<span className="hidden md:inline mx-2">•</span>
 							<span className="text-xs">
