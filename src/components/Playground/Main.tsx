@@ -11,7 +11,7 @@ import type { Network } from "@/lib/types/network";
 import { CodeEditor, type SupportedNetwork } from "@/lib/editor";
 import LivePreviewContainer from "@/components/LivePreview";
 import Button from "@/components/ui/Button";
-import ConsoleOutputToggle from "@/components/Playground/ConsoleOutputToggle"; 
+import ConsoleOutputToggle from "@/components/Playground/ConsoleOutputToggle";
 
 interface MainProps {
 	code: string;
@@ -41,7 +41,7 @@ export default function Main({
 	const editorRef = useRef<HTMLDivElement>(null);
 
 	const handleToggleLivePreview = () => {
-		setIsLivePreviewMode((prev) => !prev);		
+		setIsLivePreviewMode((prev) => !prev);
 		setIsCodeOutputVisible(true);
 	};
 
@@ -129,6 +129,8 @@ export default function Main({
 										onChange={updateCode}
 										disabled={isRunning}
 										network={selectedNetwork.id as SupportedNetwork}
+										language="typescript"
+										string=""
 									/>
 								</div>
 							)}
