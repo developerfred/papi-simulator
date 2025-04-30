@@ -29,7 +29,7 @@ const ALLOWED_MODULES: Record<string, unknown> = {
 	},
 	"polkadot-api/ws-provider/web": { getWsProvider },
 	"polkadot-api/polkadot-sdk-compat": { withPolkadotSdkCompat },
-	"@polkadot-api/descriptors": { paseo, roc, wnd, MultiAddress },
+	"@polkadot-api/descriptors": { paseo, roc, wnd, MultiAddress },	
 	"polkadot-api": { createClient },
 };
 
@@ -385,8 +385,8 @@ const ErrorFallback: React.FC<{ error: Error; originalCode?: string }> = ({
 			color: "#333",
 		}}
 	>
-		<h3 style={{
-			color: "#ff3b30",
+		<h3 style={{ 
+			color: "#ff3b30", 
 			marginTop: 0,
 			marginBottom: "12px",
 			fontSize: "18px",
@@ -410,7 +410,7 @@ const ErrorFallback: React.FC<{ error: Error; originalCode?: string }> = ({
 		</pre>
 		{originalCode && (
 			<details style={{ marginTop: "16px" }}>
-				<summary style={{
+				<summary style={{ 
 					cursor: "pointer",
 					color: "#007aff",
 					fontWeight: 500,
@@ -436,7 +436,7 @@ const ErrorFallback: React.FC<{ error: Error; originalCode?: string }> = ({
 			</details>
 		)}
 		<details style={{ marginTop: "16px" }}>
-			<summary style={{
+			<summary style={{ 
 				cursor: "pointer",
 				color: "#007aff",
 				fontWeight: 500,
@@ -444,9 +444,9 @@ const ErrorFallback: React.FC<{ error: Error; originalCode?: string }> = ({
 			}}>
 				View Stack Trace
 			</summary>
-			<pre
-				style={{
-					whiteSpace: "pre-wrap",
+			<pre 
+				style={{ 
+					whiteSpace: "pre-wrap", 
 					wordBreak: "break-word",
 					backgroundColor: "#f8f9fa",
 					padding: "16px",
@@ -550,6 +550,7 @@ const LivePreview: React.FC<LivePreviewProps> = ({
 					/>
 				) : componentData?.Component ? (
 					<Suspense fallback={
+
 						<div style={{
 							textAlign: "center",
 							color: "#666",
