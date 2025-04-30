@@ -6,7 +6,8 @@ export class AccountBalanceCheckerExample extends ExampleFactory {
         super({
             id: "account-balance",
             name: "Account Balance Checker",
-            description: "Query and display an account's balance from a live Polkadot network",
+            description:
+                "Query and display an account's balance from a live Polkadot network",
             level: "beginner",
             categories: ["queries", "balances", "components", "react"],
         });
@@ -410,30 +411,29 @@ if (typeof window === 'undefined' || !window.React) {
         imports += `import { withPolkadotSdkCompat } from "polkadot-api/polkadot-sdk-compat";\n`;
 
         // Network-specific imports
-        if (network.id === 'westend') {
+        if (network.id === "westend") {
             imports += `import { wnd } from "@polkadot-api/descriptors";\n`;
-        } else if (network.id === 'rococo') {
+        } else if (network.id === "rococo") {
             imports += `import { roc } from "@polkadot-api/descriptors";\n`;
-        } else if (network.id === 'paseo') {
+        } else if (network.id === "paseo") {
             imports += `import { paseo } from "@polkadot-api/descriptors";\n`;
-        } else if (network.id === 'polkadot') {
+        } else if (network.id === "polkadot") {
             imports += `import { dot } from "@polkadot-api/descriptors";\n`;
         }
 
         return imports;
     }
 
-    
     getClientSetup(network: Network): string {
-        let networkDescriptor = '';
-        if (network.id === 'westend') {
-            networkDescriptor = 'wnd';
-        } else if (network.id === 'rococo') {
-            networkDescriptor = 'roc';
-        } else if (network.id === 'paseo') {
-            networkDescriptor = 'paseo';
-        } else if (network.id === 'polkadot') {
-            networkDescriptor = 'dot';
+        let networkDescriptor = "";
+        if (network.id === "westend") {
+            networkDescriptor = "wnd";
+        } else if (network.id === "rococo") {
+            networkDescriptor = "roc";
+        } else if (network.id === "paseo") {
+            networkDescriptor = "paseo";
+        } else if (network.id === "polkadot") {
+            networkDescriptor = "dot";
         } else {
             return `// No predefined descriptor for ${network.id}, using unsafe API\nconst provider = getWsProvider("${network.endpoint}");\nconst client = createClient(withPolkadotSdkCompat(provider));\nconst typedApi = client.getUnsafeApi();\n`;
         }
@@ -442,16 +442,20 @@ if (typeof window === 'undefined' || !window.React) {
     }
 
     
-    getTestAccount(name: string): string {
-        const accounts = {
-            codingsh: '5Ei1XfC53EZr7DEhYTk7KRAzneiVppyxz7mr3upQgQw58u7G',
-            alice: '5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY',
-            bob: '5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty',
-            charlie: '5FLSigC9HGRKVhB9FiEo4Y3koPsNmBmLJbpXg2mp1hXcS59Y',
-            dave: '5DAAnrj7VHTznn2AWBemMuyBwZWs6FNFjdyVXUeYum3PTXFy',
-            eve: '5HGjWAeFDfFCWPsjFQdVV2Msvz2XtMktvgocEZcCj68kUMaw',
+    getTestAccount(name: string): string {        
+        type AccountKey = "codingsh" | "alice" | "bob" | "charlie" | "dave" | "eve";
+
+        const accounts: Record<AccountKey, string> = {
+            codingsh: "5Ei1XfC53EZr7DEhYTk7KRAzneiVppyxz7mr3upQgQw58u7G",
+            alice: "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+            bob: "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty",
+            charlie: "5FLSigC9HGRKVhB9FiEo4Y3koPsNmBmLJbpXg2mp1hXcS59Y",
+            dave: "5DAAnrj7VHTznn2AWBemMuyBwZWs6FNFjdyVXUeYum3PTXFy",
+            eve: "5HGjWAeFDfFCWPsjFQdVV2Msvz2XtMktvgocEZcCj68kUMaw",
         };
 
-        return accounts[name.toLowerCase()] || accounts.alice;
+    
+        const lowercaseName = name.toLowerCase() as AccountKey;
+        return (lowercaseName in accounts) ? accounts[lowercaseName] : accounts.alice;
     }
 }

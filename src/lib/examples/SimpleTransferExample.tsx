@@ -321,7 +321,7 @@ if (typeof window === 'undefined' || !window.React) {
 }`;
     }
 
-    // Method to get imports based on the network and if we're using components
+    
     getImports(network: Network, useComponents: boolean = false): string {
         let imports = '';
 
@@ -329,10 +329,10 @@ if (typeof window === 'undefined' || !window.React) {
             imports += `import React from 'react';\n`;
         }
 
-        // Add standard API imports
+        
         imports += `import { MultiAddress } from "@polkadot-api/descriptors";\n`;
 
-        // Network-specific imports
+        
         if (network.id === 'westend') {
             imports += `import { wnd } from "@polkadot-api/descriptors";\n`;
         } else if (network.id === 'rococo') {
@@ -341,7 +341,7 @@ if (typeof window === 'undefined' || !window.React) {
             imports += `import { paseo } from "@polkadot-api/descriptors";\n`;
         }
 
-        // Add client creation imports
+        
         imports += `import { getWsProvider } from "polkadot-api/ws-provider/web";\n`;
         imports += `import { createClient } from "polkadot-api";\n`;
         imports += `import { withPolkadotSdkCompat } from "polkadot-api/polkadot-sdk-compat";\n`;
@@ -349,7 +349,7 @@ if (typeof window === 'undefined' || !window.React) {
         return imports;
     }
 
-    // Method to generate client setup code for the API
+    
     getClientSetup(network: Network): string {
         let networkDescriptor = '';
         if (network.id === 'westend') {
@@ -365,16 +365,17 @@ if (typeof window === 'undefined' || !window.React) {
         return `// Set up client for ${network.name}\nconst provider = getWsProvider("${network.endpoint}");\nconst client = createClient(provider, ${networkDescriptor});\nconst { typedApi } = withPolkadotSdkCompat(client);\n`;
     }
 
-    // Method to get test accounts
-    getTestAccount(name: string): string {
-        const accounts = {
+    
+    getTestAccount(name: string): string {    
+        const accounts: Record<string, string> = {
             alice: '5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY',
             bob: '5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty',
             charlie: '5FLSigC9HGRKVhB9FiEo4Y3koPsNmBmLJbpXg2mp1hXcS59Y',
             dave: '5DAAnrj7VHTznn2AWBemMuyBwZWs6FNFjdyVXUeYum3PTXFy',
             eve: '5HGjWAeFDfFCWPsjFQdVV2Msvz2XtMktvgocEZcCj68kUMaw',
         };
-
-        return accounts[name.toLowerCase()] || accounts.bob;
+        
+        const lowercaseName = name.toLowerCase();
+        return (lowercaseName in accounts) ? accounts[lowercaseName] : accounts.bob;
     }
 }
