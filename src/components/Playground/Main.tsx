@@ -36,7 +36,7 @@ export default function Main({
 }: MainProps) {
 	const { isDarkTheme, getColor } = useTheme();
 	const [isLivePreviewMode, setIsLivePreviewMode] = useState(false);
-	const [editorHeight, setEditorHeight] = useState("auto");
+	const [editorHeight, setEditorHeight] = useState("500px");
 	const [isCodeOutputVisible, setIsCodeOutputVisible] = useState(true);
 	const editorRef = useRef<HTMLDivElement>(null);
 
@@ -53,19 +53,26 @@ export default function Main({
 		const adjustHeight = () => {
 			if (editorRef.current) {
 				const actualHeight = editorRef.current.scrollHeight;
-				const height = Math.min(Math.max(actualHeight, 200), 900);
+				const height = Math.min(Math.max(actualHeight, 400), 900);
 				setEditorHeight(`${height}px`);
 			}
 		};
 
-		const timeoutId = setTimeout(adjustHeight, 50);
-		window.addEventListener("resize", adjustHeight);
+		
+		if (isMounted) {
+			
+			setEditorHeight("500px");
 
-		return () => {
-			clearTimeout(timeoutId);
-			window.removeEventListener("resize", adjustHeight);
-		};
-	}, [code]);
+			
+			const timeoutId = setTimeout(adjustHeight, 100);
+			window.addEventListener("resize", adjustHeight);
+
+			return () => {
+				clearTimeout(timeoutId);
+				window.removeEventListener("resize", adjustHeight);
+			};
+		}
+	}, [isMounted, code]);
 
 	return (
 		<div className="flex flex-col gap-4 h-full">
@@ -118,23 +125,24 @@ export default function Main({
 								transition: "width 0.3s ease",
 							}}
 						>
-							{isMounted && (
-								<div
-									className="flex-grow overflow-auto"
-									style={{
-										maxHeight: editorHeight,
-									}}
-								>
+							<div
+								className="flex-grow overflow-auto"
+								style={{
+									height: editorHeight, 
+									display: "block", 
+									minHeight: "400px", 
+								}}
+							>								
+								{isMounted && (
 									<CodeEditor
 										code={code}
 										onChange={updateCode}
 										disabled={isRunning}
 										network={selectedNetwork.id as SupportedNetwork}
 										language="typescript"
-										className=""
 									/>
-								</div>
-							)}
+								)}
+							</div>
 						</div>
 
 						{isLivePreviewMode && (
