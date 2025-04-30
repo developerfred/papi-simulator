@@ -131,7 +131,7 @@ export default function Main({
 										disabled={isRunning}
 										network={selectedNetwork.id as SupportedNetwork}
 										language="typescript"
-										string=""
+										className=""
 									/>
 								</div>
 							)}

@@ -105,7 +105,7 @@ export interface CodeEditorProps {
 	language?: string;
 	height?: string;
 	network?: SupportedNetwork;
-	className?; string;
+	className?: string;
 }
 
 /**

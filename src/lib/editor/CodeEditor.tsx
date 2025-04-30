@@ -23,7 +23,7 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
 	code,
 	onChange,
 	disabled = false,
-	language = "typescript",	
+	language = "typescript",
 	network = "westend",
 	className = "",
 }) => {
@@ -36,38 +36,40 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
 
 	if (!isMounted) {
 		return (
-			<EditorContainer className={containerClassName}>
-				<EditorLoadingPlaceholder />
+			<EditorContainer height="100%">
+				<div className={containerClassName}>
+					<EditorLoadingPlaceholder />
+				</div>
 			</EditorContainer>
 		);
 	}
 
 	return (
 		<EditorErrorBoundary>
-			<EditorContainer
-				className={containerClassName}
-			>
-				<Editor
-					width="100%"
-					height="100%"
-					defaultLanguage={language}
-					value={code}
-					theme={isDarkTheme ? "vs-dark" : "light"}
-					onChange={(value) => onChange(value || "")}
-					onMount={handleEditorDidMount}
-					loading={<EditorLoadingPlaceholder />}
-					options={{
-						...DEFAULT_EDITOR_OPTIONS,
-						readOnly: disabled,
-						cursorBlinking: "blink",
-						automaticLayout: true,
-						wordWrap: "on",
-						scrollbar: {
-							vertical: "auto",
-							horizontal: "auto",
-						},
-					}}
-				/>
+			<EditorContainer height="100%">
+				<div className={containerClassName}>
+					<Editor
+						width="100%"
+						height="100%"
+						defaultLanguage={language}
+						value={code}
+						theme={isDarkTheme ? "vs-dark" : "light"}
+						onChange={(value) => onChange(value || "")}
+						onMount={handleEditorDidMount}
+						loading={<EditorLoadingPlaceholder />}
+						options={{
+							...DEFAULT_EDITOR_OPTIONS,
+							readOnly: disabled,
+							cursorBlinking: "blink",
+							automaticLayout: true,
+							wordWrap: "on",
+							scrollbar: {
+								vertical: "auto",
+								horizontal: "auto",
+							},
+						}}
+					/>
+				</div>
 			</EditorContainer>
 		</EditorErrorBoundary>
 	);
