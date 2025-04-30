@@ -1,17 +1,13 @@
 import { exampleRegistry } from "./factory";
 import { SimpleTransferExample } from "./SimpleTransferExample";
-import { QueryBalanceExample } from "./QueryBalanceExample";
-import { WatchBlocksExample } from "./WatchBlocksExample";
-import { TestComponentExample } from "./TestComponentExample";
 import { NetworkDashboardExample } from "./NetworkDashboardExample";
+import { AccountBalanceCheckerExample } from "./AccountBalanceCheckerExample";
 import type { Example, ExampleLevel } from "../types/example";
 
 exampleRegistry.registerMany([
-	new SimpleTransferExample(),
-	new QueryBalanceExample(),
-	new WatchBlocksExample(),
-	new TestComponentExample(),
+	new SimpleTransferExample(),			
 	new NetworkDashboardExample(),
+	new AccountBalanceCheckerExample(),
 ]);
 
 exampleRegistry.setDefaultExample("network-dashboard");
