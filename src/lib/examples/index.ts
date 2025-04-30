@@ -5,12 +5,12 @@ import { AccountBalanceCheckerExample } from "./AccountBalanceCheckerExample";
 import type { Example, ExampleLevel } from "../types/example";
 
 exampleRegistry.registerMany([
+	new AccountBalanceCheckerExample(),
 	new SimpleTransferExample(),			
 	new NetworkDashboardExample(),
-	new AccountBalanceCheckerExample(),
 ]);
 
-exampleRegistry.setDefaultExample("network-dashboard");
+exampleRegistry.setDefaultExample("account-balance");
 
 export const EXAMPLES: Example[] = exampleRegistry.getAll();
 export const findExampleById = (id: string): Example | undefined =>
