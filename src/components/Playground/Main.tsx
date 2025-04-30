@@ -53,7 +53,7 @@ export default function Main({
 		const adjustHeight = () => {
 			if (editorRef.current) {
 				const actualHeight = editorRef.current.scrollHeight;
-				const height = Math.min(Math.max(actualHeight, 200), 600);
+				const height = Math.min(Math.max(actualHeight, 200), 900);
 				setEditorHeight(`${height}px`);
 			}
 		};
@@ -85,9 +85,10 @@ export default function Main({
 							>
 								{isLivePreviewMode ? "Live Preview ON" : "Live Preview OFF"}
 							</Button>
-							{isLivePreviewMode && selectedExample.categories.includes("components") && (
-								<Badge variant="success">Component rendering enabled</Badge>
-							)}
+							{isLivePreviewMode &&
+								selectedExample.categories.includes("components") && (
+									<Badge variant="success">Component rendering enabled</Badge>
+								)}
 						</div>
 						<div
 							className="text-xs px-2 py-1 rounded flex items-center"
@@ -141,7 +142,7 @@ export default function Main({
 								className="w-1/2 pl-2 border-l flex flex-col"
 								style={{
 									transition: "width 0.3s ease",
-									borderColor: getColor("border")
+									borderColor: getColor("border"),
 								}}
 							>
 								<div className="flex-grow overflow-auto">
