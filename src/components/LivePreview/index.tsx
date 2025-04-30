@@ -130,11 +130,29 @@ const analyzeExports = (exports: Record<string, unknown>): string => {
 	}
 };
 
-const createModuleEnvironment = () => {
+
+const createModuleEnvironment = (network?: Network) => {
 	const exports: Record<string, unknown> = {};
+
+
+	const global = {
+		network,
+		networkData: {
+			id: network?.id || '',
+			name: network?.name || '',
+			tokenSymbol: network?.tokenSymbol || '',
+			tokenDecimals: network?.tokenDecimals || 0,
+			isTest: network?.isTest || false,
+			endpoint: network?.endpoint || '',
+			explorer: network?.explorer || '',
+			faucet: network?.faucet || '',
+		},
+	};
+
 	return {
 		module: { exports, id: "user-component", loaded: true },
 		exports,
+		global,
 		require: (path: string) => {
 			if (ALLOWED_MODULES[path]) return ALLOWED_MODULES[path];
 			throw new Error(
@@ -197,7 +215,7 @@ const normalizeComponent = (
 		typeof v === "function" &&
 		((v as { prototype?: unknown }).prototype === undefined ||
 			(v as { prototype: { render?: () => void } }).prototype.render ===
-				undefined);
+			undefined);
 
 	const isSpecialReactComponent = (v: unknown): v is { $$typeof: symbol } =>
 		typeof v === "object" && v !== null && "$$typeof" in v;
@@ -251,7 +269,8 @@ const normalizeComponent = (
 	return null;
 };
 
-const evaluateComponent = (code: string) => {
+// Updated to include network parameter
+const evaluateComponent = (code: string, network?: Network) => {
 	try {
 		const { code: transpiled, errors, originalCode } = transpileCode(code);
 		if (errors.length > 0) {
@@ -259,7 +278,8 @@ const evaluateComponent = (code: string) => {
 				`Compilation errors:\n${errors.map((e) => `${e.line ? `Line ${e.line}: ` : ""}${e.message}`).join("\n")}`,
 			);
 		}
-		const { module, exports, require } = createModuleEnvironment();
+
+		const { module, exports, require, global } = createModuleEnvironment(network);
 		const reactHooks = {
 			useState,
 			useEffect,
@@ -271,25 +291,75 @@ const evaluateComponent = (code: string) => {
 			useLayoutEffect,
 			useImperativeHandle,
 		};
+
+		// Inject network data into the global scope
+		const networkCode = network ? `
+		  // Inject network data from props
+		  const __network__ = ${JSON.stringify(network)};
+		  
+		  // Create helper functions for accessing network data
+		  const useNetworkInfo = () => __network__;
+		  const getChainToken = () => ({
+		    name: __network__.tokenSymbol,
+		    decimals: __network__.tokenDecimals,
+		    existentialDeposit: BigInt(1),
+		    metadataTypes: {}
+		  });
+		  
+		  // Create typedApi mock
+		  const typedApi = {
+		    tx: {
+		      Balances: {
+		        transfer_keep_alive: async (params) => {
+		          return {
+		            getEncodedData: async () => ({
+		              asHex: () => "0x" + Array(64).fill('0').join('')
+		            })
+		          };
+		        }
+		      }
+		    }
+		  };
+		` : '';
+
 		const evaluationCode = `
       try {
         const { ${Object.keys(reactHooks).join(", ")} } = __hooks__;
+        
+        // Set up global context
+        const window = {
+          ...global,
+          // Add mock fs functionality for file reading in components
+          fs: {
+            readFile: async (path, options) => {
+              console.log("Mock file reading:", path);
+              return "mocked file content";
+            }
+          }
+        };
+        
+        ${networkCode}
+        
         ${transpiled}
         return module.exports;
       } catch(error) {
         throw new Error('Runtime error: ' + error.message + '\\n' + error.stack);
       }
     `;
+
 		const evaluator = new Function(
 			"React",
 			"exports",
 			"module",
 			"require",
 			"__hooks__",
+			"global",
 			evaluationCode,
 		);
-		const result = evaluator(React, exports, module, require, reactHooks);
+
+		const result = evaluator(React, exports, module, require, reactHooks, global);
 		const component = normalizeComponent(result as Record<string, unknown>);
+
 		if (!component) {
 			throw new Error(
 				`No valid React component found. Please ensure your code exports a valid React component.\n\nExport analysis:\n${analyzeExports(result as Record<string, unknown>)}\n\nA valid React component can be:\n- A function component: const MyComponent = () => <div>Hello</div>\n- A class component: class MyComponent extends React.Component { ... }\n- Exported as default: export default MyComponent\n- A memo, forwardRef, or lazy component`,
@@ -406,6 +476,7 @@ const LivePreview: React.FC<LivePreviewProps> = ({
 	width = "100%",
 	height = "auto",
 	fallbackMessage = "Loading component...",
+	network,  
 }) => {
 	const [componentData, setComponentData] = useState<{
 		Component: ComponentType;
@@ -414,12 +485,15 @@ const LivePreview: React.FC<LivePreviewProps> = ({
 	const [error, setError] = useState<Error | null>(null);
 	const [loading, setLoading] = useState(true);
 
+	const networkData = useMemo(() => network, [network]);
+
 	useEffect(() => {
 		let isMounted = true;
 		setLoading(true);
 		const timer = setTimeout(async () => {
 			try {
-				const { component, originalCode } = evaluateComponent(code);
+				// Pass network data to evaluateComponent
+				const { component, originalCode } = evaluateComponent(code, networkData);
 				if (isMounted) {
 					setComponentData({ Component: component, originalCode });
 					setError(null);
@@ -434,7 +508,7 @@ const LivePreview: React.FC<LivePreviewProps> = ({
 			isMounted = false;
 			clearTimeout(timer);
 		};
-	}, [code]);
+	}, [code, networkData]);
 
 	const containerStyle: React.CSSProperties = {
 		width,
@@ -452,7 +526,7 @@ const LivePreview: React.FC<LivePreviewProps> = ({
 	return (
 		<div style={containerStyle}>
 			<ErrorBoundary
-				resetKeys={[code]}
+				resetKeys={[code, network?.id]}
 				FallbackComponent={({ error }) => (
 					<ErrorFallback
 						error={error}
@@ -461,8 +535,8 @@ const LivePreview: React.FC<LivePreviewProps> = ({
 				)}
 			>
 				{loading ? (
-					<div style={{ 
-						textAlign: "center", 
+					<div style={{
+						textAlign: "center",
 						color: "#666",
 						padding: "20px",
 						fontFamily: "system-ui, -apple-system, sans-serif",
@@ -476,8 +550,9 @@ const LivePreview: React.FC<LivePreviewProps> = ({
 					/>
 				) : componentData?.Component ? (
 					<Suspense fallback={
-						<div style={{ 
-							textAlign: "center", 
+
+						<div style={{
+							textAlign: "center",
 							color: "#666",
 							padding: "20px",
 							fontFamily: "system-ui, -apple-system, sans-serif",

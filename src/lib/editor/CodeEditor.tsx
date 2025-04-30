@@ -24,40 +24,52 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
 	onChange,
 	disabled = false,
 	language = "typescript",
-	height = "400px",
 	network = "westend",
+	className = "",
 }) => {
 	const { isDarkTheme } = useTheme();
 	const isMounted = useMountedState();
+	const containerClassName = `w-full h-full ${className}`;
 
 	useMonacoConfiguration(network as SupportedNetwork);
 	const { handleEditorDidMount } = useEditorInstance(code, onChange, disabled);
 
 	if (!isMounted) {
 		return (
-			<EditorContainer height={height}>
-				<EditorLoadingPlaceholder />
+			<EditorContainer height="100%">
+				<div className={containerClassName}>
+					<EditorLoadingPlaceholder />
+				</div>
 			</EditorContainer>
 		);
 	}
 
 	return (
 		<EditorErrorBoundary>
-			<EditorContainer height={height}>
-				<Editor
-					height="100%"
-					defaultLanguage={language}
-					value={code}
-					theme={isDarkTheme ? "vs-dark" : "light"}
-					onChange={(value) => onChange(value || "")}
-					onMount={handleEditorDidMount}
-					loading={<EditorLoadingPlaceholder />}
-					options={{
-						...DEFAULT_EDITOR_OPTIONS,
-						readOnly: disabled,
-						cursorBlinking: "blink",
-					}}
-				/>
+			<EditorContainer height="100%">
+				<div className={containerClassName}>
+					<Editor
+						width="100%"
+						height="100%"
+						defaultLanguage={language}
+						value={code}
+						theme={isDarkTheme ? "vs-dark" : "light"}
+						onChange={(value) => onChange(value || "")}
+						onMount={handleEditorDidMount}
+						loading={<EditorLoadingPlaceholder />}
+						options={{
+							...DEFAULT_EDITOR_OPTIONS,
+							readOnly: disabled,
+							cursorBlinking: "blink",
+							automaticLayout: true,
+							wordWrap: "on",
+							scrollbar: {
+								vertical: "auto",
+								horizontal: "auto",
+							},
+						}}
+					/>
+				</div>
 			</EditorContainer>
 		</EditorErrorBoundary>
 	);
