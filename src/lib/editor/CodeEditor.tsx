@@ -23,19 +23,20 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
 	code,
 	onChange,
 	disabled = false,
-	language = "typescript",
-	height = "400px",
+	language = "typescript",	
 	network = "westend",
+	className = "",
 }) => {
 	const { isDarkTheme } = useTheme();
 	const isMounted = useMountedState();
+	const containerClassName = `w-full h-full ${className}`;
 
 	useMonacoConfiguration(network as SupportedNetwork);
 	const { handleEditorDidMount } = useEditorInstance(code, onChange, disabled);
 
 	if (!isMounted) {
 		return (
-			<EditorContainer height={height}>
+			<EditorContainer className={containerClassName}>
 				<EditorLoadingPlaceholder />
 			</EditorContainer>
 		);
@@ -43,8 +44,11 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
 
 	return (
 		<EditorErrorBoundary>
-			<EditorContainer height={height}>
+			<EditorContainer
+				className={containerClassName}
+			>
 				<Editor
+					width="100%"
 					height="100%"
 					defaultLanguage={language}
 					value={code}
@@ -56,6 +60,12 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
 						...DEFAULT_EDITOR_OPTIONS,
 						readOnly: disabled,
 						cursorBlinking: "blink",
+						automaticLayout: true,
+						wordWrap: "on",
+						scrollbar: {
+							vertical: "auto",
+							horizontal: "auto",
+						},
 					}}
 				/>
 			</EditorContainer>

@@ -11,6 +11,7 @@ import type { Network } from "@/lib/types/network";
 import { CodeEditor, type SupportedNetwork } from "@/lib/editor";
 import LivePreviewContainer from "@/components/LivePreview";
 import Button from "@/components/ui/Button";
+import ConsoleOutputToggle from "@/components/Playground/ConsoleOutputToggle"; 
 
 interface MainProps {
 	code: string;
@@ -36,10 +37,16 @@ export default function Main({
 	const { isDarkTheme, getColor } = useTheme();
 	const [isLivePreviewMode, setIsLivePreviewMode] = useState(false);
 	const [editorHeight, setEditorHeight] = useState("auto");
+	const [isCodeOutputVisible, setIsCodeOutputVisible] = useState(true);
 	const editorRef = useRef<HTMLDivElement>(null);
 
 	const handleToggleLivePreview = () => {
-		setIsLivePreviewMode((prev) => !prev);
+		setIsLivePreviewMode((prev) => !prev);		
+		setIsCodeOutputVisible(true);
+	};
+
+	const toggleCodeOutputVisibility = () => {
+		setIsCodeOutputVisible((prev) => !prev);
 	};
 
 	useEffect(() => {
@@ -101,41 +108,60 @@ export default function Main({
 					</div>
 				}
 			>
-				<div className="flex">
-					<div
-						ref={editorRef}
-						className={`${isLivePreviewMode ? "w-1/2" : "w-full"} pr-2`}
-						style={{
-							transition: "width 0.3s ease",
-							height: editorHeight,
-							overflowY: "auto",
-						}}
-					>
-						{isMounted && (
-							<CodeEditor
-								code={code}
-								onChange={updateCode}
-								disabled={isRunning}
-								network={selectedNetwork.id as SupportedNetwork}
-							/>
+				<div className="flex flex-col">
+					<div className="flex">
+						<div
+							ref={editorRef}
+							className={`${isLivePreviewMode ? "w-1/2" : "w-full"} pr-2 flex flex-col`}
+							style={{
+								transition: "width 0.3s ease",
+							}}
+						>
+							{isMounted && (
+								<div
+									className="flex-grow overflow-auto"
+									style={{
+										maxHeight: editorHeight,
+									}}
+								>
+									<CodeEditor
+										code={code}
+										onChange={updateCode}
+										disabled={isRunning}
+										network={selectedNetwork.id as SupportedNetwork}
+									/>
+								</div>
+							)}
+						</div>
+
+						{isLivePreviewMode && (
+							<div
+								className="w-1/2 pl-2 border-l flex flex-col"
+								style={{
+									transition: "width 0.3s ease",
+									borderColor: getColor("border")
+								}}
+							>
+								<div className="flex-grow overflow-auto">
+									<LivePreviewContainer code={code} network={selectedNetwork} />
+								</div>
+							</div>
 						)}
 					</div>
 
-					{isLivePreviewMode && (
-						<div
-							className="w-1/2 pl-2 border-l"
-							style={{
-								transition: "width 0.3s ease",
-								borderColor: getColor("border")
-							}}
-						>
-							<LivePreviewContainer code={code} network={selectedNetwork} />
-						</div>
+					{isMounted && isLivePreviewMode && (
+						<>
+							<ConsoleOutputToggle
+								isCodeOutputVisible={isCodeOutputVisible}
+								toggleCodeOutputVisibility={toggleCodeOutputVisibility}
+							/>
+							{isCodeOutputVisible && (
+								<Console outputs={outputs} onClear={clearOutput} />
+							)}
+						</>
 					)}
 				</div>
 			</Card>
-
-			{isMounted && <Console outputs={outputs} onClear={clearOutput} />}
 		</div>
 	);
 }
