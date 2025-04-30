@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, CSSProperties } from "react";
 import Console from "@/components/Console";
 import TutorialPanel from "@/components/TutorialPanel";
 import Badge from "@/components/ui/Badge";
@@ -13,6 +13,14 @@ import LivePreviewContainer from "@/components/LivePreview";
 import Button from "@/components/ui/Button";
 import ConsoleOutputToggle from "@/components/Playground/ConsoleOutputToggle";
 
+
+const EDITOR_CONFIG = {
+	MIN_HEIGHT: 400,
+	MAX_HEIGHT: 900,
+	DEFAULT_HEIGHT: 500,
+	RESIZE_TIMEOUT: 50
+} as const;
+
 interface MainProps {
 	code: string;
 	outputs: ConsoleOutput[];
@@ -23,6 +31,16 @@ interface MainProps {
 	clearOutput: () => void;
 	isMounted: boolean;
 }
+
+
+type TransitionStyles = {
+	transition: string;
+};
+
+type EditorContainerStyles = TransitionStyles & {
+	height: string;
+	minHeight: string;
+};
 
 export default function Main({
 	code,
@@ -35,44 +53,79 @@ export default function Main({
 	isMounted,
 }: MainProps) {
 	const { isDarkTheme, getColor } = useTheme();
-	const [isLivePreviewMode, setIsLivePreviewMode] = useState(false);
-	const [editorHeight, setEditorHeight] = useState("500px");
-	const [isCodeOutputVisible, setIsCodeOutputVisible] = useState(true);
+	const [isLivePreviewMode, setIsLivePreviewMode] = useState<boolean>(false);
+	const [editorHeight, setEditorHeight] = useState<string>(`${EDITOR_CONFIG.DEFAULT_HEIGHT}px`);
+	const [isCodeOutputVisible, setIsCodeOutputVisible] = useState<boolean>(true);
 	const editorRef = useRef<HTMLDivElement>(null);
 
-	const handleToggleLivePreview = () => {
+	
+	const handleToggleLivePreview = (): void => {
 		setIsLivePreviewMode((prev) => !prev);
 		setIsCodeOutputVisible(true);
 	};
 
-	const toggleCodeOutputVisibility = () => {
+	const toggleCodeOutputVisibility = (): void => {
 		setIsCodeOutputVisible((prev) => !prev);
 	};
 
+	
+	const transitionStyle: TransitionStyles = {
+		transition: "width 0.3s ease"
+	};
+
+	
+	const editorContainerStyle: EditorContainerStyles = {
+		...transitionStyle,
+		height: editorHeight,
+		minHeight: `${EDITOR_CONFIG.MIN_HEIGHT}px`
+	};
+
+	
+	const previewContainerStyle: CSSProperties = {
+		...transitionStyle,
+		borderColor: getColor("border")
+	};
+
+	
+	const headerBadgeStyle: CSSProperties = {
+		backgroundColor: isDarkTheme
+			? "rgba(255,255,255,0.05)"
+			: "rgba(0,0,0,0.05)"
+	};
+
 	useEffect(() => {
-		const adjustHeight = () => {
+		const adjustHeight = (): void => {
 			if (editorRef.current) {
 				const actualHeight = editorRef.current.scrollHeight;
-				const height = Math.min(Math.max(actualHeight, 400), 900);
+				const height = Math.min(
+					Math.max(actualHeight, EDITOR_CONFIG.MIN_HEIGHT),
+					EDITOR_CONFIG.MAX_HEIGHT
+				);
 				setEditorHeight(`${height}px`);
 			}
 		};
 
-		
-		if (isMounted) {
-			
-			setEditorHeight("500px");
+		const timeoutId = setTimeout(adjustHeight, EDITOR_CONFIG.RESIZE_TIMEOUT);
+		window.addEventListener("resize", adjustHeight);
 
-			
-			const timeoutId = setTimeout(adjustHeight, 100);
-			window.addEventListener("resize", adjustHeight);
+		return () => {
+			clearTimeout(timeoutId);
+			window.removeEventListener("resize", adjustHeight);
+		};
+	}, [code]);
 
-			return () => {
-				clearTimeout(timeoutId);
-				window.removeEventListener("resize", adjustHeight);
-			};
-		}
-	}, [isMounted, code]);
+	
+	const ConsoleOutputSection = isLivePreviewMode && (
+		<>
+			<ConsoleOutputToggle
+				isCodeOutputVisible={isCodeOutputVisible}
+				toggleCodeOutputVisibility={toggleCodeOutputVisibility}
+			/>
+			{isCodeOutputVisible && (
+				<Console outputs={outputs} onClear={clearOutput} />
+			)}
+		</>
+	);
 
 	return (
 		<div className="flex flex-col gap-4 h-full">
@@ -99,11 +152,7 @@ export default function Main({
 						</div>
 						<div
 							className="text-xs px-2 py-1 rounded flex items-center"
-							style={{
-								backgroundColor: isDarkTheme
-									? "rgba(255,255,255,0.05)"
-									: "rgba(0,0,0,0.05)",
-							}}
+							style={headerBadgeStyle}
 						>
 							<NetworkBadge
 								network={selectedNetwork}
@@ -121,18 +170,14 @@ export default function Main({
 						<div
 							ref={editorRef}
 							className={`${isLivePreviewMode ? "w-1/2" : "w-full"} pr-2 flex flex-col`}
-							style={{
-								transition: "width 0.3s ease",
-							}}
+							style={transitionStyle}
 						>
+							
 							<div
 								className="flex-grow overflow-auto"
-								style={{
-									height: editorHeight, 
-									display: "block", 
-									minHeight: "400px", 
-								}}
-							>								
+								style={editorContainerStyle}
+							>
+							
 								{isMounted && (
 									<CodeEditor
 										code={code}
@@ -140,6 +185,7 @@ export default function Main({
 										disabled={isRunning}
 										network={selectedNetwork.id as SupportedNetwork}
 										language="typescript"
+										className=""
 									/>
 								)}
 							</div>
@@ -148,10 +194,7 @@ export default function Main({
 						{isLivePreviewMode && (
 							<div
 								className="w-1/2 pl-2 border-l flex flex-col"
-								style={{
-									transition: "width 0.3s ease",
-									borderColor: getColor("border"),
-								}}
+								style={previewContainerStyle}
 							>
 								<div className="flex-grow overflow-auto">
 									<LivePreviewContainer code={code} network={selectedNetwork} />
@@ -160,17 +203,7 @@ export default function Main({
 						)}
 					</div>
 
-					{isMounted && isLivePreviewMode && (
-						<>
-							<ConsoleOutputToggle
-								isCodeOutputVisible={isCodeOutputVisible}
-								toggleCodeOutputVisibility={toggleCodeOutputVisibility}
-							/>
-							{isCodeOutputVisible && (
-								<Console outputs={outputs} onClear={clearOutput} />
-							)}
-						</>
-					)}
+					{isMounted && ConsoleOutputSection}
 				</div>
 			</Card>
 		</div>
