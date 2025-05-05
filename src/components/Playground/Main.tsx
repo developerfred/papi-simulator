@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, CSSProperties } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import Console from "@/components/Console";
 import TutorialPanel from "@/components/TutorialPanel";
 import Badge from "@/components/ui/Badge";
@@ -9,17 +9,16 @@ import type { Example } from "@/lib/types/example";
 import type { ConsoleOutput } from "@/lib/types/example";
 import type { Network } from "@/lib/types/network";
 import { CodeEditor, type SupportedNetwork } from "@/lib/editor";
-import LivePreviewContainer from "@/components/LivePreview";
+import LivePreviewContainer from "@/components/LivePreview/LivePreviewContainer";
 import Button from "@/components/ui/Button";
 import ConsoleOutputToggle from "@/components/Playground/ConsoleOutputToggle";
-
 
 const EDITOR_CONFIG = {
 	MIN_HEIGHT: 400,
 	MAX_HEIGHT: 900,
 	DEFAULT_HEIGHT: 500,
 	RESIZE_TIMEOUT: 50
-} as const;
+};
 
 interface MainProps {
 	code: string;
@@ -31,16 +30,6 @@ interface MainProps {
 	clearOutput: () => void;
 	isMounted: boolean;
 }
-
-
-type TransitionStyles = {
-	transition: string;
-};
-
-type EditorContainerStyles = TransitionStyles & {
-	height: string;
-	minHeight: string;
-};
 
 export default function Main({
 	code,
@@ -59,42 +48,19 @@ export default function Main({
 	const editorRef = useRef<HTMLDivElement>(null);
 
 	
-	const handleToggleLivePreview = (): void => {
+	const handleToggleLivePreview = () => {
 		setIsLivePreviewMode((prev) => !prev);
 		setIsCodeOutputVisible(true);
 	};
 
-	const toggleCodeOutputVisibility = (): void => {
+	
+	const toggleCodeOutputVisibility = () => {
 		setIsCodeOutputVisible((prev) => !prev);
 	};
 
 	
-	const transitionStyle: TransitionStyles = {
-		transition: "width 0.3s ease"
-	};
-
-	
-	const editorContainerStyle: EditorContainerStyles = {
-		...transitionStyle,
-		height: editorHeight,
-		minHeight: `${EDITOR_CONFIG.MIN_HEIGHT}px`
-	};
-
-	
-	const previewContainerStyle: CSSProperties = {
-		...transitionStyle,
-		borderColor: getColor("border")
-	};
-
-	
-	const headerBadgeStyle: CSSProperties = {
-		backgroundColor: isDarkTheme
-			? "rgba(255,255,255,0.05)"
-			: "rgba(0,0,0,0.05)"
-	};
-
 	useEffect(() => {
-		const adjustHeight = (): void => {
+		const adjustHeight = () => {
 			if (editorRef.current) {
 				const actualHeight = editorRef.current.scrollHeight;
 				const height = Math.min(
@@ -152,7 +118,11 @@ export default function Main({
 						</div>
 						<div
 							className="text-xs px-2 py-1 rounded flex items-center"
-							style={headerBadgeStyle}
+							style={{
+								backgroundColor: isDarkTheme
+									? "rgba(255,255,255,0.05)"
+									: "rgba(0,0,0,0.05)"
+							}}
 						>
 							<NetworkBadge
 								network={selectedNetwork}
@@ -165,19 +135,25 @@ export default function Main({
 					</div>
 				}
 			>
-				<div className="flex flex-col">
-					<div className="flex">
+				<div className="flex flex-col">					
+					<div className="flex">					
 						<div
 							ref={editorRef}
-							className={`${isLivePreviewMode ? "w-1/2" : "w-full"} pr-2 flex flex-col`}
-							style={transitionStyle}
+							className={`editor-container ${isLivePreviewMode ? "w-1/2" : "w-full"} pr-2 flex flex-col`}
+							style={{
+								transition: "width 0.3s ease",
+								position: "relative",
+								zIndex: 10 
+							}}
 						>
-							
 							<div
 								className="flex-grow overflow-auto"
-								style={editorContainerStyle}
+								style={{
+									height: editorHeight,
+									minHeight: `${EDITOR_CONFIG.MIN_HEIGHT}px`,
+									transition: "width 0.3s ease"
+								}}
 							>
-							
 								{isMounted && (
 									<CodeEditor
 										code={code}
@@ -191,18 +167,28 @@ export default function Main({
 							</div>
 						</div>
 
+						
 						{isLivePreviewMode && (
 							<div
-								className="w-1/2 pl-2 border-l flex flex-col"
-								style={previewContainerStyle}
+								className="preview-container w-1/2 pl-2 border-l flex flex-col"
+								style={{
+									transition: "width 0.3s ease",
+									borderColor: getColor("border"),
+									position: "relative",
+									zIndex: 1 
+								}}
 							>
 								<div className="flex-grow overflow-auto">
-									<LivePreviewContainer code={code} network={selectedNetwork} />
+									<LivePreviewContainer
+										code={code}
+										network={selectedNetwork}
+										className="live-preview-container"
+									/>
 								</div>
 							</div>
 						)}
 					</div>
-
+					
 					{isMounted && ConsoleOutputSection}
 				</div>
 			</Card>
