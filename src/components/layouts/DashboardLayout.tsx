@@ -34,7 +34,7 @@ export default function DashboardLayout({
 		return () => window.removeEventListener("scroll", handleScroll);
 	}, []);
 
-	const headerClasses = `sticky top-0 z-10 border-b p-4 transition-all duration-200 ${scrolled ? "shadow-sm backdrop-blur-md bg-opacity-90" : ""
+	const headerClasses = `sticky top-0 z-10 border-b p-4 transition-all duration-200  z-1001 ${scrolled ? "shadow-sm backdrop-blur-md bg-opacity-90" : ""
 		}`;
 
 	
