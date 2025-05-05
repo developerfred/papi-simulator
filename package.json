@@ -19,6 +19,7 @@
     "@polkadot-api/descriptors": "file:.papi/descriptors",
     "@polkadot/api": "^15.9.2",
     "@polkadot/types": "^15.9.2",
+    "@radix-ui/react-scroll-area": "^1.2.7",
     "@radix-ui/react-slot": "^1.2.0",
     "@radix-ui/react-toggle": "^1.1.6",
     "@types/babel__standalone": "^7.1.9",
