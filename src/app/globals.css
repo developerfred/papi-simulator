@@ -369,3 +369,47 @@ body {
 		@apply bg-background text-foreground;
 	}
 }
+
+
+
+.monaco-editor .suggest-widget {
+  z-index: 1000 !important;
+}
+
+.monaco-editor .monaco-hover {
+  z-index: 1000 !important;
+}
+
+.monaco-editor .parameter-hints-widget {
+  z-index: 1000 !important;
+}
+
+
+.monaco-editor {
+  position: relative;
+  z-index: 10;
+}
+
+
+.live-preview-container {
+  pointer-events: auto;
+  position: relative;
+  z-index: 1;
+}
+
+
+.editor-container {
+  position: relative;
+  z-index: 10;
+}
+
+.preview-container {
+  position: relative;
+  z-index: 1;
+}
+
+
+.monaco-editor-container,
+.preview-container {
+  transition: width 0.3s ease-in-out;
+}
