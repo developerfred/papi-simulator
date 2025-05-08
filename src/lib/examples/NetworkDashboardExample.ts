@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import type { Network } from "../types/network";
 import { ExampleFactory } from "./factory";
 
@@ -15,20 +16,6 @@ export class NetworkDashboardExample extends ExampleFactory {
 	generateCode(network: Network): string {
 		return `// Network Dashboard Component
 import React, { useState, useEffect } from 'react';
-
-// Mock network info hook for preview
-const useNetworkInfo = () => {
-  return {
-    id: '${network.id}',
-    name: '${network.name}',
-    tokenSymbol: '${network.tokenSymbol}',
-    tokenDecimals: ${network.tokenDecimals},
-    isTest: ${network.isTest},
-    endpoint: '${network.endpoint}',
-    explorer: '${network.explorer}',
-    faucet: '${network.faucet}'
-  };
-};
 
 export default function NetworkDashboard() {
   // Use React hooks for local state
