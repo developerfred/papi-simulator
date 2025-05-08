@@ -126,13 +126,15 @@ export default function Console({ outputs, onClear }: ConsoleProps) {
 	);
 
 	return (
-		<Card header={consoleHeader} className="h-1/2 min-h-[220px] flex flex-col">
+		<Card header={consoleHeader} className="h-1/2 min-h-[220px] flex flex-col" style={{ position: "relative", zIndex: "var(--z-index-content)" }}>
 			<div
 				ref={consoleRef}
 				className="flex-1 font-mono text-sm overflow-y-auto -mt-2 -mb-2 p-2"
 				style={{
 					backgroundColor: getColor("surface"),
 					borderRadius: "4px",
+					position: "relative", 
+					zIndex: "var(--z-index-content)" 
 				}}
 			>
 				{outputs.length === 0 ? (

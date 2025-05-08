@@ -1,9 +1,10 @@
-import React from "react";
+import type React from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 
 interface ConsoleOutputToggleProps {
 	isCodeOutputVisible: boolean;
 	toggleCodeOutputVisibility: () => void;
+	style?: { position: string; zIndex: string; };
 }
 
 const ConsoleOutputToggle: React.FC<ConsoleOutputToggleProps> = ({
@@ -18,6 +19,10 @@ const ConsoleOutputToggle: React.FC<ConsoleOutputToggleProps> = ({
         bg-surface 
         network-transition group"
 			onClick={toggleCodeOutputVisibility}
+			style={{
+				position: "relative",
+				zIndex: "var(--z-index-content)" 
+			}}
 		>
 			<div className="flex items-center gap-2">
 				<span className="text-sm font-medium text-theme-secondary">
