@@ -62,6 +62,19 @@
 	--sidebar-accent-foreground: oklch(0.205 0 0);
 	--sidebar-border: oklch(0.922 0 0);
 	--sidebar-ring: oklch(0.708 0 0);
+
+	--z-index-base: 1;
+	--z-index-content: 10;
+	--z-index-monaco-editor: 20;
+	--z-index-monaco-widgets: 1000;
+	--z-index-floating-ui: 50;
+	--z-index-overlay: 100;
+	--z-index-modal: 200;
+	--z-index-popover: 300;
+	--z-index-toast: 400;
+	--z-index-tooltip: 500;
+	--z-index-network-indicator: 50;
+	--z-index-mobile-nav: 1001;
 }
 
 [data-theme="dark"] {
@@ -287,6 +300,17 @@ body {
 	.card-compact {
 		padding: 12px !important;
 	}
+
+	.monaco-editor .suggest-widget,
+	.monaco-editor .monaco-hover,
+	.monaco-editor .parameter-hints-widget {
+		z-index: calc(var(--z-index-monaco-widgets) + 100) !important;
+	}
+	
+	
+	.mobile-sidebar {
+		z-index: var(--z-index-mobile-nav);
+	}
 }
 
 @theme inline {
@@ -373,43 +397,86 @@ body {
 
 
 .monaco-editor .suggest-widget {
-  z-index: 1000 !important;
+  z-index: var(--z-index-monaco-widgets) !important;
 }
 
 .monaco-editor .monaco-hover {
-  z-index: 1000 !important;
+  z-index: var(--z-index-monaco-widgets) !important;
 }
 
 .monaco-editor .parameter-hints-widget {
-  z-index: 1000 !important;
+  z-index: var(--z-index-monaco-widgets) !important;
 }
 
 
 .monaco-editor {
   position: relative;
-  z-index: 10;
+  z-index: var(--z-index-monaco-editor);
 }
 
 
 .live-preview-container {
   pointer-events: auto;
   position: relative;
-  z-index: 1;
+  z-index: var(--z-index-content);
 }
 
 
 .editor-container {
   position: relative;
-  z-index: 10;
+  z-index: var(--z-index-monaco-editor);
+  isolation: isolate;
+
 }
 
 .preview-container {
   position: relative;
-  z-index: 1;
+  z-index: var(--z-index-content);
 }
 
 
 .monaco-editor-container,
 .preview-container {
   transition: width 0.3s ease-in-out;
+}
+
+.console-output-panel {
+  position: relative;
+  z-index: var(--z-index-content);
+}
+
+.console-output-toggle {
+  position: relative;
+  z-index: var(--z-index-content);
+}
+
+.loading-indicator-overlay {
+  z-index: var(--z-index-overlay);
+}
+
+.tooltip {
+  z-index: var(--z-index-tooltip);
+}
+
+.popover {
+  z-index: var(--z-index-popover);
+}
+
+.mobile-sidebar-toggle {
+  z-index: var(--z-index-mobile-nav);
+}
+
+.network-indicator {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: var(--z-index-network-indicator);
+}
+
+.dashboard-header {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-index-overlay);
+  backdrop-filter: blur(8px);
 }

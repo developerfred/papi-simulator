@@ -86,9 +86,12 @@ export default function Main({
 			<ConsoleOutputToggle
 				isCodeOutputVisible={isCodeOutputVisible}
 				toggleCodeOutputVisibility={toggleCodeOutputVisibility}
+				style={{ position: "relative", zIndex: "var(--z-index-content)" }} 
 			/>
 			{isCodeOutputVisible && (
+				<div style={{ position: "relative", zIndex: "var(--z-index-content)" }}> 
 				<Console outputs={outputs} onClear={clearOutput} />
+				</div>
 			)}
 		</>
 	);
@@ -143,7 +146,8 @@ export default function Main({
 							style={{
 								transition: "width 0.3s ease",
 								position: "relative",
-								zIndex: 10 
+								zIndex: "var(--z-index-monaco-editor)",
+								isolation: "isolate" 
 							}}
 						>
 							<div
@@ -175,7 +179,7 @@ export default function Main({
 									transition: "width 0.3s ease",
 									borderColor: getColor("border"),
 									position: "relative",
-									zIndex: 1 
+									zIndex: "var(--z-index-content)" 
 								}}
 							>
 								<div className="flex-grow overflow-auto">

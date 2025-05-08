@@ -10,6 +10,7 @@ interface CardProps {
 	bordered?: boolean;
 	header?: ReactNode;
 	footer?: ReactNode;
+	style?: { position: string, zIndex: string};
 }
 
 export default function Card({

@@ -33,13 +33,14 @@ const LivePreviewContainer: React.FC<LivePreviewContainerProps> = ({
       className={`relative h-full ${className}`}
       style={{
         
-        zIndex: 1,        
+        zIndex: "var(--z-index-content)", 
         padding: "12px",        
         width: "100%",
         height: "100%",        
         backgroundColor: getColor("surface"),        
         borderRadius: "8px",        
-        boxShadow: "inset 0 0 5px rgba(0,0,0,0.05)"
+        boxShadow: "inset 0 0 5px rgba(0,0,0,0.05)",
+        position: "relative"
       }}
     >
       <LivePreview 
