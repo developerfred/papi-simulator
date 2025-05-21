@@ -34,9 +34,11 @@ export default function RootLayout({
 			>
 				<WasmPreloader />
 				<PolkadotProvider>
+					
 					<Suspense fallback={<LoadingIndicator />}>
 						<ThemeProvider>{children}</ThemeProvider>
 					</Suspense>
+					
 				</PolkadotProvider>
 			</body>
 		</html>

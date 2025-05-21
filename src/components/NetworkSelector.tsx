@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useMemo, useState, useEffect } from "react";
-import { Network } from "@/lib/types/network";
+import type { Network } from "@/lib/types/network";
 import { useTheme } from "@/lib/theme/ThemeProvider";
 import Card from "@/components/ui/Card";
 import Badge from "@/components/ui/Badge";

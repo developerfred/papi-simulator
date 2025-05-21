@@ -37,15 +37,13 @@ export function useChainState<T>(
 		selectedNetwork: { id: string };
 	};
 
-	// Extract connection status
 	const isConnected = connectionState.state === "connected";
 	const client =
 		isConnected && connectionState.client ? connectionState.client : null;
 
 	const {
 		enabled = true,
-		refetchInterval,
-		// Keep the parameter even if unused to maintain the interface consistency
+		refetchInterval,		
 	} = options || {};
 
 	const [data, setData] = useState<T | null>(null);
@@ -81,14 +79,14 @@ export function useChainState<T>(
 
 			const typedApi = client.getTypedApi(networkDescriptor);
 
-			// Verifica se o pallet existe
+			
 			const palletStorage =
 				typedApi.query[pallet as keyof typeof typedApi.query];
 			if (!palletStorage) {
 				throw new Error(`Pallet not found: ${pallet}`);
 			}
 
-			// Acessa o método de storage de forma segura para tipagem
+
 			type StorageKey = keyof typeof palletStorage;
 			const storageMethod = palletStorage[storage as StorageKey];
 
@@ -96,14 +94,14 @@ export function useChainState<T>(
 				throw new Error(`Storage method not found: ${storage}`);
 			}
 
-			// Verifica a existência do método de forma segura para tipagem
+			
 			if (typeof (storageMethod as any).getValue !== "function") {
 				throw new Error(
 					`Storage method getValue not available for: ${storage}`,
 				);
 			}
 
-			// Chama o método getValue com os parâmetros
+
 			const result = await (storageMethod as any).getValue(...params);
 
 			setData(result as T);
@@ -118,14 +116,14 @@ export function useChainState<T>(
 		}
 	}, [client, path, params, isConnected, selectedNetwork.id]);
 
-	// Initial fetch when enabled
+
 	useEffect(() => {
 		if (enabled && isConnected) {
 			refetch();
 		}
 	}, [enabled, isConnected, refetch]);
 
-	// Set up interval if requested
+	
 	useEffect(() => {
 		if (!refetchInterval) return;
 
@@ -171,8 +169,7 @@ export function useAccountBalance(
 
 	const enabled = options?.enabled !== false && !!address;
 	const params = useMemo(() => (address ? [address] : []), [address]);
-
-	// Query System.Account storage
+	
 	const result = useChainState<{
 		data: {
 			free: bigint;
@@ -184,7 +181,7 @@ export function useAccountBalance(
 		enabled,
 	});
 
-	// Format balance data
+
 	const balance = useMemo(() => {
 		if (result.data?.data) {
 			const { free, reserved, frozen } = result.data.data;

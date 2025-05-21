@@ -1,22 +1,21 @@
+"use client";
+
 import { useCallback, useRef, useEffect, useState } from "react";
-import { useChain } from "@/hooks";
+import { useChain } from "@/hooks/useChain";
 
 export function useSafeConnection() {
 	const {
 		isConnecting,
 		isConnected,
-		error,
-		selectedNetwork,
 		connect,
 		disconnect,
+		error: contextError,
+		network
 	} = useChain();
 
-	const [connectionError, setConnectionError] = useState<Error | null>(null);
+	const [localError, setLocalError] = useState<Error | null>(null);
 	const [isLocalConnecting, setIsLocalConnecting] = useState(false);
-
 	const isMountedRef = useRef(true);
-
-	const connectionRef = useRef({ isAttemptingConnection: false });
 
 	useEffect(() => {
 		isMountedRef.current = true;
@@ -25,86 +24,48 @@ export function useSafeConnection() {
 		};
 	}, []);
 
-	// Use a generic type that works with boolean values
-	const safeBooleanSetState = useCallback(
-		(setter: React.Dispatch<React.SetStateAction<boolean>>, value: boolean) => {
-			if (isMountedRef.current) {
-				setter(value);
-			}
-		},
-		[],
-	);
-
-	// Use a separate function for setting null values
-	const safeErrorSetState = useCallback(
-		(
-			setter: React.Dispatch<React.SetStateAction<Error | null>>,
-			value: Error | null,
-		) => {
-			if (isMountedRef.current) {
-				setter(value);
-			}
-		},
-		[],
-	);
-
-	const safePromise = async <T>(promise: Promise<T>): Promise<T | null> => {
-		try {
-			return await promise;
-		} catch (err) {
-			console.error("Promise error:", err);
-			return null;
-		}
-	};
-
 	const safeConnect = useCallback(async () => {
 		try {
-			safeBooleanSetState(setIsLocalConnecting, true);
-			connectionRef.current.isAttemptingConnection = true;
-			safeErrorSetState(setConnectionError, null);
-			await safePromise(connect(selectedNetwork));
-		} catch (err) {
-			let errorMessage = "Erro desconhecido";
-			if (err instanceof Error) {
-				errorMessage = err.message;
-			} else if (typeof err === "object" && err !== null) {
-				if ("message" in err) {
-					errorMessage = String(err.message);
-				} else if (
-					"error" in err &&
-					err.error &&
-					typeof err.error === "object" &&
-					"message" in err.error
-				) {
-					errorMessage = String(err.error.message);
-				} else {
-					errorMessage = JSON.stringify(err);
-				}
-			} else {
-				errorMessage = String(err);
+			if (!isMountedRef.current) return;
+
+			setIsLocalConnecting(true);
+			setLocalError(null);
+
+			if (network) {
+				await connect(network);
 			}
-			safeErrorSetState(setConnectionError, new Error(errorMessage));
+		} catch (error) {
+			if (!isMountedRef.current) return;
+
+			const err = error instanceof Error
+				? error
+				: new Error(typeof error === "string" ? error : "Unknown error");
+			setLocalError(err);
 		} finally {
-			connectionRef.current.isAttemptingConnection = false;
-			safeBooleanSetState(setIsLocalConnecting, false);
+			if (isMountedRef.current) {
+				setIsLocalConnecting(false);
+			}
 		}
-	}, [connect, selectedNetwork, safeBooleanSetState, safeErrorSetState]);
+	}, [connect, network]);
 
 	const safeDisconnect = useCallback(() => {
 		try {
 			disconnect();
-		} catch (err) {
-			const e = err instanceof Error ? err : new Error(String(err));
-			safeErrorSetState(setConnectionError, e);
+			setLocalError(null);
+		} catch (error) {
+			const err = error instanceof Error
+				? error
+				: new Error(typeof error === "string" ? error : "Disconnection failed");
+			setLocalError(err);
 		}
-	}, [disconnect, safeErrorSetState]);
+	}, [disconnect]);
 
 	return {
 		isConnecting: isConnecting || isLocalConnecting,
 		isConnected,
-		connectionError: error || connectionError,
+		error: contextError || localError,
 		safeConnect,
 		safeDisconnect,
-		selectedNetwork,
+		network
 	};
 }

@@ -3,11 +3,13 @@ import { SimpleTransferExample } from "./SimpleTransferExample";
 import { NetworkDashboardExample } from "./NetworkDashboardExample";
 import { AccountBalanceCheckerExample } from "./AccountBalanceCheckerExample";
 import type { Example, ExampleLevel } from "../types/example";
+import { TransactionBuilderExample } from "./TransactionBuilderExample";
 
 exampleRegistry.registerMany([
 	new AccountBalanceCheckerExample(),
 	new SimpleTransferExample(),			
 	new NetworkDashboardExample(),
+	new TransactionBuilderExample(),
 ]);
 
 exampleRegistry.setDefaultExample("account-balance");

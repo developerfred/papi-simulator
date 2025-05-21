@@ -36,8 +36,7 @@ export function useAutoConnectOnMount(
 
 		const attemptConnect = async () => {
 			try {
-				await connectFn();
-				// Usar um cast explícito para SetStateAction<boolean>
+				await connectFn();				
 				safeSetState<boolean>(
 					setAutoConnectAttempted as Dispatch<SetStateAction<boolean>>,
 					true,
