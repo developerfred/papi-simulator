@@ -19,6 +19,9 @@ import { MultiAddress, paseo, roc, wnd } from "@polkadot-api/descriptors";
 import { getWsProvider } from "polkadot-api/ws-provider/web";
 import { withPolkadotSdkCompat } from "polkadot-api/polkadot-sdk-compat";
 import { createClient } from "polkadot-api";
+import  TransactionBuilder  from "@/components/TransactionBuilder";
+import { ChainProvider } from "@/providers/ChainProvider";
+import { SignerProvider } from "@/providers/SignerProvider";
 
 const ALLOWED_MODULES: Record<string, unknown> = {
 	react: React,
@@ -31,6 +34,9 @@ const ALLOWED_MODULES: Record<string, unknown> = {
 	"polkadot-api/polkadot-sdk-compat": { withPolkadotSdkCompat },
 	"@polkadot-api/descriptors": { paseo, roc, wnd, MultiAddress },	
 	"polkadot-api": { createClient },
+	"@/components/TransactionBuilder": { TransactionBuilder },
+	"@/providers/ChainProvider": { ChainProvider },
+	"@/providers/SignerProvider": { SignerProvider },
 };
 
 const COMPILER_OPTIONS: ts.CompilerOptions = {

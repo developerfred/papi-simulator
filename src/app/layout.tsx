@@ -6,6 +6,11 @@ import { Suspense } from "react";
 import LoadingIndicator from "@/components/LoadingIndicator";
 import { PolkadotProvider } from "@/components/PolkadotProvider";
 import { WasmPreloader } from "@/components/WasmPreloader";
+import { WalletProvider } from "@/providers/WalletProvider";
+import { SignerProvider } from "@/providers/SignerProvider";
+import { PolkadotSigner } from "@/providers/PolkadotSigner";
+import { Toaster } from "react-hot-toast";
+
 
 const geistSans = Geist({
 	variable: "--font-geist-sans",
@@ -34,11 +39,16 @@ export default function RootLayout({
 			>
 				<WasmPreloader />
 				<PolkadotProvider>
-					
-					<Suspense fallback={<LoadingIndicator />}>
-						<ThemeProvider>{children}</ThemeProvider>
-					</Suspense>
-					
+					<WalletProvider>
+						<SignerProvider>
+							<PolkadotSigner>
+								<Suspense fallback={<LoadingIndicator />}>
+									<ThemeProvider><Toaster position="top-right" />{children}</ThemeProvider>
+								</Suspense>
+							</PolkadotSigner>
+						</SignerProvider>
+					</WalletProvider>
+
 				</PolkadotProvider>
 			</body>
 		</html>

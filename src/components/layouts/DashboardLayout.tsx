@@ -6,6 +6,7 @@ import Button from "../ui/Button";
 import ThemeToggle from "../ui/ThemeToggle";
 import Link from "next/link";
 import { useVersion } from "@/hooks/useVersion";
+import { ConnectWalletButton } from "@/components/ConnectWalletButton";
 
 interface DashboardLayoutProps {
 	children: ReactNode;
@@ -189,6 +190,7 @@ export default function DashboardLayout({
 							>
 								Documentation
 							</Button>
+							<ConnectWalletButton />
 							<ThemeToggle />
 						</div>
 

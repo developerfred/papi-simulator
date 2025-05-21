@@ -4,7 +4,8 @@
 "use client";
 
 import React, { useState, useCallback, type FormEvent } from "react";
-import { useChainTx, useAccountBalance } from "@/hooks";
+import { useChainTx } from "@/hooks/useChainTx";
+import { useAccountBalance } from "@/hooks/useAccountBalance";
 import { useTheme } from "@/lib/theme/ThemeProvider";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";

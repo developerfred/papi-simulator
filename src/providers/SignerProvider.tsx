@@ -11,8 +11,9 @@ interface SignerContextType {
     selectedSigner: Signer | null;
     isConnected: boolean;
     selectSigner: (signer: Signer | null) => void;
+    addSigner: (signer: Signer) => void;
+    removeSigner: (signer: Signer) => void;
     getSigner: (address: string) => Signer | undefined;
-    refreshSigners: () => void;
 }
 
 const SignerContext = createContext<SignerContextType>({} as SignerContextType);
@@ -22,33 +23,39 @@ export const SignerProvider = ({ children }: { children: React.ReactNode }) => {
         selectedSigner,
         availableSigners,
         setSelectedSigner,
-        refreshAvailableSigners // Nome corrigido
+        manageSigner
     } = useSignerStore();
 
-    // Carrega contas de teste no mount
+    // Initialize test accounts upon mounting
     useEffect(() => {
+        // Convert test accounts to signer objects with mock signing capabilities
         const testSigners = Object.entries(TEST_ACCOUNTS).map(([name, address]) => ({
             address,
             name,
             type: "test" as const,
             sign: async (data: Uint8Array) => {
-                console.log(`Test sign for ${name}`);
+                console.log(`Test signature for ${name}`);
+                // Return mock signature (64 bytes of zeros)
                 return new Uint8Array(64).fill(0);
             }
         }));
 
-        refreshAvailableSigners([...testSigners]);
-    }, [refreshAvailableSigners]);
+        // Add each test signer to available signers
+        testSigners.forEach(signer => {
+            manageSigner(signer, 'add');
+        });
+    }, [manageSigner]);
 
+    // Create memoized context value to prevent unnecessary re-renders
     const value = useMemo(() => ({
         signers: availableSigners,
         selectedSigner,
         isConnected: !!selectedSigner,
         selectSigner: setSelectedSigner,
-        getSigner: (address: string) =>
-            availableSigners.find(s => s.address === address),
-        refreshSigners: () => refreshAvailableSigners() // Atualização opcional
-    }), [availableSigners, selectedSigner, setSelectedSigner, refreshAvailableSigners]);
+        addSigner: (signer: Signer) => manageSigner(signer, 'add'),
+        removeSigner: (signer: Signer) => manageSigner(signer, 'remove'),
+        getSigner: (address: string) => availableSigners.find(s => s.address === address),
+    }), [availableSigners, selectedSigner, setSelectedSigner, manageSigner]);
 
     return (
         <SignerContext.Provider value={value}>

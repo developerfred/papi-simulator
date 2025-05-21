@@ -2,8 +2,9 @@
 "use client";
 
 import React from "react";
-import { useChain } from "@/hooks";
-import { useRuntimeVersion, useBlockNumber } from "@/hooks";
+import { useChain } from "@/context/ChainProvider";
+import { useRuntimeVersion } from "@/hooks/useChainSubscriptions";
+import { useBlockNumber} from "@/hooks/useBlockNumber";
 import Card from "@/components/ui/Card";
 import Badge from "@/components/ui/Badge";
 import { useTheme } from "@/lib/theme/ThemeProvider";

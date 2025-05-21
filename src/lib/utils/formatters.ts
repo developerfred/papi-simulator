@@ -95,3 +95,17 @@ export function formatExplorerBlockUrl(
 ): string {
 	return `${network.explorer}/block/${blockNumber}`;
 }
+
+
+/**
+ * Truncate a hash or address to a readable format
+ * @param hash The full hash/address to truncate
+ * @param length The number of characters to keep at each end
+ * @returns Formatted string with characters at start and end
+ */
+export function truncateHash(hash: string, length = 4): string {
+	if (!hash) return '';
+	if (hash.length <= length * 2) return hash;
+
+	return `${hash.slice(0, length)}...${hash.slice(-length)}`;
+}

@@ -3,7 +3,7 @@
 
 import type React from "react";
 import { useState } from "react";
-import { useAccountBalance } from "@/hooks";
+import { useAccountBalance } from "@/hooks/useAccountBalance";
 import { useTheme } from "@/lib/theme/ThemeProvider";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";

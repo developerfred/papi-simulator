@@ -1,17 +1,15 @@
 "use client";
 
 import { useCallback, useRef, useEffect, useState } from "react";
-import { useChain } from "@/hooks/useChain";
+import { useChain } from "@/context/ChainProvider";
 
 export function useSafeConnection() {
-	const {
-		isConnecting,
-		isConnected,
-		connect,
-		disconnect,
-		error: contextError,
-		network
-	} = useChain();
+	
+	const { connectionState, selectedNetwork } = useChain();
+
+	const isConnected = connectionState.state === "connected";
+	const isConnecting = connectionState.state === "connecting";
+	const connectionError = connectionState.error || null;
 
 	const [localError, setLocalError] = useState<Error | null>(null);
 	const [isLocalConnecting, setIsLocalConnecting] = useState(false);
@@ -31,8 +29,9 @@ export function useSafeConnection() {
 			setIsLocalConnecting(true);
 			setLocalError(null);
 
-			if (network) {
-				await connect(network);
+			// Access the connect function from the context
+			if (connectionState.connect) {
+				await connectionState.connect();
 			}
 		} catch (error) {
 			if (!isMountedRef.current) return;
@@ -46,11 +45,13 @@ export function useSafeConnection() {
 				setIsLocalConnecting(false);
 			}
 		}
-	}, [connect, network]);
+	}, [connectionState]);
 
 	const safeDisconnect = useCallback(() => {
 		try {
-			disconnect();
+			if (connectionState.disconnect) {
+				connectionState.disconnect();
+			}
 			setLocalError(null);
 		} catch (error) {
 			const err = error instanceof Error
@@ -58,14 +59,14 @@ export function useSafeConnection() {
 				: new Error(typeof error === "string" ? error : "Disconnection failed");
 			setLocalError(err);
 		}
-	}, [disconnect]);
+	}, [connectionState]);
 
 	return {
 		isConnecting: isConnecting || isLocalConnecting,
 		isConnected,
-		error: contextError || localError,
+		connectionError: connectionError || localError,
 		safeConnect,
 		safeDisconnect,
-		network
+		selectedNetwork
 	};
 }

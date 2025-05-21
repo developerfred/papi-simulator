@@ -2,7 +2,7 @@
 
 import type React from "react";
 import { useState } from "react";
-import { useBlockWatcher } from "@/hooks";
+import { useBlockWatcher } from "@/hooks/useChainSubscriptions";
 import { useTheme } from "@/lib/theme/ThemeProvider";
 import Card from "@/components/ui/Card";
 import Badge from "@/components/ui/Badge";
@@ -10,12 +10,12 @@ import NetworkBadge from "@/components/ui/NetworkBadge";
 import { formatDistance } from "date-fns";
 import type { Network } from "@/lib/types/network";
 
-// Definir uma interface unificada para BlockInfo
+
 interface UnifiedBlockInfo {
 	hash: string;
 	number: number;
 	timestamp: number;
-	parentHash?: string; // Marcado como opcional para evitar o erro
+	parentHash?: string; 
 }
 
 export default function BlockExplorer({
