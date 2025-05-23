@@ -75,7 +75,17 @@
 	--z-index-tooltip: 500;
 	--z-index-network-indicator: 50;
 	--z-index-mobile-nav: 1001;
+
+  --primary: #E6007A;
+  --bg: light-dark(#fff, #0f0f14);
+  --text: light-dark(#000, #fff);
 }
+
+.network-polkadot { --primary: #E6007A; }
+.network-westend { --primary: #46DDD2; }
+.network-paseo { --primary: #FF7B00; }
+.network-rococo { --primary: #7D42BC; }
+
 
 [data-theme="dark"] {
 	--background: #0f0f14;
@@ -480,3 +490,8 @@ body {
   z-index: var(--z-index-overlay);
   backdrop-filter: blur(8px);
 }
+
+
+.btn { @apply px-4 py-2 rounded transition-colors; }
+.card { @apply p-4 rounded-lg border; }
+.status-dot { @apply w-2 h-2 rounded-full; }
