@@ -73,5 +73,44 @@ export function useTheme() {
 		);
 	};
 
-	return { isDarkTheme, isLoaded, toggleTheme };
+	const hexToRgba = (hex: string, opacity: number) => {
+		let r = 0, g = 0, b = 0;
+		
+		if (hex.length === 4) {
+			r = parseInt(hex[1] + hex[1], 16);
+			g = parseInt(hex[2] + hex[2], 16);
+			b = parseInt(hex[3] + hex[3], 16);
+		} else if (hex.length === 7) {
+			r = parseInt(hex[1] + hex[2], 16);
+			g = parseInt(hex[3] + hex[4], 16);
+			b = parseInt(hex[5] + hex[6], 16);
+		}
+
+		return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+	};
+
+	const getColor = (colorName: string, opacity: number = 1) => {
+		const colorValue = document.documentElement.style.getPropertyValue(`--${colorName}`) || '#000000';
+
+		if (opacity === 1) return colorValue;
+		return hexToRgba(colorValue, opacity);
+	};
+
+
+	const getNetworkColor = (colorType: string, opacity: number = 1) => {
+		const colorValue = {
+			primary: '#8e2fd0',
+			success: '#22c55e',
+			warning: '#f59e0b',
+			error: '#ef4444',
+			info: '#3b82f6',
+		}[colorType] || '#8e2fd0';
+
+		if (opacity === 1) return colorValue;
+		return hexToRgba(colorValue, opacity);
+	};
+
+	return {
+		isDarkTheme, isLoaded, toggleTheme, getColor,
+		getNetworkColor };
 }

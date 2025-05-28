@@ -6,7 +6,7 @@ import { Suspense } from "react";
 import LoadingIndicator from "@/components/LoadingIndicator";
 import { PolkadotProvider } from "@/components/PolkadotProvider";
 import { WasmPreloader } from "@/components/WasmPreloader";
-
+import { WalletProvider } from "../../src/providers/WalletProvider";
 const geistSans = Geist({
 	variable: "--font-geist-sans",
 	subsets: ["latin"],
@@ -34,9 +34,11 @@ export default function RootLayout({
 			>
 				<WasmPreloader />
 				<PolkadotProvider>
+					<WalletProvider>
 					<Suspense fallback={<LoadingIndicator />}>
 						<ThemeProvider>{children}</ThemeProvider>
 					</Suspense>
+					</WalletProvider>
 				</PolkadotProvider>
 			</body>
 		</html>

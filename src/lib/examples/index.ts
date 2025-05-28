@@ -2,12 +2,14 @@ import { exampleRegistry } from "./factory";
 import { SimpleTransferExample } from "./SimpleTransferExample";
 import { NetworkDashboardExample } from "./NetworkDashboardExample";
 import { AccountBalanceCheckerExample } from "./AccountBalanceCheckerExample";
+import { WalletTransferExample } from "./WalletTransferExample";
 import type { Example, ExampleLevel } from "../types/example";
 
 exampleRegistry.registerMany([
 	new AccountBalanceCheckerExample(),
 	new SimpleTransferExample(),			
 	new NetworkDashboardExample(),
+  new WalletTransferExample(),
 ]);
 
 exampleRegistry.setDefaultExample("account-balance");
