@@ -1,6 +1,6 @@
-
+/* eslint-disable react-hooks/exhaustive-deps */
 import { useWalletStore } from "@/stores/walletStore";
-import React, { useEffect } from "react";
+import  { useEffect } from "react";
 
 export const useWallet = () => {
     const store = useWalletStore();

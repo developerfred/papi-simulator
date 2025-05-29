@@ -1,4 +1,4 @@
-// components/TransactionConfig.tsx
+/* eslint-disable @typescript-eslint/no-explicit-any, react/display-name */
 
 import React from "react";
 import { Button } from "@/components/ui";

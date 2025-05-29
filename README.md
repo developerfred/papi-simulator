@@ -93,11 +93,18 @@ To learn more about Polkadot-API, check these resources:
 
 Contributions are welcome! Here are some ways you can contribute:
 
-- Add new examples
+### For Developers
+- Add new examples following our [Community Template Guidelines](./COMMUNITY_TEMPLATES.md)
 - Improve existing examples
-- Fix bugs
+- Fix bugs and enhance performance
 - Enhance the UI/UX
-- Improve documentation
+- Add new features
+
+### For the Community
+- Share your use cases and example ideas
+- Report bugs and suggest improvements
+- Help with documentation and tutorials
+- Spread the word about the playground
 
 Please feel free to submit a Pull Request.
 

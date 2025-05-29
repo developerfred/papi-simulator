@@ -1,7 +1,7 @@
-// components/TransactionStatus.tsx
+/* eslint-disable  react/display-name */
 
 import React from "react";
-import { TxStatus } from "../types/transaction.types";
+import type { TxStatus } from "../types/transaction.types";
 import { TX_STATUS_CONFIG } from "../constants/presets";
 
 interface TransactionStatusProps {

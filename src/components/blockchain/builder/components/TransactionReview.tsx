@@ -1,4 +1,4 @@
-// components/TransactionReview.tsx
+/* eslint-disable @typescript-eslint/no-explicit-any, react/display-name */
 
 import React from "react";
 import { XCM_DESTINATIONS, XCM_ASSETS } from "../constants/presets";

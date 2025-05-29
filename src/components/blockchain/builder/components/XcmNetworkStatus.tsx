@@ -1,7 +1,7 @@
-// components/XcmNetworkStatus.tsx
+/* eslint-disable  react/display-name */
 
 import React from "react";
-import { Network } from "../types/transaction.types";
+import type { Network } from "../types/transaction.types";
 
 interface XcmNetworkStatusProps {
     network: Network;

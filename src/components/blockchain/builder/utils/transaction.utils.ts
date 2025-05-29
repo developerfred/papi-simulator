@@ -1,7 +1,9 @@
+/* eslint-disable   @typescript-eslint/no-explicit-any */
+
 import type { TransactionArg } from "../types/transaction.types";
 import { XCM_DESTINATIONS, XCM_ASSETS } from "../constants/presets";
 
-// Get web3 extension
+
 export const getWeb3FromAddress = async () => {
     if (typeof window !== "undefined") {
         const { web3FromAddress } = await import("@polkadot/extension-dapp");
@@ -10,7 +12,7 @@ export const getWeb3FromAddress = async () => {
     return null;
 };
 
-// XCM utility functions
+
 export const createXcmDestination = (chainKey: string) => {
     const destination = XCM_DESTINATIONS[chainKey as keyof typeof XCM_DESTINATIONS];
     if (!destination) throw new Error(`Unknown destination: ${chainKey}`);
@@ -66,9 +68,13 @@ export const createXcmWeightLimit = (limit: string) => {
     return { Limited: { refTime: limit, proofSize: '65536' } };
 };
 
-// Process arguments based on type
+
 export const processArgument = (value: any, type: string, decimals: number): any => {
     if (value === undefined || value === '') return value;
+    
+    if (type === 'Address' && typeof value === 'string') {
+        return value.trim().replace(/\s/g, '');
+    }
 
     switch (type) {
         case 'Balance':

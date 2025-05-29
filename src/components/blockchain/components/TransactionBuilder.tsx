@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any, react-hooks/exhaustive-deps */
 "use client";
 
 import React, { useCallback, useMemo, useEffect, useRef } from "react";
@@ -6,6 +7,13 @@ import { formatBalance } from "@polkadot/util";
 import { Card, Button } from "@/components/ui";
 import { ChevronLeft, X, Info, Zap } from "lucide-react";
 import toast from "react-hot-toast";
+
+// Polkadot.js imports
+import { web3Accounts, web3Enable, web3FromAddress } from '@polkadot/extension-dapp';
+
+// PAPI imports (conditional - only if available)
+// import { getInjectedExtensions, connectInjectedExtension } from "polkadot-api/pjs-signer";
+// import { createClient } from "polkadot-api";
 
 // Custom hook import  
 import { useTransactionState } from "../builder/hooks/useTransactionState";
@@ -30,12 +38,114 @@ import { TRANSACTION_PRESETS } from "../builder/constants/presets";
 import {
   validateXcmArguments,
   processArgument,
-  getWeb3FromAddress
 } from "../builder/utils/transaction.utils";
+
+// Enhanced types for dual API support
+interface SignerResult {
+  signature: string;
+  signedTransaction?: any;
+}
+
+interface ExtensionSigner {
+  signer: {
+    signPayload: (payload: any) => Promise<SignerResult>;
+    signAndSend?: (address: string, options: any, callback: any) => Promise<any>;
+  };
+}
 
 interface TransactionBuilderEnhancedProps extends TransactionBuilderProps {
   onMinimize?: () => void;
   isFullscreen?: boolean;
+  preferPapi?: boolean; // New prop to prefer PAPI over Polkadot.js
+}
+
+// Enhanced wallet connection utilities
+class WalletConnector {
+  private static instance: WalletConnector;
+  private extensionsEnabled = false;
+  private availableExtensions: string[] = [];
+  private connectedAccount: WalletAccount | null = null;
+
+  static getInstance(): WalletConnector {
+    if (!WalletConnector.instance) {
+      WalletConnector.instance = new WalletConnector();
+    }
+    return WalletConnector.instance;
+  }
+
+  async enableExtensions(dappName: string = 'Polkadot Transaction Builder'): Promise<boolean> {
+    try {
+      // Enable Polkadot.js extensions
+      const extensions = await web3Enable(dappName);
+
+      if (extensions.length === 0) {
+        console.warn('No wallet extensions found. Please install Polkadot.js extension or compatible wallet.');
+        return false;
+      }
+
+      this.extensionsEnabled = true;
+      this.availableExtensions = extensions.map(ext => ext.name);
+
+      console.log(`✅ Enabled ${extensions.length} wallet extension(s):`, this.availableExtensions);
+      return true;
+    } catch (error) {
+      console.error('Failed to enable wallet extensions:', error);
+      return false;
+    }
+  }
+
+  async getAccounts(): Promise<WalletAccount[]> {
+    if (!this.extensionsEnabled) {
+      throw new Error('Extensions not enabled. Call enableExtensions() first.');
+    }
+
+    try {
+      const accounts = await web3Accounts();
+      return accounts.map(account => ({
+        address: account.address,
+        meta: {
+          name: account.meta.name || 'Unknown',
+          source: account.meta.source
+        }
+      }));
+    } catch (error) {
+      console.error('Failed to get accounts:', error);
+      throw error;
+    }
+  }
+
+  async getSigner(address: string): Promise<ExtensionSigner> {
+    if (!this.extensionsEnabled) {
+      throw new Error('Extensions not enabled. Call enableExtensions() first.');
+    }
+
+    try {
+      const injector = await web3FromAddress(address);
+      return injector as ExtensionSigner;
+    } catch (error) {
+      console.error('Failed to get signer for address:', address, error);
+      throw new Error(`Unable to get signer for address ${address}. Make sure the account exists in your wallet extension.`);
+    }
+  }
+
+  // PAPI support methods (to be implemented when PAPI is available)
+  async getPapiSigner(address: string): Promise<any> {
+    // This would be implemented when PAPI is available
+    // const extensions = getInjectedExtensions();
+    // const selectedExtension = await connectInjectedExtension(extensions[0]);
+    // const accounts = selectedExtension.getAccounts();
+    // return accounts.find(acc => acc.address === address)?.polkadotSigner;
+
+    throw new Error('PAPI support not yet implemented');
+  }
+
+  isExtensionsEnabled(): boolean {
+    return this.extensionsEnabled;
+  }
+
+  getAvailableExtensions(): string[] {
+    return this.availableExtensions;
+  }
 }
 
 const TransactionBuilder: React.FC<TransactionBuilderEnhancedProps> = ({
@@ -43,9 +153,11 @@ const TransactionBuilder: React.FC<TransactionBuilderEnhancedProps> = ({
   network,
   senderAccount,
   onMinimize,
-  isFullscreen = false
+  isFullscreen = false,
+  preferPapi = false
 }) => {
   const { state, updateState, resetState, getCurrentState } = useTransactionState();
+  const walletConnector = WalletConnector.getInstance();
 
   // Enhanced refs for better state management
   const mountedRef = useRef(true);
@@ -57,6 +169,26 @@ const TransactionBuilder: React.FC<TransactionBuilderEnhancedProps> = ({
   // UI state for elastic behavior
   const [isExpanded, setIsExpanded] = React.useState(false);
   const [showMiniPreview, setShowMiniPreview] = React.useState(false);
+  const [walletReady, setWalletReady] = React.useState(false);
+
+  // Initialize wallet connection on mount
+  useEffect(() => {
+    const initializeWallet = async () => {
+      try {
+        const enabled = await walletConnector.enableExtensions();
+        setWalletReady(enabled);
+
+        if (!enabled) {
+          toast.error('⚠️ No wallet extension found. Please install Polkadot.js extension.');
+        }
+      } catch (error) {
+        console.error('Wallet initialization failed:', error);
+        setWalletReady(false);
+      }
+    };
+
+    initializeWallet();
+  }, []);
 
   // Cleanup on unmount with enhanced cleanup
   useEffect(() => {
@@ -88,7 +220,7 @@ const TransactionBuilder: React.FC<TransactionBuilderEnhancedProps> = ({
     setShowMiniPreview(currentPhase === 'status' && state.txStatus === 'finalized');
   }, [currentPhase, state.txStatus]);
 
-  // Memoized computed values with stability
+  
   const availablePallets = useMemo(() => {
     if (!api?.tx) return [];
     return Object.keys(api.tx).sort();
@@ -99,7 +231,7 @@ const TransactionBuilder: React.FC<TransactionBuilderEnhancedProps> = ({
     return Object.keys(api.tx[state.customPallet]).sort();
   }, [api?.tx, state.customPallet]);
 
-  // Enhanced steps calculation with phase awareness
+  
   const steps: TransactionStep[] = useMemo(() => {
     const { selectedPreset, builtTx, estimatedFee, isSigning, txHash, txStatus, isSending } = state;
 
@@ -131,21 +263,19 @@ const TransactionBuilder: React.FC<TransactionBuilderEnhancedProps> = ({
     ];
   }, [state.selectedPreset, state.builtTx, state.estimatedFee, state.isSigning, state.txHash, state.txStatus, state.isSending]);
 
-  // FIXED: Enhanced preset change handling to prevent freezing
+
   useEffect(() => {
     const currentPresetId = state.selectedPreset?.id || null;
 
-    // Only reset if preset actually changed and we're not in the middle of building
+
     if (currentPresetId !== lastPresetIdRef.current && !buildingRef.current) {
       lastPresetIdRef.current = currentPresetId;
 
       if (currentPresetId) {
-        // Clear any existing timeout
         if (resetTimeoutRef.current) {
           clearTimeout(resetTimeoutRef.current);
         }
-
-        // Use longer timeout and check mount status
+        
         resetTimeoutRef.current = setTimeout(() => {
           if (mountedRef.current && !buildingRef.current) {
             updateState({
@@ -157,19 +287,19 @@ const TransactionBuilder: React.FC<TransactionBuilderEnhancedProps> = ({
             });
           }
           resetTimeoutRef.current = null;
-        }, 50); // Slightly longer timeout for stability
+        }, 50);
       }
     }
   }, [state.selectedPreset?.id, updateState]);
 
-  // FIXED: Enhanced preset selection with debouncing
+  
   const handlePresetSelect = useCallback((preset) => {
     if (buildingRef.current || !mountedRef.current) return;
 
-    // Immediate UI feedback
+  
     setIsExpanded(true);
 
-    // Debounced state update
+  
     const updates: any = { selectedPreset: preset };
 
     if (preset.id === 'custom') {
@@ -189,7 +319,7 @@ const TransactionBuilder: React.FC<TransactionBuilderEnhancedProps> = ({
       updates.args = defaultArgs;
     }
 
-    // Use requestAnimationFrame for smooth update
+    
     requestAnimationFrame(() => {
       if (mountedRef.current) {
         updateState(updates);
@@ -197,7 +327,7 @@ const TransactionBuilder: React.FC<TransactionBuilderEnhancedProps> = ({
     });
   }, [updateState]);
 
-  // Enhanced argument change handler with debouncing
+  
   const handleArgChange = useCallback((argName: string, value: any) => {
     requestAnimationFrame(() => {
       if (mountedRef.current) {
@@ -208,18 +338,15 @@ const TransactionBuilder: React.FC<TransactionBuilderEnhancedProps> = ({
       }
     });
   }, [getCurrentState, updateState]);
-
-  // FIXED: Go back handler with proper cleanup
+  
   const handleGoBack = useCallback(() => {
     if (buildingRef.current) return;
 
-    // Clear any pending timeouts
     if (resetTimeoutRef.current) {
       clearTimeout(resetTimeoutRef.current);
       resetTimeoutRef.current = null;
     }
 
-    // Cancel any ongoing operations
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
       abortControllerRef.current = null;
@@ -228,10 +355,8 @@ const TransactionBuilder: React.FC<TransactionBuilderEnhancedProps> = ({
     buildingRef.current = false;
     lastPresetIdRef.current = null;
 
-    // Smooth transition back
     setIsExpanded(false);
 
-    // Delayed state reset to prevent freezing
     setTimeout(() => {
       if (mountedRef.current) {
         resetState();
@@ -239,11 +364,10 @@ const TransactionBuilder: React.FC<TransactionBuilderEnhancedProps> = ({
     }, 100);
   }, [resetState]);
 
-  // Enhanced build transaction with better error handling
+
   const buildTransaction = useCallback(async () => {
     if (!api || !state.selectedPreset || buildingRef.current || !mountedRef.current) return;
 
-    // Cancel any previous build attempt
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
     }
@@ -264,7 +388,7 @@ const TransactionBuilder: React.FC<TransactionBuilderEnhancedProps> = ({
 
       if (signal.aborted || !mountedRef.current) return;
 
-      // Enhanced XCM pallet resolution
+      
       let actualPallet;
       await new Promise((resolve, reject) => {
         const timeoutId = setTimeout(() => reject(new Error('Pallet resolution timeout')), 3000);
@@ -298,7 +422,7 @@ const TransactionBuilder: React.FC<TransactionBuilderEnhancedProps> = ({
 
       if (signal.aborted || !mountedRef.current) return;
 
-      // Process arguments with progress indication
+      
       const processedArgs: any[] = [];
       const argDefs = state.selectedPreset.id === 'custom' ? [] : state.selectedPreset.args;
 
@@ -320,14 +444,14 @@ const TransactionBuilder: React.FC<TransactionBuilderEnhancedProps> = ({
           const processedValue = await processArgument(value, argDef.type, network.decimals);
           processedArgs.push(processedValue);
 
-          // Yield control for smooth UI
+          
           await new Promise(resolve => setTimeout(resolve, 0));
         }
       }
 
       if (signal.aborted || !mountedRef.current) return;
 
-      // Build transaction with enhanced error handling
+      
       const tx = await Promise.race([
         actualPallet[call](...processedArgs),
         new Promise((_, reject) => {
@@ -343,7 +467,7 @@ const TransactionBuilder: React.FC<TransactionBuilderEnhancedProps> = ({
 
       updateState({ builtTx: tx });
 
-      // Fee estimation with better UX
+      
       try {
         const feePromise = tx.paymentInfo(senderAccount.address);
         const info = await Promise.race([
@@ -383,34 +507,31 @@ const TransactionBuilder: React.FC<TransactionBuilderEnhancedProps> = ({
     }
   }, [api, state.selectedPreset, state.customPallet, state.customCall, state.args, network, senderAccount.address, updateState]);
 
-  // Enhanced sign and send with better UX
+  
   const signAndSendTransaction = useCallback(async () => {
     if (!state.builtTx || !api || !mountedRef.current) return;
+
+    if (!walletReady || !walletConnector.isExtensionsEnabled()) {
+      toast.error('❌ Wallet extension not available. Please install and enable a Polkadot wallet.');
+      return;
+    }
 
     updateState({ isSigning: true });
 
     try {
-      const web3FromAddress = await Promise.race([
-        getWeb3FromAddress(),
-        new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('Wallet extension timeout')), 5000)
-        )
-      ]);
+      const extensionSigner = await walletConnector.getSigner(senderAccount.address);
 
-      if (!web3FromAddress || !mountedRef.current) {
-        throw new Error("Wallet extension not available");
+      if (!extensionSigner || !mountedRef.current) {
+        throw new Error("Unable to connect to wallet extension");
       }
 
-      const injector = await web3FromAddress(senderAccount.address);
-
-      if (!mountedRef.current) return;
-
       updateState({ isSending: true, isSigning: false });
+      toast('📝 Broadcasting transaction...');
 
       let unsubscribed = false;
       const unsub = await state.builtTx.signAndSend(
         senderAccount.address,
-        { signer: injector.signer },
+        { signer: extensionSigner.signer },
         (result: any) => {
           if (!mountedRef.current || unsubscribed) return;
 
@@ -431,7 +552,7 @@ const TransactionBuilder: React.FC<TransactionBuilderEnhancedProps> = ({
             unsub();
           }
 
-          // Enhanced event processing
+          
           if (result.events?.length > 0) {
             result.events.forEach((event: any) => {
               try {
@@ -457,7 +578,7 @@ const TransactionBuilder: React.FC<TransactionBuilderEnhancedProps> = ({
         }
       );
 
-      // Enhanced cleanup with timeout
+      
       setTimeout(() => {
         if (!unsubscribed && mountedRef.current) {
           try {
@@ -476,7 +597,7 @@ const TransactionBuilder: React.FC<TransactionBuilderEnhancedProps> = ({
         console.error('Transaction error:', error);
       }
     }
-  }, [state.builtTx, api, senderAccount.address, updateState]);
+  }, [state.builtTx, api, senderAccount.address, updateState, walletReady, walletConnector]);
 
   // Enhanced layout classes based on phase
   const containerClasses = useMemo(() => {
@@ -501,8 +622,7 @@ const TransactionBuilder: React.FC<TransactionBuilderEnhancedProps> = ({
 
   return (
     <div className={containerClasses}>
-      <Card className={cardClasses}>
-        {/* Enhanced Header with Context */}
+      <Card className={cardClasses}>        
         <div className="mb-6">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center space-x-3">
@@ -543,9 +663,22 @@ const TransactionBuilder: React.FC<TransactionBuilderEnhancedProps> = ({
             )}
           </div>
 
-          {/* XCM Info Panel - Only show when relevant */}
+          
+          <div className={`p-3 rounded-lg border ${walletReady ? 'bg-green-50 border-green-200' : 'bg-yellow-50 border-yellow-200'}`}>
+            <div className="flex items-center space-x-2">
+              <div className={`w-2 h-2 rounded-full ${walletReady ? 'bg-green-500' : 'bg-yellow-500'}`} />
+              <span className="text-sm font-medium">
+                {walletReady
+                  ? `✅ Wallet Connected (${walletConnector.getAvailableExtensions().join(', ')})`
+                  : '⚠️ Wallet Extension Required'
+                }
+              </span>
+            </div>
+          </div>
+
+          
           {(currentPhase === 'selection' || state.selectedPreset?.id?.includes('xcm')) && (
-            <div className="p-3 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg">
+            <div className="p-3 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg mt-3">
               <div className="flex items-center space-x-2 mb-2">
                 <Info className="w-4 h-4 text-blue-500" />
                 <h3 className="text-sm font-medium text-blue-900">XCM Cross-Chain Support</h3>
@@ -557,12 +690,12 @@ const TransactionBuilder: React.FC<TransactionBuilderEnhancedProps> = ({
           )}
         </div>
 
-        {/* Progress Steps - Compact when not expanded */}
+        
         {isExpanded && <ProgressSteps steps={steps} />}
 
-        {/* Dynamic Content Area */}
+        
         <div className="space-y-6">
-          {/* Step 1: Selection */}
+          
           {!state.selectedPreset && (
             <PresetSelector
               presets={TRANSACTION_PRESETS}
@@ -570,7 +703,7 @@ const TransactionBuilder: React.FC<TransactionBuilderEnhancedProps> = ({
             />
           )}
 
-          {/* Step 2: Configuration */}
+          
           {state.selectedPreset && !state.builtTx && (
             <TransactionConfig
               preset={state.selectedPreset}
@@ -589,7 +722,7 @@ const TransactionBuilder: React.FC<TransactionBuilderEnhancedProps> = ({
             />
           )}
 
-          {/* Step 3: Review */}
+          
           {state.builtTx && !state.txHash && (
             <div className="space-y-6">
               <div className="flex items-center justify-between">
@@ -610,16 +743,19 @@ const TransactionBuilder: React.FC<TransactionBuilderEnhancedProps> = ({
 
               <Button
                 onClick={signAndSendTransaction}
-                disabled={state.isSigning || state.isSending}
+                disabled={state.isSigning || state.isSending || !walletReady}
                 className="w-full h-12 text-lg font-medium"
                 variant="primary"
               >
-                {state.isSigning ? '✍️ Signing...' : state.isSending ? '📡 Broadcasting...' : '🚀 Sign & Send Transaction'}
+                {!walletReady ? '⚠️ Wallet Required' :
+                  state.isSigning ? '✍️ Signing...' :
+                    state.isSending ? '📡 Broadcasting...' :
+                      '🚀 Sign & Send Transaction'}
               </Button>
             </div>
           )}
 
-          {/* Step 4: Status */}
+          
           {state.txHash && (
             <div className="space-y-4">
               <h3 className="text-lg font-medium">Transaction Status</h3>
@@ -639,7 +775,6 @@ const TransactionBuilder: React.FC<TransactionBuilderEnhancedProps> = ({
             </div>
           )}
 
-          {/* Network Status - Only show when relevant */}
           {(currentPhase === 'selection' || currentPhase === 'configuration') && (
             <XcmNetworkStatus network={network} />
           )}

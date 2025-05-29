@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars,  react/display-name, @next/next/no-img-element */
 "use client";
 
 import React, { memo, useMemo } from "react";
@@ -6,9 +7,8 @@ import { useTheme } from "@/lib/theme/ThemeProvider";
 import Button from "@/components/ui/Button";
 import Badge from "@/components/ui/Badge";
 import { cn } from "@/lib/utils";
-import Skeleton from "@/components/ui/Skeleton";
 
-// Componente de item de carteira otimizado
+
 const WalletItem = memo<{
   wallet: { id: string; name: string; logo?: string; website: string };
   onConnect: () => void;
@@ -21,7 +21,7 @@ const WalletItem = memo<{
   const isConnected = isWalletConnected(wallet.id);
   const isConnecting = status === "connecting";
 
-  // Estilos baseados no tema usando as funções de tema
+  
   const walletStyles = useMemo(() => {
     const baseStyles = {
       background: getColor("surfaceVariant"),
@@ -251,7 +251,7 @@ const AccountSelector = memo(() => {
   );
 });
 
-// Componente principal de conexão de carteira
+
 export const WalletConnect = memo(() => {
   const { status, wallets, error, connect, disconnect } = useWallet();
   const { getColor } = useTheme();

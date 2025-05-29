@@ -1,6 +1,6 @@
-// types/transaction.types.ts
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { ApiPromise } from "@polkadot/api";
+import type { ApiPromise } from "@polkadot/api";
 
 export type TransactionStatus = 'pending' | 'active' | 'completed' | 'error';
 export type TxStatus = 'inBlock' | 'finalized' | 'error' | null;

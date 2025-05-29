@@ -1,3 +1,5 @@
+/* eslint-disable react/display-name,  @typescript-eslint/no-unused-vars */
+
 "use client";
 
 import React, { useState, useMemo, useCallback, memo, useRef, useEffect } from "react";

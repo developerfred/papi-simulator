@@ -4,11 +4,11 @@
   "author": "codingsh <codinsh@pm.me>",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
+    "dev": "node scripts/ensure-descriptors.js && next dev --turbopack",
     "build": "node scripts/update-version.js && next build",
     "start": "next start",
     "lint": "next lint",
-    "prebuild": "papi",
+    "prebuild": "node scripts/update-chains.js && papi",
     "update-chains": "node scripts/update-chains.js",
     "update-version": "node scripts/update-version.js",
     "postversion": "node scripts/update-version.js"

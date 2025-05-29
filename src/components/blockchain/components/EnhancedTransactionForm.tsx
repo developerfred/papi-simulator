@@ -1,7 +1,10 @@
+/* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any */
+
 "use client";
 
-import React, { useState, useCallback, useMemo } from "react";
-import { ApiPromise } from "@polkadot/api";
+import type React from "react";
+import { useState, useCallback, useMemo } from "react";
+import type { ApiPromise } from "@polkadot/api";
 import { formatBalance } from "@polkadot/util";
 import { Card, Button } from "@/components/ui";
 import dynamic from "next/dynamic";

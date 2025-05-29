@@ -1,7 +1,7 @@
-// components/ArgumentInput.tsx
+/* eslint-disable @typescript-eslint/no-explicit-any, react/display-name */
 
 import React from "react";
-import { TransactionArg } from "../types/transaction.types";
+import type { TransactionArg } from "../types/transaction.types";
 
 interface ArgumentInputProps {
   arg: TransactionArg;

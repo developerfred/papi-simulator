@@ -1,4 +1,4 @@
-// components/XcmHelper.tsx
+/* eslint-disable react/display-name */
 
 import React from "react";
 

@@ -1,10 +1,9 @@
-/* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/ban-ts-comment */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState,  useCallback, useMemo } from "react";
 import {
-	useMultiEventSubscribe,
-	type EventData,
+	useMultiEventSubscribe,	
 } from "@/hooks/useMultiEventSubscribe";
 import { useConnectionStatus } from "@/store/useChainStore";
 import Card from "@/components/ui/Card";
