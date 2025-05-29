@@ -63,6 +63,7 @@ import { withPolkadotSdkCompat } from "polkadot-api/polkadot-sdk-compat";`;
 	protected getTestAccount(name: "alice" | "bob" | "charlie"): string {
 		return TEST_ACCOUNTS[name];
 	}
+	
 }
 
 /**

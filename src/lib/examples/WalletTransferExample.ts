@@ -549,7 +549,7 @@ export default function RealWalletTransfer() {
     return colors[network.id as keyof typeof colors] || '#8E2FD0';
   }
 
-  private getTestAccount(name: string): string {
+  protected getTestAccount(name: string): string {
     const accounts = {
       papi: '5Gq3Z2KdQvKiZj1rvJ57eSkABKGTYfx8DigokpDvQ2jtvkAJ',
       alice: '5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY',

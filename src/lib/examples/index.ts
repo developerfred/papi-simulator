@@ -3,13 +3,17 @@ import { SimpleTransferExample } from "./SimpleTransferExample";
 import { NetworkDashboardExample } from "./NetworkDashboardExample";
 import { AccountBalanceCheckerExample } from "./AccountBalanceCheckerExample";
 import { WalletTransferExample } from "./WalletTransferExample";
+import { AcalaDeFiExample } from "./AcalaDeFiExample";
 import type { Example, ExampleLevel } from "../types/example";
+import { PolkadotGovernanceExample } from "./PolkadotGovernanceExample";
 
 exampleRegistry.registerMany([
 	new AccountBalanceCheckerExample(),
 	new SimpleTransferExample(),			
 	new NetworkDashboardExample(),
-  new WalletTransferExample(),
+  	new WalletTransferExample(),
+	new AcalaDeFiExample(),
+	new PolkadotGovernanceExample(),
 ]);
 
 exampleRegistry.setDefaultExample("account-balance");

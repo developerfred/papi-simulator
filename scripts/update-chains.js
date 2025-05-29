@@ -13,6 +13,8 @@ const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
+
+
 // All supported chains - updated list based on current parachains
 const ALL_CHAINS = [
   // Relay chains
@@ -25,66 +27,24 @@ const ALL_CHAINS = [
   // System Parachains
   'polkadot_asset_hub',
   'ksmcc3_asset_hub',
-  'westend_asset_hub',
-  'rococo_asset_hub',
+  'westend2_asset_hub',    // Corrigido de 'westend_asset_hub'
+  'rococo_v2_2_asset_hub', // Corrigido de 'rococo_asset_hub'
   'polkadot_bridge_hub',
   'ksmcc3_bridge_hub',
-  'westend_bridge_hub',
-  'rococo_bridge_hub',
+  'westend2_bridge_hub',   // Corrigido de 'westend_bridge_hub'
+  'rococo_v2_2_bridge_hub',// Corrigido de 'rococo_bridge_hub'
   'polkadot_collectives',
+  'polkadot_coretime',     // Adicionado
   'polkadot_people',
   'ksmcc3_people',
-  'westend_people',
+  'westend2_people',       // Corrigido de 'westend_people'
+  'rococo_v2_2_people',    // Adicionado
+  'paseo_asset_hub',       // Adicionado
+  'paseo_people',          // Adicionado
+  'westend2_collectives',  // Adicionado
 
-  // Major DeFi & Smart Contract Parachains
-  'acala',
-  'moonbeam',
-  'astar',
-  'parallel_finance',
-  'hydradx',
-  'interlay',
-  'centrifuge',
-  'pendulum',
-  'amplitude',
-  'manta',
-  'bifrost_polkadot',
-  'bifrost_kusama',
-  'basilisk',
-  'mangata',
-  'phala',
-  'kylin',
-
-  // Other Important Parachains
-  'kilt',
-  'litentry',
-  'unique_network',
-  'subsocial',
-  'zeitgeist',
-  'polkadex',
-  'crust',
-  'darwinia',
-  'efinity',
-  'nodle',
-  'origin_trail',
-  'clover',
-  'equilibrium',
-  'composable',
-
-  // Kusama Parachains
-  'ksmcc3_encointer',
-  'calamari',
-  'karura',
-  'shiden',
-  'moonriver',
-  'turing',
-  'picasso',
-  'quartz',
-  'kintsugi',
-  'robonomics',
-  'heiko',
-  'crab',
-  'altair',
-  'genshiro'
+  // Kusama Ecosystem
+  'ksmcc3_encointer'
 ];
 
 // Map of chain names to their correct descriptor keys for the papi add command
@@ -97,71 +57,29 @@ const CHAIN_TO_DESCRIPTOR_MAPPING = {
   'rococo_v2_2': 'roc',
   'paseo': 'paseo',
 
-  // Asset & Bridge Hubs
-  'polkadot_asset_hub': 'assethub',
-  'ksmcc3_asset_hub': 'ksmassethub',
-  'westend_asset_hub': 'westendassethub',
-  'rococo_asset_hub': 'rococoassethub',
-  'polkadot_bridge_hub': 'bridgehub',
-  'ksmcc3_bridge_hub': 'ksmbridgehub',
-  'westend_bridge_hub': 'westendbridgehub',
-  'rococo_bridge_hub': 'rococobridgehub',
+
 
   // System Parachains
+  'polkadot_asset_hub': 'assethub',
+  'ksmcc3_asset_hub': 'ksmassethub',
+  'westend2_asset_hub': 'westendassethub',
+  'rococo_v2_2_asset_hub': 'rococoassethub',
+  'polkadot_bridge_hub': 'bridgehub',
+  'ksmcc3_bridge_hub': 'ksmbridgehub',
+  'westend2_bridge_hub': 'westendbridgehub',
+  'rococo_v2_2_bridge_hub': 'rococobridgehub',
   'polkadot_collectives': 'collectives',
+  'polkadot_coretime': 'coretime',
   'polkadot_people': 'people',
   'ksmcc3_people': 'ksmpeople',
-  'westend_people': 'wndpeople',
-
-  // Major DeFi & Smart Contract Parachains
-  'acala': 'acala',
-  'moonbeam': 'moonbeam',
-  'astar': 'astar',
-  'parallel_finance': 'parallel',
-  'hydradx': 'hydradx',
-  'interlay': 'interlay',
-  'centrifuge': 'centrifuge',
-  'pendulum': 'pendulum',
-  'amplitude': 'amplitude',
-  'manta': 'manta',
-  'bifrost_polkadot': 'bifrost',
-  'bifrost_kusama': 'bifrostkusama',
-  'basilisk': 'basilisk',
-  'mangata': 'mangata',
-  'phala': 'phala',
-  'kylin': 'kylin',
-
-  // Other Important Parachains
-  'kilt': 'kilt',
-  'litentry': 'litentry',
-  'unique_network': 'unique',
-  'subsocial': 'subsocial',
-  'zeitgeist': 'zeitgeist',
-  'polkadex': 'polkadex',
-  'crust': 'crust',
-  'darwinia': 'darwinia',
-  'efinity': 'efinity',
-  'nodle': 'nodle',
-  'origin_trail': 'origintrail',
-  'clover': 'clover',
-  'equilibrium': 'equilibrium',
-  'composable': 'composable',
+  'westend2_people': 'wndpeople',
+  'rococo_v2_2_people': 'rococopeople',
+  'paseo_asset_hub': 'paseoassethub',
+  'paseo_people': 'paseopeople',
+  'westend2_collectives': 'westendcollectives',
 
   // Kusama Parachains
-  'ksmcc3_encointer': 'encointer',
-  'calamari': 'calamari',
-  'karura': 'karura',
-  'shiden': 'shiden',
-  'moonriver': 'moonriver',
-  'turing': 'turing',
-  'picasso': 'picasso',
-  'quartz': 'quartz',
-  'kintsugi': 'kintsugi',
-  'robonomics': 'robonomics',
-  'heiko': 'heiko',
-  'crab': 'crab',
-  'altair': 'altair',
-  'genshiro': 'genshiro'
+  'ksmcc3_encointer': 'encointer'
 };
 
 // Known RPC endpoints for parachains
@@ -177,45 +95,31 @@ const CHAIN_RPC_ENDPOINTS = {
   'polkadot_asset_hub': 'wss://polkadot-asset-hub-rpc.polkadot.io',
   'polkadot_bridge_hub': 'wss://polkadot-bridge-hub-rpc.polkadot.io',
   'polkadot_collectives': 'wss://polkadot-collectives-rpc.polkadot.io',
+  'polkadot_coretime': 'wss://polkadot-coretime-rpc.polkadot.io',
   'ksmcc3_asset_hub': 'wss://kusama-asset-hub-rpc.polkadot.io',
   'ksmcc3_bridge_hub': 'wss://kusama-bridge-hub-rpc.polkadot.io',
+  'westend2_asset_hub': 'wss://westend-asset-hub-rpc.polkadot.io',
+  'westend2_bridge_hub': 'wss://westend-bridge-hub-rpc.polkadot.io',
+  'westend2_collectives': 'wss://westend-collectives-rpc.polkadot.io',
+  'rococo_v2_2_asset_hub': 'wss://rococo-asset-hub-rpc.polkadot.io',
+  'rococo_v2_2_bridge_hub': 'wss://rococo-bridge-hub-rpc.polkadot.io',
+  'paseo_asset_hub': 'wss://paseo-asset-hub-rpc.polkadot.io',
 
-  // Major Parachains
-  'acala': 'wss://acala-rpc-0.aca-api.network',
-  'moonbeam': 'wss://wss.api.moonbeam.network',
-  'astar': 'wss://rpc.astar.network',
-  'hydradx': 'wss://rpc.hydradx.io',
-  'interlay': 'wss://api.interlay.io/parachain',
-  'centrifuge': 'wss://centrifuge-parachain.api.onfinality.io/public-ws',
-  'pendulum': 'wss://rpc-pendulum.prd.pendulumchain.tech',
-  'amplitude': 'wss://rpc-amplitude.pendulumchain.tech',
-  'parallel_finance': 'wss://parallel.api.onfinality.io/public-ws',
-  'manta': 'wss://manta.public.curie.radiumblock.co/ws',
-  'bifrost_polkadot': 'wss://bifrost-polkadot.api.onfinality.io/public-ws',
+  // People Chains
+  'polkadot_people': 'wss://polkadot-people-rpc.polkadot.io',
+  'ksmcc3_people': 'wss://kusama-people-rpc.polkadot.io',
+  'westend2_people': 'wss://westend-people-rpc.polkadot.io',
+  'rococo_v2_2_people': 'wss://rococo-people-rpc.polkadot.io',
+  'paseo_people': 'wss://paseo-people-rpc.polkadot.io',
 
   // Kusama Ecosystem
-  'moonriver': 'wss://wss.api.moonriver.moonbeam.network',
-  'karura': 'wss://karura.api.onfinality.io/public-ws',
-  'basilisk': 'wss://rpc.basilisk.cloud',
-  'shiden': 'wss://shiden.api.onfinality.io/public-ws',
-  'calamari': 'wss://calamari.api.onfinality.io/public-ws',
-  'kintsugi': 'wss://api-kusama.interlay.io/parachain',
-  'bifrost_kusama': 'wss://bifrost-kusama.api.onfinality.io/public-ws',
-  'mangata': 'wss://kusama-archive.mangata.online',
-
-  // Other parachains
-  'kilt': 'wss://kilt.api.onfinality.io/public-ws',
-  'unique_network': 'wss://ws.unique.network',
-  'phala': 'wss://api.phala.network/ws',
-  'subsocial': 'wss://para.subsocial.network'
+  'ksmcc3_encointer': 'wss://encointer.api.onfinality.io/public-ws'
 };
 
 // Alternative endpoints in case primary fails
 const ALTERNATIVE_ENDPOINTS = {
-  'acala': ['wss://acala.polkawallet.io', 'wss://acala-rpc.dwellir.com'],
-  'moonbeam': ['wss://moonbeam.api.onfinality.io/public-ws', 'wss://moonbeam-rpc.dwellir.com'],
-  'astar': ['wss://astar.api.onfinality.io/public-ws', 'wss://astar-rpc.dwellir.com'],
-  'hydradx': ['wss://hydradx.api.onfinality.io/public-ws', 'wss://hydradx-rpc.dwellir.com']
+  'polkadot': ['wss://rpc.dotters.network/polkadot'],
+  'ksmcc3': ['wss://kusama.api.onfinality.io/public-ws']
 };
 
 // Ensure metadata directory exists
@@ -225,9 +129,18 @@ if (!fs.existsSync(metadataDir)) {
   fs.mkdirSync(metadataDir, { recursive: true });
 }
 
-// Determine which chains to update
-const specificChain = process.argv[2];
-const chainsToUpdate = specificChain ? [specificChain] : ALL_CHAINS;
+
+
+const specificChains = process.argv.slice(2);
+const chainsToUpdate = specificChains.length > 0
+  ? specificChains.filter(chain => ALL_CHAINS.includes(chain))
+  : ALL_CHAINS;
+
+if (specificChains.length > 0 && chainsToUpdate.length === 0) {
+  console.error('No valid chains specified. Supported chains:');
+  console.error(ALL_CHAINS.join(', '));
+  process.exit(1);
+}
 
 console.log(`Updating ${chainsToUpdate.length} chains: ${chainsToUpdate.join(', ')}`);
 console.log('This may take some time, especially for chains that need direct RPC connections...');
@@ -335,21 +248,6 @@ for (const chain of chainsToUpdate) {
   }
 }
 
-// Run codegen once at the end to include all chains
-if (results.success.length > 0) {
-  try {
-    console.log('\nRunning final codegen...');
-    execSync('npx papi', { stdio: 'inherit' });
-    console.log('Codegen completed successfully');
-
-    // Install the updated descriptors
-    console.log('\nInstalling updated descriptors...');
-    execSync('npm install --no-save @polkadot-api/descriptors@.papi/descriptors', { stdio: 'inherit' });
-    console.log('Installation completed successfully');
-  } catch (error) {
-    console.error(`Error during final steps: ${error.message}`);
-  }
-}
 
 // Print summary
 console.log('\n=== UPDATE SUMMARY ===');
