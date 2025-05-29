@@ -1,3 +1,4 @@
+import type { Network } from "../types/network";
 import { ExampleFactory } from "./factory";
 
 export class PolkadotGovernanceExample extends ExampleFactory {
