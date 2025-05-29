@@ -26,11 +26,9 @@ const ALL_CHAINS = [
   'polkadot_asset_hub',
   'ksmcc3_asset_hub',
   'westend2_asset_hub',    
-  'rococo_v2_2_asset_hub', 
   'polkadot_bridge_hub',
   'ksmcc3_bridge_hub',
   'westend2_bridge_hub',   
-  'rococo_v2_2_bridge_hub',
   'polkadot_collectives',
   'polkadot_coretime',     
   'polkadot_people',
@@ -83,19 +81,19 @@ const CHAIN_RPC_ENDPOINTS = {
   'polkadot_bridge_hub': 'wss://polkadot-bridge-hub-rpc.dwellir.com',
   'polkadot_collectives': 'wss://polkadot-collectives-rpc.dwellir.com',
   'polkadot_coretime': 'wss://polkadot-coretime-rpc.dwellir.com',
-  'ksmcc3_asset_hub': 'wss://kusama-asset-hub-rpc.dwellir.com',
+  'ksmcc3_asset_hub': 'wss://kusama-asset-hub-rpc.polkadot.io',
   'ksmcc3_bridge_hub': 'wss://kusama-bridge-hub-rpc.dwellir.com',
-  'westend2_asset_hub': 'wss://westend-asset-hub-rpc.dwellir.com',
-  'westend2_bridge_hub': 'wss://westend-bridge-hub-rpc.dwellir.com',
-  'westend2_collectives': 'wss://westend-collectives-rpc.dwellir.com',
+  'westend2_asset_hub': 'wss://westend-asset-hub-rpc.polkadot.io',
+  'westend2_bridge_hub': 'wss://westend-bridge-hub-rpc.polkadot.io',
+  'westend2_collectives': 'wss://westend-collectives-rpc.polkadot.io',
   'paseo_asset_hub': 'wss://paseo-asset-hub-rpc.dwellir.com',
 
   'polkadot_people': 'wss://polkadot-people-rpc.dwellir.com',
-  'ksmcc3_people': 'wss://kusama-people-rpc.dwellir.com',
+  'ksmcc3_people': 'wss://kusama-people-rpc.polkadot.io',
   'westend2_people': 'wss://westend-people-rpc.dwellir.com',
   'paseo_people': 'wss://paseo-people-rpc.dwellir.com',
 
-  'ksmcc3_encointer': 'wss://kusama.api.onfinality.io/public-ws' // OnFinality still reliable for Encointer
+  'ksmcc3_encointer': 'wss://kusama.api.onfinality.io/public-ws' 
 };
 
 
