@@ -471,7 +471,7 @@ const Footer = memo(() => {
 	);
 });
 
-// Componente principal otimizado
+
 const DashboardLayout = memo<DashboardLayoutProps>(({
 	children,
 	title,
