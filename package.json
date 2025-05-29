@@ -8,7 +8,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "prebuild": "node scripts/update-chains.js && papi",
+    "prebuild": "papi",
     "update-chains": "node scripts/update-chains.js",
     "update-version": "node scripts/update-version.js",
     "postversion": "node scripts/update-version.js"
