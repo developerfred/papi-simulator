@@ -8,6 +8,8 @@ import { PolkadotProvider } from "@/components/PolkadotProvider";
 import { WasmPreloader } from "@/components/WasmPreloader";
 import { WalletProvider } from "../../src/providers/WalletProvider";
 import { CryptoSetup } from '@/blockchain/CryptoSetup';
+import { Analytics } from "@vercel/analytics/next"
+
 const geistSans = Geist({
 	variable: "--font-geist-sans",
 	subsets: ["latin"],
@@ -43,6 +45,7 @@ export default function RootLayout({
 					</WalletProvider>
 				</PolkadotProvider>
 				</CryptoSetup>
+				<Analytics/>
 			</body>
 		</html>
 	);
