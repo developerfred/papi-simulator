@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import type { Network } from "../types/network";
 import { ExampleFactory } from "./factory";
 
