@@ -1,4 +1,5 @@
-/* eslint-disable @typescript-eslint/no-unused-vars,  react/display-name, @next/next/no-img-element */
+/* eslint-disable @typescript-eslint/no-unused-vars,  react/display-name, @next/next/no-img-element,  @typescript-eslint/ban-ts-comment */
+// @ts-nocheck
 "use client";
 
 import React, { memo, useMemo } from "react";

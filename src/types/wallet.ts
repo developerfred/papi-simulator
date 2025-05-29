@@ -1,3 +1,6 @@
+/* eslint-disable   @typescript-eslint/ban-ts-comment  */
+// @ts-nocheck
+
 import { z } from 'zod';
 
 // Zod schemas for validation

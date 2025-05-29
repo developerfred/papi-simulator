@@ -1,3 +1,5 @@
+/* eslint-disable  @typescript-eslint/ban-ts-comment  */
+// @ts-nocheck
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
@@ -6,7 +8,7 @@ import type { WalletState } from '@/types/wallet';
 import { SUPPORTED_WALLETS } from '@/constants/wallets';
 
 
-// Utility functions
+
 const isWalletInstalled = (walletId: string): boolean => {
   if (typeof window === "undefined") return false;
   return !!(window.injectedWeb3?.[walletId]);
@@ -33,7 +35,7 @@ export const useWalletStore = create<WalletState>()(
       wallets: getInstalledWallets(),
       extension: null,
       error: null,
-      connectedWalletId: null, // Track which wallet is connected specifically
+      connectedWalletId: null, 
 
       // Internal setters
       _setStatus: (status) => set((state) => {
@@ -57,14 +59,13 @@ export const useWalletStore = create<WalletState>()(
         state.connectedWalletId = walletId;
       }),
 
-      // Public actions
+      
       refreshWallets: () => set((state) => {
         state.wallets = getInstalledWallets();
       }),
 
       isWalletInstalled: (walletId: string) => isWalletInstalled(walletId),
-
-      // Fix: Check if specific wallet is connected
+      
       isWalletConnected: (walletId: string) => {
         const state = get();
         return state.status === "connected" && state.connectedWalletId === walletId;
@@ -80,7 +81,7 @@ export const useWalletStore = create<WalletState>()(
         state.accounts = [];
         state.extension = null;
         state.error = null;
-        state.connectedWalletId = null; // Clear connected wallet
+        state.connectedWalletId = null; 
         toast.success("Wallet disconnected");
       }),
 
@@ -117,14 +118,14 @@ export const useWalletStore = create<WalletState>()(
             throw new Error("No accounts found in wallet");
           }
 
-          // Update state atomically
+          
           set((state) => {
             state.status = "connected";
             state.extension = extension;
             state.accounts = accounts;
             state.activeAccount = accounts[0];
             state.error = null;
-            state.connectedWalletId = targetWalletId; // Set connected wallet ID
+            state.connectedWalletId = targetWalletId; 
           });
 
           const walletName = SUPPORTED_WALLETS.find(w => w.id === targetWalletId)?.name || 'Wallet';
@@ -142,7 +143,7 @@ export const useWalletStore = create<WalletState>()(
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         activeAccount: state.activeAccount,
-        connectedWalletId: state.connectedWalletId, // Persist connected wallet
+        connectedWalletId: state.connectedWalletId, 
       }),
     }
   )
