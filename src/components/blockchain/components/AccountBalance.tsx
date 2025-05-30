@@ -11,9 +11,6 @@ import Input from "@/components/ui/Input";
 import type { Network } from "@/lib/types/network";
 import { formatTokenAmount } from "@/lib/utils/formatters";
 
-/**
- * Component that displays and queries account balances
- */
 export default function AccountBalance({
 	network,
 	initialAddress,
@@ -25,17 +22,18 @@ export default function AccountBalance({
 	const [address, setAddress] = useState(initialAddress || "");
 	const [searchAddress, setSearchAddress] = useState(initialAddress || "");
 
-	// Query balance for the current search address
 	const { free, reserved, frozen, total, isLoading, error, refetch } =
 		useAccountBalance(searchAddress, {
 			refetchOnBlock: true,
 		});
 
-	// Handle search form submission
 	const handleSubmit = (e: React.FormEvent) => {
 		e.preventDefault();
 		setSearchAddress(address);
 	};
+
+	// Verificação segura para exibição de saldos
+	const showBalances = searchAddress && !error && !isLoading;
 
 	return (
 		<Card
@@ -76,56 +74,56 @@ export default function AccountBalance({
 					</div>
 				)}
 
-				{searchAddress && !error && (
+				{isLoading && (
+					<div className="text-center py-4">Loading balance...</div>
+				)}
+
+				{showBalances && (
 					<div
 						className="p-3 rounded"
 						style={{ backgroundColor: getColor("surfaceVariant") }}
 					>
-						{isLoading ? (
-							<div className="text-center py-4">Loading balance...</div>
-						) : (
-							<div className="space-y-3">
-								<AccountHeader address={searchAddress} />
+						<div className="space-y-3">
+							<AccountHeader address={searchAddress} />
 
+							<BalanceRow
+								label="Free Balance"
+								amount={free}
+								network={network}
+							/>
+
+							<BalanceRow
+								label="Reserved"
+								amount={reserved}
+								network={network}
+							/>
+
+							<BalanceRow label="Frozen" amount={frozen} network={network} />
+
+							<div
+								className="pt-2 border-t"
+								style={{ borderColor: getColor("border") }}
+							>
 								<BalanceRow
-									label="Free Balance"
-									amount={free}
+									label="Total Balance"
+									amount={total}
 									network={network}
+									isTotal
 								/>
-
-								<BalanceRow
-									label="Reserved"
-									amount={reserved}
-									network={network}
-								/>
-
-								<BalanceRow label="Frozen" amount={frozen} network={network} />
-
-								<div
-									className="pt-2 border-t"
-									style={{ borderColor: getColor("border") }}
-								>
-									<BalanceRow
-										label="Total Balance"
-										amount={total}
-										network={network}
-										isTotal
-									/>
-								</div>
-
-								<div className="pt-2 flex justify-end">
-									<a
-										href={`${network.explorer}/account/${searchAddress}`}
-										target="_blank"
-										rel="noopener noreferrer"
-										className="text-sm hover:underline"
-										style={{ color: getNetworkColor("primary") }}
-									>
-										View in explorer →
-									</a>
-								</div>
 							</div>
-						)}
+
+							<div className="pt-2 flex justify-end">
+								<a
+									href={`${network.explorer}/account/${searchAddress}`}
+									target="_blank"
+									rel="noopener noreferrer"
+									className="text-sm hover:underline"
+									style={{ color: getNetworkColor("primary") }}
+								>
+									View in explorer →
+								</a>
+							</div>
+						</div>
 					</div>
 				)}
 			</form>
@@ -133,9 +131,6 @@ export default function AccountBalance({
 	);
 }
 
-/**
- * Account header component
- */
 function AccountHeader({ address }: { address: string }) {
 	const { getColor } = useTheme();
 
@@ -152,9 +147,6 @@ function AccountHeader({ address }: { address: string }) {
 	);
 }
 
-/**
- * Balance row component
- */
 function BalanceRow({
 	label,
 	amount,
@@ -162,11 +154,17 @@ function BalanceRow({
 	isTotal = false,
 }: {
 	label: string;
-	amount: bigint;
+	amount?: bigint;
 	network: Network;
 	isTotal?: boolean;
 }) {
 	const { getColor, getNetworkColor } = useTheme();
+
+	// Tratamento completo para diferentes estados
+	const getDisplayValue = () => {
+		if (amount === undefined) return "N/A";
+		return formatTokenAmount(network, amount, true, 4);
+	};
 
 	return (
 		<div className="flex justify-between items-center">
@@ -179,7 +177,7 @@ function BalanceRow({
 					color: isTotal ? getNetworkColor("primary") : getColor("textPrimary"),
 				}}
 			>
-				{formatTokenAmount(network, amount, true, 4)}
+				{getDisplayValue()}
 			</span>
 		</div>
 	);

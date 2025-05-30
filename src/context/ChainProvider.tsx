@@ -9,6 +9,7 @@ import {
 	useState,
 	useCallback,
 	useMemo,
+	useRef,
 } from "react";
 import type { PolkadotClient } from "polkadot-api";
 import type { Network } from "@/lib/types/network";
@@ -43,6 +44,10 @@ export const ChainProvider: React.FC<{
 	const [selectedNetwork, setSelectedNetwork] =
 		useState<Network>(initialNetwork);
 
+	// Use ref to store current connection state for disconnect function
+	const connectionStateRef = useRef(connectionState);
+	connectionStateRef.current = connectionState;
+
 	const connect = useCallback(async (networkToConnect: Network) => {
 		try {
 			// Set connecting state
@@ -73,10 +78,13 @@ export const ChainProvider: React.FC<{
 	}, []);
 
 	const disconnect = useCallback(() => {
-		if (connectionState.state === "connected") {
+		// Use ref to access current state without adding it as dependency
+		const currentState = connectionStateRef.current;
+
+		if (currentState.state === "connected") {
 			try {
 				// Properly destroy the client if possible
-				connectionState.client.destroy();
+				currentState.client.destroy();
 			} catch (err) {
 				console.error("Error during disconnection:", err);
 			}
@@ -84,7 +92,7 @@ export const ChainProvider: React.FC<{
 
 		// Reset to idle state
 		setConnectionState({ state: "idle" });
-	}, [connectionState]);
+	}, []); // Empty dependency array - function is stable
 
 	// Cleanup on unmount
 	useEffect(() => {

@@ -1,67 +1,162 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
-import React, { type ReactNode } from "react";
+import React, { type ReactNode, useMemo, memo } from "react";
+import { cn } from "@/lib/utils";
+
+
+const SIDEBAR_WIDTHS = ['narrow', 'medium', 'wide'] as const;
+type SidebarWidth = typeof SIDEBAR_WIDTHS[number];
 
 interface ContentLayoutProps {
 	children: ReactNode;
 	sidebar?: ReactNode;
-	sidebarWidth?: "narrow" | "medium" | "wide";
+	sidebarWidth?: SidebarWidth;
+	className?: string;	
+	gap?: 'sm' | 'md' | 'lg';
+	containerSize?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
+	enableAnimations?: boolean;
 }
 
+
+const GRID_CONFIGS = {
+	narrow: {
+		sidebar: "lg:col-span-1",
+		main: "lg:col-span-4",
+		grid: "lg:grid-cols-5"
+	},
+	medium: {
+		sidebar: "lg:col-span-1",
+		main: "lg:col-span-3",
+		grid: "lg:grid-cols-4"
+	},
+	wide: {
+		sidebar: "lg:col-span-2",
+		main: "lg:col-span-5",
+		grid: "lg:grid-cols-7"
+	}
+} as const;
+
+const GAP_CLASSES = {
+	sm: "gap-2 lg:gap-3",
+	md: "gap-4 lg:gap-6",
+	lg: "gap-6 lg:gap-8"
+} as const;
+
+const CONTAINER_CLASSES = {
+	sm: "max-w-4xl",
+	md: "max-w-6xl",
+	lg: "max-w-7xl",
+	xl: "max-w-screen-xl",
+	full: "max-w-full"
+} as const;
+
 /**
- * Layout component for main content with optional sidebar
- * Makes the main content area responsive with proper spacing
+ * Layout component otimizado para conteúdo principal com sidebar opcional
+ * Performance melhorada com memoização e cálculos pré-computados
  */
-export default function ContentLayout({
+const ContentLayout = memo<ContentLayoutProps>(({
 	children,
 	sidebar,
 	sidebarWidth = "medium",
-}: ContentLayoutProps) {
-	const getSidebarGridCols = () => {
-		switch (sidebarWidth) {
-			case "narrow":
-				return "lg:col-span-1 lg:grid-cols-5";
-			case "wide":
-				return "lg:col-span-2 lg:grid-cols-7";
-			case "medium":
-			default:
-				return "lg:col-span-1 lg:grid-cols-4";
-		}
-	};
+	className,
+	gap = "md",
+	containerSize = "lg",
+	enableAnimations = true
+}) => {
+	// Memoização dos cálculos de classe para evitar recálculos
+	const gridClasses = useMemo(() => {
+		const config = GRID_CONFIGS[sidebarWidth];
+		const gapClass = GAP_CLASSES[gap];
+		const containerClass = CONTAINER_CLASSES[containerSize];
 
-	const mainContentCols = () => {
-		switch (sidebarWidth) {
-			case "narrow":
-				return "lg:col-span-4";
-			case "wide":
-				return "lg:col-span-5";
-			case "medium":
-			default:
-				return "lg:col-span-3";
-		}
-	};
+		return {
+			container: cn(
+				"container mx-auto px-4 sm:px-6 lg:px-8",
+				containerClass,
+				className
+			),
+			grid: cn(
+				"grid grid-cols-1",
+				config.grid,
+				gapClass
+			),
+			sidebar: cn(
+				"col-span-1",
+				config.sidebar,
+				enableAnimations && "animate-fadeIn"
+			),
+			main: cn(
+				"col-span-1",
+				config.main,
+				enableAnimations && "animate-slideInRight"
+			),
+			singleColumn: cn(
+				enableAnimations && "animate-fadeIn"
+			)
+		};
+	}, [sidebarWidth, gap, containerSize, className, enableAnimations]);
 
+	// Early return para layout sem sidebar (otimização)
 	if (!sidebar) {
 		return (
-			<div className="container mx-auto">
-				<div className="animate-fadeIn">{children}</div>
+			<div className={gridClasses.container}>
+				<div className={gridClasses.singleColumn}>
+					{children}
+				</div>
 			</div>
 		);
 	}
 
 	return (
-		<div className="container mx-auto">
-			<div
-				className={`grid grid-cols-1 lg:${getSidebarGridCols()} gap-4 lg:gap-6`}
-			>
-				{/* Sidebar */}
-				<div className="col-span-1 animate-fadeIn">{sidebar}</div>
+		<div className={gridClasses.container}>
+			<div className={gridClasses.grid}>
+				{/* Sidebar otimizada */}
+				<aside
+					className={gridClasses.sidebar}
+					aria-label="Sidebar navigation"
+				>
+					{sidebar}
+				</aside>
 
-				{/* Main content */}
-				<div className={`col-span-1 ${mainContentCols()} animate-slideInRight`}>
+				{/* Conteúdo principal otimizado */}
+				<main className={gridClasses.main}>
 					{children}
-				</div>
+				</main>
 			</div>
 		</div>
 	);
-}
+});
+
+ContentLayout.displayName = 'ContentLayout';
+
+export default ContentLayout;
+
+// Hook personalizado para usar com o layout (opcional)
+export const useContentLayout = (
+	sidebarWidth: SidebarWidth = 'medium',
+	gap: ContentLayoutProps['gap'] = 'md'
+) => {
+	const config = useMemo(() => GRID_CONFIGS[sidebarWidth], [sidebarWidth]);
+	const gapClasses = useMemo(() => GAP_CLASSES[gap], [gap]);
+
+	return {
+		config,
+		gapClasses,
+		isSidebarWide: sidebarWidth === 'wide',
+		isSidebarNarrow: sidebarWidth === 'narrow'
+	};
+};
+
+
+export const ContentLayoutWithSidebar = memo<{
+	children: ReactNode;
+	sidebar: ReactNode;
+	sidebarProps?: Partial<ContentLayoutProps>;
+}>(({ children, sidebar, sidebarProps }) => (
+	<ContentLayout sidebar={sidebar} {...sidebarProps}>
+		{children}
+	</ContentLayout>
+));
+
+ContentLayoutWithSidebar.displayName = 'ContentLayoutWithSidebar';

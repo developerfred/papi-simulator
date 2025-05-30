@@ -4,34 +4,51 @@ import type { Network } from "../types/network";
  * Formats a token amount from chain format (with all decimals) to human-readable format
  *
  * @param network The network configuration
- * @param amount The amount in smallest units (e.g., Planck)
+ * @param amount The amount in smallest units (e.g., Planck), or undefined
  * @param includeSymbol Whether to include the token symbol in the output
  * @param decimals Number of decimal places to show (defaults to 4)
  * @returns Formatted amount as a string
  */
 export function formatTokenAmount(
 	network: Network,
-	amount: bigint,
+	amount: bigint | undefined,
 	includeSymbol = true,
 	decimals = 4,
 ): string {
-	const divisor = BigInt(10) ** BigInt(network.tokenDecimals);
-	const whole = amount / divisor;
-	const fraction = amount % divisor;
+	// Validação reforçada
+	if (amount === undefined || amount === null) {
+		return includeSymbol ? `0 ${network.tokenSymbol}` : "0";
+	}
 
-	// Format to include leading zeros for the fraction part
-	const fractionStr = fraction.toString().padStart(network.tokenDecimals, "0");
+	// Conversão segura para tokenDecimals
+	const tokenDecimals = Number(network.tokenDecimals) || 0;
 
-	// Trim to requested decimal places
-	const trimmedFraction = fractionStr.substring(0, decimals);
+	try {
+		const divisor = 10n ** BigInt(tokenDecimals);
+		const whole = amount / divisor;
+		const fractional = amount % divisor;
 
-	const formattedAmount = `${whole.toString()}.${trimmedFraction}`;
+		// Formatação da parte fracionária
+		let fractionalStr = fractional.toString()
+			.padStart(tokenDecimals, '0')
+			.substring(0, decimals);
 
-	return includeSymbol
-		? `${formattedAmount} ${network.tokenSymbol}`
-		: formattedAmount;
+		// Remove zeros não significativos no final
+		fractionalStr = fractionalStr.replace(/0+$/, '');
+
+		const formattedAmount = fractionalStr
+			? `${whole.toString()}.${fractionalStr}`
+			: whole.toString();
+
+		return includeSymbol
+			? `${formattedAmount} ${network.tokenSymbol}`
+			: formattedAmount;
+
+	} catch (error) {
+		console.error("Error formatting token amount:", error);
+		return includeSymbol ? `0 ${network.tokenSymbol}` : "0";
+	}
 }
-
 /**
  * Converts a human-readable amount to chain format with all decimals
  *

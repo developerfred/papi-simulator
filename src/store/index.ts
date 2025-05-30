@@ -1,12 +1,10 @@
-// Export all stores and hooks from a single entry point
-
 // Core chain store
 export {
 	useChainStore,
 	type ConnectionStatus,
 } from "./useChainStore";
 
-// Query store for storage queries
+
 export {
 	useQueryStore,
 	useQuery,
@@ -15,7 +13,7 @@ export {
 	type QueryResult,
 } from "./useQueryStore";
 
-// Transaction store for submitting transactions
+
 export {
 	useTransactionStore,
 	useTransaction,
@@ -25,7 +23,7 @@ export {
 	type TransactionOptions,
 } from "./useTransactionStore";
 
-// Event store for subscribing to blockchain events
+
 export {
 	useEventStore,
 	useEventSubscription,

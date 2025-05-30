@@ -19,6 +19,9 @@ import { MultiAddress, paseo, roc, wnd } from "@polkadot-api/descriptors";
 import { getWsProvider } from "polkadot-api/ws-provider/web";
 import { withPolkadotSdkCompat } from "polkadot-api/polkadot-sdk-compat";
 import { createClient } from "polkadot-api";
+import { useWallet } from '@/hooks/useWallet';
+import { useTheme } from "@/lib/theme/ThemeProvider";
+import { getInjectedExtensions, connectInjectedExtension } from "polkadot-api/pjs-signer";
 
 const ALLOWED_MODULES: Record<string, unknown> = {
 	react: React,
@@ -31,6 +34,9 @@ const ALLOWED_MODULES: Record<string, unknown> = {
 	"polkadot-api/polkadot-sdk-compat": { withPolkadotSdkCompat },
 	"@polkadot-api/descriptors": { paseo, roc, wnd, MultiAddress },	
 	"polkadot-api": { createClient },
+	"@/hooks/useWallet": { useWallet },
+	"@/lib/theme/ThemeProvider": { useTheme },
+	"polkadot-api/pjs-signer": { getInjectedExtensions, connectInjectedExtension }
 };
 
 const COMPILER_OPTIONS: ts.CompilerOptions = {

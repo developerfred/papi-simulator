@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any,  @typescript-eslint/no-unused-vars, @typescript-eslint/ban-ts-comment  */
-// @ts-ignore
+// @ts-nocheck
 import { create } from "zustand";
 import { devtools, persist, subscribeWithSelector } from "zustand/middleware";
 import { useChainStore } from "./useChainStore";
@@ -10,6 +10,7 @@ import type { KeyringPair } from "@polkadot/keyring/types";
 import type { SignerOptions } from "@polkadot/api/types";
 import { BN } from "@polkadot/util";
 import type { u32 } from "@polkadot/types";
+import type { BlockNumber } from "@polkadot/types/interfaces";
 
 export type TransactionStatus =
 	| "idle"
@@ -169,10 +170,13 @@ export const useTransactionStore = create<TransactionState>()(
 												signerOptions.tip = tip;
 											}
 											if (era !== undefined) {
-												const blockNumber = await api.query.system.number();
-												const currentBlockNumber = (blockNumber as u32).toNumber();
+												const blockNumber = await api.query.system.number() as unknown as BlockNumber;
+												if (!blockNumber || typeof blockNumber.toNumber !== "function") {
+													throw new Error("Invalid block number received");
+												}
+												const currentBlockNumber = blockNumber.toNumber();
 												const { GenericExtrinsicEra } = await import("@polkadot/types");
-
+												// @ts-nocheck
 												const extrinsicEra = new GenericExtrinsicEra(api.registry, {
 													current: currentBlockNumber,
 													period: era,

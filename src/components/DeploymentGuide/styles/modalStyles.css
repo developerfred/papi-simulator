@@ -1,0 +1,395 @@
+.modal-header {
+  padding: 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-title {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.modal-subtitle {
+  margin: 4px 0 0;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+}
+
+.modal-close-btn {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: var(--text-secondary);
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.modal-close-btn:hover {
+  background-color: var(--surface-variant);
+  color: var(--text-primary);
+}
+
+.modal-tabs {
+  display: flex;
+  padding: 16px 20px 0;
+  border-bottom: 1px solid var(--border);
+  gap: 8px;
+}
+
+.modal-tab {
+  padding: 12px 24px;
+  border: none;
+  background-color: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  border-radius: 8px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  font-size: 0.875rem;
+}
+
+.modal-tab:hover {
+  background-color: var(--surface-variant);
+  color: var(--text-primary);
+}
+
+.modal-tab.active {
+  background-color: var(--network-primary);
+  color: white;
+}
+
+/* Configuration Tab Styles */
+.config-tab {
+  display: grid;
+  gap: 24px;
+}
+
+.config-section {
+  display: grid;
+  gap: 16px;
+}
+
+.config-section-title {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+.config-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.config-fields {
+  display: grid;
+  gap: 16px;
+}
+
+.config-field {
+  display: grid;
+  gap: 8px;
+}
+
+.config-label {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 0.875rem;
+}
+
+.config-input {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background-color: var(--surface);
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+}
+
+.config-input:focus {
+  outline: none;
+  border-color: var(--network-primary);
+  box-shadow: 0 0 0 3px rgba(var(--network-primary-rgb, 230, 0, 122), 0.1);
+}
+
+/* Guide Tab Styles */
+.guide-tab {
+  display: grid;
+  gap: 20px;
+}
+
+.guide-header {
+  display: grid;
+  gap: 8px;
+}
+
+.guide-title {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+.guide-description {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+}
+
+.file-selector {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.file-button {
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  background-color: var(--surface);
+  color: var(--text-primary);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.file-button:hover {
+  background-color: var(--surface-variant);
+  border-color: var(--network-primary);
+}
+
+.file-button.active {
+  background-color: var(--network-primary);
+  color: white;
+  border-color: var(--network-primary);
+}
+
+.file-viewer {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.file-header {
+  padding: 12px 16px;
+  background-color: var(--surface-variant);
+  border-bottom: 1px solid var(--border);
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.file-content {
+  margin: 0;
+  padding: 16px;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  overflow: auto;
+  max-height: 300px;
+  font-family: ui-monospace, monospace;
+  background-color: var(--surface);
+  color: var(--text-primary);
+}
+
+.troubleshooting {
+  display: grid;
+  gap: 12px;
+}
+
+.troubleshooting-title {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.troubleshooting-items {
+  display: grid;
+  gap: 12px;
+}
+
+.troubleshooting-item {
+  padding: 16px;
+  background-color: var(--surface-variant);
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+
+.troubleshooting-issue {
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: var(--text-primary);
+  font-size: 0.875rem;
+}
+
+.troubleshooting-solution {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+
+/* Download Tab Styles */
+.download-tab {
+  display: grid;
+  gap: 24px;
+}
+
+.download-all-section {
+  padding: 20px;
+  background-color: var(--surface-variant);
+  border-radius: 12px;
+  text-align: center;
+  border: 1px solid var(--border);
+}
+
+.download-title {
+  margin: 0 0 8px;
+  color: var(--text-primary);
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+.download-subtitle {
+  margin: 0 0 20px;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  max-width: 400px;
+  margin-left: auto;
+  margin-right: auto;
+  line-height: 1.5;
+}
+
+.download-all-btn {
+  font-size: 1rem;
+  padding: 12px 24px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.individual-files-section {
+  display: grid;
+  gap: 16px;
+}
+
+.files-list {
+  display: grid;
+  gap: 12px;
+}
+
+.file-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background-color: var(--surface);
+  transition: all 0.2s ease;
+}
+
+.file-item:hover {
+  border-color: var(--network-primary);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.file-info {
+  flex: 1;
+}
+
+.file-name {
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.file-description {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.file-download-btn {
+  padding: 8px 16px;
+  font-size: 0.875rem;
+  flex-shrink: 0;
+}
+
+.quick-setup-section {
+  padding: 20px;
+  background-color: rgba(33, 150, 243, 0.05);
+  border-radius: 8px;
+  border: 1px solid rgba(33, 150, 243, 0.2);
+}
+
+.quick-setup-title {
+  margin: 0 0 12px;
+  color: #1976d2;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.quick-setup-steps {
+  margin: 0;
+  padding-left: 20px;
+  font-size: 0.875rem;
+  color: var(--text-primary);
+  line-height: 1.6;
+}
+
+.quick-setup-steps li {
+  margin-bottom: 4px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .config-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .modal-tabs {
+    padding: 12px 16px 0;
+    gap: 4px;
+  }
+
+  .modal-tab {
+    padding: 10px 16px;
+    font-size: 0.8rem;
+  }
+
+  .file-selector {
+    gap: 6px;
+  }
+
+  .file-button {
+    padding: 6px 10px;
+    font-size: 0.7rem;
+  }
+
+  .file-item {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .file-download-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* Dark theme adjustments */
+[data-theme="dark"] .quick-setup-section {
+  background-color: rgba(33, 150, 243, 0.1);
+  border-color: rgba(33, 150, 243, 0.3);
+}

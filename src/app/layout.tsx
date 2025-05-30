@@ -6,6 +6,9 @@ import { Suspense } from "react";
 import LoadingIndicator from "@/components/LoadingIndicator";
 import { PolkadotProvider } from "@/components/PolkadotProvider";
 import { WasmPreloader } from "@/components/WasmPreloader";
+import { WalletProvider } from "../../src/providers/WalletProvider";
+import { CryptoSetup } from '@/blockchain/CryptoSetup';
+import { Analytics } from "@vercel/analytics/next"
 
 const geistSans = Geist({
 	variable: "--font-geist-sans",
@@ -32,12 +35,17 @@ export default function RootLayout({
 			<body
 				className={`${geistSans.variable} ${geistMono.variable} antialiased`}
 			>
+				<CryptoSetup showDebugInfo={process.env.NODE_ENV === 'development'}>
 				<WasmPreloader />
 				<PolkadotProvider>
+					<WalletProvider>
 					<Suspense fallback={<LoadingIndicator />}>
 						<ThemeProvider>{children}</ThemeProvider>
 					</Suspense>
+					</WalletProvider>
 				</PolkadotProvider>
+				</CryptoSetup>
+				<Analytics/>
 			</body>
 		</html>
 	);
