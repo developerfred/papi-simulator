@@ -600,9 +600,9 @@ const TransactionBuilder: React.FC<TransactionBuilderEnhancedProps> = ({
     }
   }, [state.builtTx, api, senderAccount.address, updateState, walletReady, walletConnector]);
 
-  // Enhanced layout classes based on phase
+  
   const containerClasses = useMemo(() => {
-    const base = "modal-index-export transition-all duration-300 ease-in-out";
+    const base = " transition-all duration-300 ease-in-out";
 
     if (isFullscreen || isExpanded) {
       return `${base} fixed inset-4 z-50 max-h-[calc(100vh-2rem)] overflow-y-auto`;
@@ -612,7 +612,7 @@ const TransactionBuilder: React.FC<TransactionBuilderEnhancedProps> = ({
   }, [isFullscreen, isExpanded]);
 
   const cardClasses = useMemo(() => {
-    const base = "modal-index-export relative transition-all duration-300 ease-in-out";
+    const base = "relative transition-all duration-300 ease-in-out";
 
     if (isExpanded) {
       return `${base} p-6 shadow-2xl border-2 border-blue-200 bg-white/95 backdrop-blur-sm`;
