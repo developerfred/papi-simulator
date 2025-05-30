@@ -1,4 +1,4 @@
-/* eslint-disable  @typescript-eslint/no-unused-vars */
+/* eslint-disable  @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any */
 
 export const downloadFile = (filename: string, content: string) => {
   const blob = new Blob([content], { type: 'text/plain' });
@@ -22,54 +22,57 @@ export const getFileExtension = (filename: string): string => {
   return '.txt';
 };
 
-export const modalStyle = (getColor: (key: string) => string): React.CSSProperties => ({
-  position: 'fixed',
-  top: 0,
-  left: 0,
-  right: 0,
-  bottom: 0,
-  backgroundColor: 'rgba(0, 0, 0, 0.6)',
+export const modalStyle = (getColor: any) => ({
+  position: 'fixed' as const,
+  inset: 0,
+  backgroundColor: 'rgba(0, 0, 0, 0.8)',
+  backdropFilter: 'blur(8px)',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
   zIndex: 1000,
-  backdropFilter: 'blur(4px)'
+  animation: 'fadeIn 0.2s ease-out'
 });
 
-export const contentStyle = (getColor: (key: string) => string): React.CSSProperties => ({
+export const contentStyle = (getColor: any) => ({
   backgroundColor: getColor('surface'),
-  borderRadius: '16px',
-  padding: '0',
-  maxWidth: '1000px',
-  maxHeight: '85vh',
-  width: '95%',
-  overflow: 'hidden',
-  display: 'flex',
-  flexDirection: 'column',
-  boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)'
-});
-
-export const tabStyle = (
-  active: boolean, 
-  getColor: (key: string) => string
-): React.CSSProperties => ({
-  padding: '12px 24px',
-  border: 'none',
-  backgroundColor: active ? getColor('primary') : 'transparent',
-  color: active ? 'white' : getColor('text-secondary'),
-  cursor: 'pointer',
-  borderRadius: '8px',
-  margin: '0 4px',
-  fontWeight: '600',
-  transition: 'all 0.2s ease'
-});
-
-export const inputStyle = (getColor: (key: string) => string): React.CSSProperties => ({
-  width: '100%',
-  padding: '12px',
-  borderRadius: '8px',
   border: `1px solid ${getColor('border')}`,
-  backgroundColor: getColor('surface'),
-  color: getColor('text-primary'),
-  fontSize: '14px'
+  borderRadius: '16px',
+  width: '90vw',
+  maxWidth: '900px',
+  maxHeight: '90vh',
+  display: 'flex',
+  flexDirection: 'column' as const,
+  boxShadow: '0 25px 50px rgba(0, 0, 0, 0.5)',
+  animation: 'scaleIn 0.2s ease-out',
+  overflow: 'hidden'
 });
+
+export const tabStyle = (isActive: boolean, getColor: any) => ({
+  padding: '12px 20px',
+  border: 'none',
+  background: isActive ? getColor('surface-variant') : 'transparent',
+  color: isActive ? getColor('text-primary') : getColor('text-secondary'),
+  cursor: 'pointer',
+  borderRadius: '8px 8px 0 0',
+  fontSize: '14px',
+  fontWeight: isActive ? '600' : '500',
+  transition: 'all 0.2s ease',
+  borderBottom: isActive ? `3px solid ${getColor('network-primary')}` : 'none',
+  position: 'relative' as const
+});
+
+export const inputStyle = (getColor: any) => ({
+  width: '100%',
+  padding: '12px 16px',
+  backgroundColor: getColor('background'),
+  border: `2px solid ${getColor('border')}`,
+  borderRadius: '8px',
+  color: getColor('text-primary'),
+  fontSize: '14px',
+  transition: 'all 0.2s ease',
+  outline: 'none',
+  fontFamily: 'inherit'
+});
+
+

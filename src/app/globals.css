@@ -75,6 +75,7 @@
 	--z-index-tooltip: 500;
 	--z-index-network-indicator: 50;
 	--z-index-mobile-nav: 1001;
+  --z-index-modal: 1002;
 }
 
 [data-theme="dark"] {
@@ -312,6 +313,11 @@ body {
 		z-index: var(--z-index-mobile-nav);
 	}
 }
+
+
+	.modal-index-export {
+		z-index: var(--z-index-modal);
+	}
 
 @theme inline {
 	--radius-sm: calc(var(--radius) - 4px);
@@ -1422,4 +1428,99 @@ button:focus-visible {
   outline: 2px solid var(--network-primary);
   outline-offset: 2px;
   border-radius: var(--radius-md);
+}
+
+
+/* Adicione apenas estas regras essenciais ao globals.css */
+
+/* Body scroll lock */
+body.modal-open {
+  overflow: hidden !important;
+}
+
+/* Z-index override para garantir que modal esteja sempre no topo */
+.z-modal {
+  z-index: 200 !important;
+}
+
+.z-modal-content {
+  z-index: 201 !important;
+}
+
+/* Animações customizadas que o Tailwind não tem por padrão */
+@keyframes fade-in-backdrop {
+  from {
+    opacity: 0;
+    backdrop-filter: blur(0px);
+  }
+  to {
+    opacity: 1;
+    backdrop-filter: blur(8px);
+  }
+}
+
+@keyframes zoom-in-scale {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Classes utilitárias customizadas */
+.animate-fade-in-backdrop {
+  animation: fade-in-backdrop 0.2s ease-out forwards;
+}
+
+.animate-zoom-in-scale {
+  animation: zoom-in-scale 0.2s ease-out forwards;
+}
+
+/* Garantir que elementos Monaco Editor não interfiram */
+.modal-content .monaco-editor .suggest-widget,
+.modal-content .monaco-editor .monaco-hover,
+.modal-content .monaco-editor .parameter-hints-widget {
+  z-index: 210 !important;
+}
+
+/* Scrollbar customizada para o conteúdo do modal */
+.modal-content {
+  scrollbar-width: thin;
+  scrollbar-color: var(--network-primary) var(--surface-variant);
+}
+
+.modal-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.modal-content::-webkit-scrollbar-track {
+  background: var(--surface-variant);
+  border-radius: 3px;
+}
+
+.modal-content::-webkit-scrollbar-thumb {
+  background: var(--network-primary);
+  border-radius: 3px;
+  opacity: 0.7;
+}
+
+.modal-content::-webkit-scrollbar-thumb:hover {
+  opacity: 1;
+}
+
+/* Focus styles para acessibilidade */
+.modal-content button:focus-visible {
+  outline: 2px solid var(--network-primary);
+  outline-offset: 2px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .modal-content {
+    margin: 0.5rem;
+    max-height: 95vh;
+  }
 }

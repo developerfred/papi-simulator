@@ -335,7 +335,7 @@ export default memo(function BlockExplorer({
 				<div className="flex items-center space-x-2">
 					<Layers className="w-5 h-5" style={{ color: getNetworkColor("primary") }} />
 					<span className="font-medium">Recent Blocks</span>
-				</div>
+				</div>		
 				<NetworkBadge network={network} size="sm" />
 				{isActive && (
 					<div className="flex items-center space-x-1 px-2 py-1 bg-green-50 rounded-full">

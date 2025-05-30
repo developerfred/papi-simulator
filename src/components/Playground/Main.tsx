@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import Console from "@/components/Console";
 import TutorialPanel from "@/components/TutorialPanel";
@@ -38,7 +39,6 @@ const getComponentName = (exampleName: string): string => {
 	return exampleName.replace(/\s+/g, '');
 };
 
-
 export default function Main({
 	code,
 	outputs,
@@ -55,12 +55,12 @@ export default function Main({
 	const [isCodeOutputVisible, setIsCodeOutputVisible] = useState<boolean>(true);
 	const editorRef = useRef<HTMLDivElement>(null);
 
-	
+	// Memoized computed values
 	const componentName = useMemo(() => getComponentName(selectedExample.name), [selectedExample.name]);
 	const isComponentExample = useMemo(() => selectedExample.categories.includes("components"), [selectedExample.categories]);
 	const showExportButton = useMemo(() => isLivePreviewMode && isComponentExample, [isLivePreviewMode, isComponentExample]);
 
-	
+	// Memoized styles
 	const containerStyles = useMemo(() => ({
 		editorContainer: {
 			transition: "width 0.3s ease",
@@ -78,18 +78,13 @@ export default function Main({
 			minHeight: `${EDITOR_CONFIG.MIN_HEIGHT}px`,
 			transition: "width 0.3s ease"
 		},
-		exampleBadge: {
-			backgroundColor: isDarkTheme
-				? "rgba(255,255,255,0.05)"
-				: "rgba(0,0,0,0.05)"
-		},
 		consoleSection: {
 			position: "relative" as const,
 			zIndex: "var(--z-index-content)"
 		}
-	}), [getColor, isDarkTheme]);
+	}), [getColor]);
 
-	
+	// Event handlers
 	const handleToggleLivePreview = useCallback(() => {
 		setIsLivePreviewMode(prev => !prev);
 		setIsCodeOutputVisible(true);
@@ -99,7 +94,7 @@ export default function Main({
 		setIsCodeOutputVisible(prev => !prev);
 	}, []);
 
-	
+	// Height adjustment
 	const adjustHeight = useCallback(() => {
 		if (editorRef.current) {
 			const actualHeight = editorRef.current.scrollHeight;
@@ -111,7 +106,7 @@ export default function Main({
 		}
 	}, []);
 
-	
+	// Effects
 	useEffect(() => {
 		const timeoutId = setTimeout(adjustHeight, EDITOR_CONFIG.RESIZE_TIMEOUT);
 		window.addEventListener("resize", adjustHeight);
@@ -122,55 +117,113 @@ export default function Main({
 		};
 	}, [code, adjustHeight]);
 
-	
+	// Memoized header content with harmonized design
 	const HeaderContent = useMemo(() => (
-		<div className="flex justify-between items-center">
-			<div className="font-medium flex items-center gap-3">
-				<span>Code Editor</span>
+		<div className="flex justify-between items-center" >
+			<div className="flex items-center gap-3" >
+				<span className="font-medium text-sm" style={{ color: getColor('text-primary') }}>
+					Code Editor
+				</span>
+
+				{/* Live Preview Toggle */}
 				<Button
 					variant={isLivePreviewMode ? "primary" : "outline"}
 					size="sm"
 					onClick={handleToggleLivePreview}
 					networkColored={isLivePreviewMode}
+					style={{ fontSize: '12px', height: '28px' }}
 				>
 					{isLivePreviewMode ? "Live Preview ON" : "Live Preview OFF"}
 				</Button>
 
-				
-				{showExportButton && (
-					<Badge variant="success">Component rendering enabled</Badge>
-				)}
-
-			
-				{showExportButton && (
-					<ExportButton
-						code={code}
-						network={selectedNetwork}
-						componentName={componentName}
-					/>
-				)}
-
-				{showExportButton && (
-					<DeploymentGuideButton 
-  						componentName={componentName}
-						packageName={`@papi-simulator/${componentName.toLowerCase()}`}/>
-					)}
-
-				
+				{/* Component Status Badge */}
+				{
+					showExportButton && (
+						<div
+							style={
+								{
+									backgroundColor: getColor('success') + '15',
+									color: getColor('success'),
+									border: `1px solid ${getColor('success')}30`,
+									borderRadius: '6px',
+									padding: '4px 8px',
+									fontSize: '11px',
+									fontWeight: '600',
+									display: 'inline-flex',
+									alignItems: 'center',
+									gap: '4px',
+									height: '28px'
+								}
+							}
+						>
+							✓ Component Ready
+						</div>
+					)
+				}
 			</div>
 
-			
-			<div
-				className="text-xs px-2 py-1 rounded flex items-center"
-				style={containerStyles.exampleBadge}
-			>
-				<NetworkBadge
-					network={selectedNetwork}
-					size="sm"
-					showName={false}
-					className="mr-2"
-				/>
-				{selectedExample.name}
+			{/* Right side - Network badge and action buttons */}
+			<div className="flex items-center gap-3" >
+				{/* Action Buttons Container */}
+				{showExportButton && (
+					<div className="flex flex-wrap gap-2 p-3 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-700 rounded-xl border border-gray-200 dark:border-gray-600">
+						<div className="relative group">
+							<ExportButton
+								code={code}
+								network={selectedNetwork}
+								componentName={componentName}
+								className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5"
+							>
+								<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+								</svg>
+								Export
+							</ExportButton>
+
+							{/* Tooltip */}
+							<div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap">
+								Export component code
+							</div>
+						</div>
+
+						<div className="relative group">
+							<DeploymentGuideButton
+								componentName={componentName}
+								packageName={`@papi-simulator/${componentName.toLowerCase()}`}
+								className="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-lg transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5"
+							>
+								<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+								</svg>
+								Guide
+							</DeploymentGuideButton>
+
+							{/* Tooltip */}
+							<div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap">
+								View deployment guide
+							</div>
+						</div>
+					</div>
+				)}
+
+				{/* Network Badge */}
+				<div
+					className="text-xs px-3 py-1.5 rounded-md flex items-center border"
+					style={{
+						backgroundColor: getColor('surface'),
+						borderColor: getColor('border'),
+						color: getColor('text-secondary'),
+						height: '32px'
+					}}
+				>
+					<NetworkBadge
+						network={selectedNetwork}
+						size="sm"
+						showName={false}
+						className="mr-2"
+					/>
+					<span className="font-medium" > {selectedExample.name} </span>
+				</div>
 			</div>
 		</div>
 	), [
@@ -181,7 +234,7 @@ export default function Main({
 		selectedNetwork,
 		selectedExample.name,
 		handleToggleLivePreview,
-		containerStyles.exampleBadge
+		getColor
 	]);
 
 	// Memoized console output section
@@ -258,7 +311,7 @@ export default function Main({
 				className="preview-container w-1/2 pl-2 border-l flex flex-col"
 				style={containerStyles.previewContainer}
 			>
-				<div className="flex-grow overflow-auto">
+				<div className="flex-grow overflow-auto" >
 					<LivePreviewContainer
 						code={code}
 						network={selectedNetwork}
@@ -275,7 +328,7 @@ export default function Main({
 	]);
 
 	return (
-		<div className="flex flex-col gap-4 h-full">
+		<div className="flex flex-col gap-4 h-full" >
 			<TutorialPanel
 				example={selectedExample}
 				network={selectedNetwork}
@@ -285,8 +338,8 @@ export default function Main({
 				className="flex-1"
 				header={HeaderContent}
 			>
-				<div className="flex flex-col">
-					<div className="flex">
+				<div className="flex flex-col" >
+					<div className="flex" >
 						{EditorSection}
 						{PreviewSection}
 					</div>
