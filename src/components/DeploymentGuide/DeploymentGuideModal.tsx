@@ -1,4 +1,5 @@
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import type React from 'react';
 import { useState, useMemo, useCallback } from 'react';
 import type { DeploymentConfig, DeploymentGuide } from '@/lib/deployment/types';
@@ -304,7 +305,12 @@ const GuideTab: React.FC<{
 }> = ({ guide, getColor }) => {
   const [selectedFile, setSelectedFile] = useState<string>('deployment');
 
-  const files = {
+  interface FileEntry {
+    name: string;
+    content: string;
+  }
+
+  const files: { [key: string]: FileEntry } = {
     deployment: { name: 'Deployment Steps', content: guide.deploymentSteps.join('\n') },
     ...Object.fromEntries(
       guide.configFiles.map(f => [

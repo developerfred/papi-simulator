@@ -1,4 +1,4 @@
-import type { DeploymentConfig, DeploymentGuide, ConfigFile } from '../types';
+import type { DeploymentConfig, DeploymentGuide } from '../types';
 import { FrameworkGenerator } from './FrameworkGenerator';
 
 export class DeploymentConfigGenerator {

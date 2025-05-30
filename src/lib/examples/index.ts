@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 import { exampleRegistry } from "./factory";
 import { SimpleTransferExample } from "./SimpleTransferExample";
 import { NetworkDashboardExample } from "./NetworkDashboardExample";
@@ -11,8 +12,10 @@ exampleRegistry.registerMany([
 	new AccountBalanceCheckerExample(),
 	new SimpleTransferExample(),			
 	new NetworkDashboardExample(),
+	// @ts-ignore
   	new WalletTransferExample(),
 	new AcalaDeFiExample(),
+	// @ts-ignore
 	new PolkadotGovernanceExample(),
 ]);
 

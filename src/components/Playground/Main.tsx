@@ -13,6 +13,7 @@ import LivePreviewContainer from "@/components/LivePreview/LivePreviewContainer"
 import Button from "@/components/ui/Button";
 import ConsoleOutputToggle from "@/components/Playground/ConsoleOutputToggle";
 import { ExportButton } from "@/lib/export-modal/ExportButton";
+import { DeploymentGuideButton } from "../DeploymentGuide/DeploymentGuideModal";
 
 const EDITOR_CONFIG = {
 	MIN_HEIGHT: 400,
@@ -37,6 +38,7 @@ const getComponentName = (exampleName: string): string => {
 	return exampleName.replace(/\s+/g, '');
 };
 
+
 export default function Main({
 	code,
 	outputs,
@@ -53,12 +55,12 @@ export default function Main({
 	const [isCodeOutputVisible, setIsCodeOutputVisible] = useState<boolean>(true);
 	const editorRef = useRef<HTMLDivElement>(null);
 
-	// Memoized values to prevent unnecessary recalculations
+	
 	const componentName = useMemo(() => getComponentName(selectedExample.name), [selectedExample.name]);
 	const isComponentExample = useMemo(() => selectedExample.categories.includes("components"), [selectedExample.categories]);
 	const showExportButton = useMemo(() => isLivePreviewMode && isComponentExample, [isLivePreviewMode, isComponentExample]);
 
-	// Memoized styles to prevent object recreation
+	
 	const containerStyles = useMemo(() => ({
 		editorContainer: {
 			transition: "width 0.3s ease",
@@ -87,7 +89,7 @@ export default function Main({
 		}
 	}), [getColor, isDarkTheme]);
 
-	// Optimized toggle handlers using useCallback
+	
 	const handleToggleLivePreview = useCallback(() => {
 		setIsLivePreviewMode(prev => !prev);
 		setIsCodeOutputVisible(true);
@@ -97,7 +99,7 @@ export default function Main({
 		setIsCodeOutputVisible(prev => !prev);
 	}, []);
 
-	// Optimized height adjustment with debouncing
+	
 	const adjustHeight = useCallback(() => {
 		if (editorRef.current) {
 			const actualHeight = editorRef.current.scrollHeight;
@@ -109,7 +111,7 @@ export default function Main({
 		}
 	}, []);
 
-	// Effect for height adjustment with cleanup
+	
 	useEffect(() => {
 		const timeoutId = setTimeout(adjustHeight, EDITOR_CONFIG.RESIZE_TIMEOUT);
 		window.addEventListener("resize", adjustHeight);
@@ -120,7 +122,7 @@ export default function Main({
 		};
 	}, [code, adjustHeight]);
 
-	// Memoized header content to prevent unnecessary rerenders
+	
 	const HeaderContent = useMemo(() => (
 		<div className="flex justify-between items-center">
 			<div className="font-medium flex items-center gap-3">
@@ -134,12 +136,12 @@ export default function Main({
 					{isLivePreviewMode ? "Live Preview ON" : "Live Preview OFF"}
 				</Button>
 
-				{/* Component rendering badge */}
+				
 				{showExportButton && (
 					<Badge variant="success">Component rendering enabled</Badge>
 				)}
 
-				{/* Export Button - Fixed integration */}
+			
 				{showExportButton && (
 					<ExportButton
 						code={code}
@@ -147,9 +149,17 @@ export default function Main({
 						componentName={componentName}
 					/>
 				)}
+
+				{showExportButton && (
+					<DeploymentGuideButton 
+  						componentName={componentName}
+						packageName={`@papi-simulator/${componentName.toLowerCase()}`}/>
+					)}
+
+				
 			</div>
 
-			{/* Example info badge */}
+			
 			<div
 				className="text-xs px-2 py-1 rounded flex items-center"
 				style={containerStyles.exampleBadge}

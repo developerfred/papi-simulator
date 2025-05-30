@@ -238,7 +238,7 @@ const getStatusMessage = (walletStatus: string, chainStatus: ConnectionStatus): 
 	return messages.default;
 };
 
-// Enhanced reusable components with theme support
+
 const StatusIndicator = memo<{ status: ConnectionStatus; showLabel?: boolean }>(({ status, showLabel = true }) => {
 	const colors = {
 		connected: "bg-success",
@@ -318,7 +318,7 @@ const NetworkDisconnectedIcon = memo(() => (
 	</div>
 ));
 
-// Network Type Icons with enhanced styling
+
 const getNetworkTypeIcon = (type: Network["type"], className = "w-4 h-4") => {
 	const icons = {
 		relay: <Globe className={className} />,
@@ -329,7 +329,7 @@ const getNetworkTypeIcon = (type: Network["type"], className = "w-4 h-4") => {
 	return icons[type] || <Globe className={className} />;
 };
 
-// Theme Toggle Component
+
 const ThemeToggle = memo(() => {
 	const { isDarkTheme, toggleTheme } = useTheme();
 
@@ -349,7 +349,7 @@ const ThemeToggle = memo(() => {
 	);
 });
 
-// Enhanced Network Selector with improved UX
+
 const NetworkSelector = memo<{
 	selectedNetwork: Network;
 	onNetworkChange: (network: Network) => void;
@@ -395,7 +395,7 @@ const NetworkSelector = memo<{
 		return groups;
 	}, [networks, selectedFilter, searchQuery]);
 
-	// Keyboard navigation
+	
 	useEffect(() => {
 		const handleKeyDown = (e: KeyboardEvent) => {
 			if (e.key === 'Escape' && isOpen) {
@@ -553,7 +553,7 @@ const NetworkSelector = memo<{
 	);
 });
 
-// Enhanced Dashboard Header with theme integration
+
 const DashboardHeader = memo<{
 	selectedNetwork: Network;
 	wallet: ReturnType<typeof useWallet>;
@@ -668,7 +668,7 @@ const DashboardHeader = memo<{
 	);
 });
 
-// Enhanced Connection Status Display
+
 const ConnectionStatusDisplay = memo<{
 	walletStatus: string;
 	chainStatus: ConnectionStatus;
@@ -727,7 +727,7 @@ const ConnectionStatusDisplay = memo<{
 	);
 });
 
-// Enhanced Not Connected State
+
 const NotConnectedState = memo<{
 	walletStatus: string;
 	chainStatus: ConnectionStatus;
@@ -799,7 +799,7 @@ const NotConnectedState = memo<{
 	);
 });
 
-// Enhanced main content with elastic layout support
+
 const MainDashboardContent = memo<{
 	api: ApiPromise;
 	network: Network;
@@ -867,7 +867,7 @@ const MainDashboardContent = memo<{
 		);
 	}
 
-	// Normal Layout - Standard grid
+	
 	return (
 		<div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 			<div className="space-y-6">
@@ -898,7 +898,7 @@ const MainDashboardContent = memo<{
 	);
 });
 
-// Enhanced Keyboard Shortcuts Help
+
 const KeyboardShortcutsHelp = memo<{ layoutMode: LayoutMode; selectedNetwork: Network }>(({ layoutMode, selectedNetwork }) => {
 	const [isVisible, setIsVisible] = useState(true);
 	const { isDarkTheme } = useTheme();
@@ -964,7 +964,7 @@ const KeyboardShortcutsHelp = memo<{ layoutMode: LayoutMode; selectedNetwork: Ne
 	);
 });
 
-// Main Dashboard Component with Enhanced Theme Support
+
 function BlockchainDashboard() {
 	const wallet = useWallet();
 	const { isDarkTheme } = useTheme();

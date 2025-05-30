@@ -1,3 +1,4 @@
+/*eslint-disable @typescript-eslint/no-explicit-any */
 import { BaseTemplates } from '../templates/BaseTemplates';
 import type { DeploymentConfig, BoilerplateFile } from '../types';
 
