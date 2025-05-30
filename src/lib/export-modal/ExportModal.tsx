@@ -105,7 +105,8 @@ const FallbackOptionsTab: React.FC<any> = ({
   onExport,
   isExporting,
   exportError,
-  getColor
+  getColor,
+  getNetworkColor
 }) => (
   <div className="space-y-6">
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -183,7 +184,7 @@ const FallbackOptionsTab: React.FC<any> = ({
   </div>
 );
 
-// Fallback Preview Tab Component
+
 const FallbackPreviewTab: React.FC<any> = ({ exportedComponent, metrics }) => (
   <div className="space-y-6">
     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -218,7 +219,7 @@ const FallbackPreviewTab: React.FC<any> = ({ exportedComponent, metrics }) => (
   </div>
 );
 
-// Fallback Download Tab Component
+
 const FallbackDownloadTab: React.FC<any> = ({ exportedComponent, options, onDownloadAll }) => (
   <div className="space-y-6">
     <div className="text-center">
@@ -282,7 +283,7 @@ export const ExportModal: React.FC<ExportModalProps> = React.memo(({
   const [exportError, setExportError] = useState<string>('');
   const [activeTab, setActiveTab] = useState<TabType>('options');
 
-  // Reset state when modal opens/closes
+  
   useEffect(() => {
     if (isOpen) {
       setExportedComponent(null);
@@ -400,6 +401,7 @@ export const ExportModal: React.FC<ExportModalProps> = React.memo(({
   return (
     <>
       {/* Overlay */}
+      {/* biome-ignore lint/a11y/useKeyWithClickEvents: <explanation> */}
       <div
         className="modal-index-export fixed inset-0 bg-black/50 dark:bg-black/80 backdrop-blur-sm z-[200] flex items-center justify-center p-4 animate-in fade-in-0 duration-200"
         onClick={handleOverlayClick}
@@ -484,6 +486,7 @@ export const ExportModal: React.FC<ExportModalProps> = React.memo(({
                 isExporting={isExporting}
                 exportError={exportError}
                 getColor={getColor}
+                getNetworkColor={getNetworkColor} 
               />
             )}
 

@@ -2,7 +2,7 @@
 // @ts-nocheck
 import type React from 'react';
 import type { TabProps } from '../types';
-import { useTheme } from '@/lib/hooks/useTheme';
+import { useThemeHook } from '@/lib/hooks/useTheme';
 
 export const OptionsTab: React.FC<TabProps> = ({
   options,

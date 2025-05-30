@@ -9,9 +9,6 @@ export function useThemeHook() {
   const themeContext = useContext(ThemeContext);
 
   
-  const [additionalColors, setAdditionalColors] = useState<Record<string, string>>({});
-
-  
   const {
     isDarkTheme = false,
     toggleTheme = () => { },
@@ -53,7 +50,11 @@ export function useThemeHook() {
 
   
   const hexToRgba = useCallback((hex: string, opacity: number): string => {
+    if (!hex || typeof hex !== 'string') return `rgba(0, 0, 0, ${opacity})`;
     hex = hex.replace('#', '');
+
+    if (![3, 6].includes(hex.length)) return `rgba(0, 0, 0, ${opacity})`;
+
     let r = 0, g = 0, b = 0;
 
     if (hex.length === 3) {
@@ -61,13 +62,14 @@ export function useThemeHook() {
       g = parseInt(hex[1] + hex[1], 16);
       b = parseInt(hex[2] + hex[2], 16);
     } else if (hex.length === 6) {
-      r = parseInt(hex.substr(0, 2), 16);
-      g = parseInt(hex.substr(2, 2), 16);
-      b = parseInt(hex.substr(4, 2), 16);
+      r = parseInt(hex.substring(0, 2), 16);
+      g = parseInt(hex.substring(2, 4), 16);
+      b = parseInt(hex.substring(4, 6), 16);
     }
 
     return `rgba(${r}, ${g}, ${b}, ${opacity})`;
   }, []);
+
 
   
   const getCustomColor = useCallback((colorName: string, opacity: number = 1): string => {
@@ -84,7 +86,7 @@ export function useThemeHook() {
     return hexToRgba(colorValue, opacity);
   }, [hexToRgba]);
 
-  // Função para obter cores de rede com opacity
+  
   const getNetworkColorWithOpacity = useCallback((
     colorType: 'primary' | 'secondary' | 'light' | 'dark' = 'primary',
     opacity: number = 1
