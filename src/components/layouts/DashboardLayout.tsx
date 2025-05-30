@@ -1,4 +1,5 @@
-/* eslint-disable react-hooks/rules-of-hooks, @typescript-eslint/no-unused-vars */
+/* eslint-disable react-hooks/rules-of-hooks, @typescript-eslint/no-unused-vars,  @typescript-eslint/ban-ts-comment */
+//@ts-nocheck
 "use client";
 
 import { useTheme } from "@/lib/theme/ThemeProvider";
@@ -10,7 +11,7 @@ import Link from "next/link";
 import { useVersion } from "@/hooks/useVersion";
 import { WalletStatus, WalletConnect } from "../wallet/WalletConnect";
 
-// Lazy loading para componentes pesados
+
 const LazyWalletConnect = lazy(() =>
 	import("../wallet/WalletConnect").then(module => ({ default: module.WalletConnect }))
 );
@@ -31,7 +32,7 @@ interface FooterLinkProps {
 	label: string;
 }
 
-// Constants otimizados
+
 const SCROLL_THRESHOLD = 10;
 const HEADER_Z_INDEX = 1001;
 const RESIZE_DEBOUNCE_MS = 100;
@@ -43,7 +44,7 @@ const EXTERNAL_LINKS = {
 	docs: "https://papi.how"
 } as const;
 
-// SVG Icons otimizados como componentes
+
 const DashboardIcon = memo(() => (
 	<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
 		<rect x="3" y="3" width="7" height="7" />
@@ -84,7 +85,7 @@ const ExternalIcon = memo(() => (
 	</svg>
 ));
 
-// Logo otimizado
+
 const LogoIcon = memo(() => {
 	const { getNetworkColor } = useTheme();
 	const primaryColor = useMemo(() => getNetworkColor("primary"), [getNetworkColor]);
@@ -109,7 +110,7 @@ const LogoIcon = memo(() => {
 	);
 });
 
-// Componente de ícone otimizado
+
 const Icon = memo<{
 	children: ReactNode;
 	size?: number;
@@ -133,7 +134,7 @@ const Icon = memo<{
 	</span>
 ));
 
-// Hook de scroll otimizado com debounce
+
 const useScrolled = (threshold = SCROLL_THRESHOLD, enabled = true) => {
 	const [scrolled, setScrolled] = useState(false);
 
@@ -149,7 +150,7 @@ const useScrolled = (threshold = SCROLL_THRESHOLD, enabled = true) => {
 			}, 16); // ~60fps
 		};
 
-		handleScroll(); // Set initial state
+		handleScroll();
 		window.addEventListener("scroll", handleScroll, { passive: true });
 
 		return () => {

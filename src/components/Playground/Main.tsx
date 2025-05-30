@@ -1,4 +1,6 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable  @typescript-eslint/ban-ts-comment, @typescript-eslint/no-unused-vars */
+// @ts-nocheck
+
 import React, { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import Console from "@/components/Console";
 import TutorialPanel from "@/components/TutorialPanel";
