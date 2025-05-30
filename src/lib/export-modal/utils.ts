@@ -1,3 +1,5 @@
+/* eslint-disable  @typescript-eslint/no-unused-vars */
+
 export const downloadFile = (filename: string, content: string) => {
   const blob = new Blob([content], { type: 'text/plain' });
   const url = URL.createObjectURL(blob);

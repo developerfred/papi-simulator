@@ -1,9 +1,6 @@
-import type { 
-  ExportOptions, 
-  ExportedComponent, 
-  ExportMetrics, 
-  Network 
-} from '@/lib/component-exporter/types';
+import type { ExportedComponent, ExportMetrics, ExportOptions } from "../component-exporter/types";
+import type { Network } from "../types/network";
+
 
 export interface ExportModalProps {
   readonly isOpen: boolean;

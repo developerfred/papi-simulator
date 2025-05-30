@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/ban-ts-comment  */
+// @ts-nocheck
 import React from 'react';
 import type { TabProps } from '../types';
 

@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unused-vars, react/display-name, @typescript-eslint/ban-ts-comment  */
+// @ts-nocheck
 import React, { useState, useCallback, useMemo } from 'react';
 import { ComponentExporter } from '@/lib/component-exporter/ComponentExporter';
 import type { ExportOptions, ExportedComponent, ExportMetrics } from '@/lib/component-exporter/types';

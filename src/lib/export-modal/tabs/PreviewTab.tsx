@@ -4,7 +4,6 @@ import type { TabProps } from '../types';
 export const PreviewTab: React.FC<TabProps> = ({
   exportedComponent,
   metrics,
-  getColor
 }) => {
   const [selectedFile, setSelectedFile] = useState<string>('component');
 
@@ -20,42 +19,37 @@ export const PreviewTab: React.FC<TabProps> = ({
   if (!exportedComponent) return null;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+    <div className="flex flex-col gap-6">
       {/* Metrics Overview */}
       {metrics && (
-        <div style={{
-          padding: '20px',
-          backgroundColor: getColor('surface-variant'),
-          borderRadius: '12px',
-          border: `1px solid ${getColor('border')}`
-        }}>
-          <h3 style={{ margin: '0 0 16px', color: getColor('text-primary') }}>
+        <div className="p-5 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl">
+          <h3 className="text-foreground font-semibold text-lg mb-4 m-0">
             📊 Export Metrics
           </h3>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '16px' }}>
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: '24px', fontWeight: '700', color: getColor('primary') }}>
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-4">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-primary-600 dark:text-primary-400">
                 {metrics.linesOfCode}
               </div>
-              <div style={{ fontSize: '12px', color: getColor('text-secondary') }}>Lines of Code</div>
+              <div className="text-xs text-gray-600 dark:text-gray-400">Lines of Code</div>
             </div>
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: '24px', fontWeight: '700', color: getColor('primary') }}>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-primary-600 dark:text-primary-400">
                 {(metrics.bundleSize / 1024).toFixed(1)}KB
               </div>
-              <div style={{ fontSize: '12px', color: getColor('text-secondary') }}>Bundle Size</div>
+              <div className="text-xs text-gray-600 dark:text-gray-400">Bundle Size</div>
             </div>
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: '24px', fontWeight: '700', color: getColor('primary') }}>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-primary-600 dark:text-primary-400">
                 {metrics.dependencies}
               </div>
-              <div style={{ fontSize: '12px', color: getColor('text-secondary') }}>Dependencies</div>
+              <div className="text-xs text-gray-600 dark:text-gray-400">Dependencies</div>
             </div>
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: '24px', fontWeight: '700', color: getColor('primary') }}>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-primary-600 dark:text-primary-400">
                 {metrics.typeComplexity}
               </div>
-              <div style={{ fontSize: '12px', color: getColor('text-secondary') }}>Complexity</div>
+              <div className="text-xs text-gray-600 dark:text-gray-400">Complexity</div>
             </div>
           </div>
         </div>
@@ -63,25 +57,18 @@ export const PreviewTab: React.FC<TabProps> = ({
 
       {/* File Selector */}
       <div>
-        <h3 style={{ margin: '0 0 16px', color: getColor('text-primary') }}>
+        <h3 className="text-foreground font-semibold text-lg mb-4 m-0">
           📁 Generated Files
         </h3>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '16px' }}>
+        <div className="flex flex-wrap gap-2 mb-4">
           {Object.entries(files).map(([key, file]) => (
             <button
               key={key}
               onClick={() => setSelectedFile(key)}
-              style={{
-                padding: '8px 16px',
-                border: `1px solid ${getColor('border')}`,
-                backgroundColor: selectedFile === key ? getColor('primary') : getColor('surface'),
-                color: selectedFile === key ? 'white' : getColor('text-primary'),
-                borderRadius: '6px',
-                cursor: 'pointer',
-                fontSize: '14px',
-                fontWeight: '500',
-                transition: 'all 0.2s ease'
-              }}
+              className={`px-4 py-2 border rounded-md text-sm font-medium transition-all duration-200 ease-in-out ${selectedFile === key
+                  ? 'bg-primary-600 hover:bg-primary-700 text-white border-primary-600 dark:bg-primary-500 dark:hover:bg-primary-600 dark:border-primary-500'
+                  : 'bg-white dark:bg-gray-800 text-foreground border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'
+                }`}
             >
               {file.name}
             </button>
@@ -89,34 +76,12 @@ export const PreviewTab: React.FC<TabProps> = ({
         </div>
 
         {/* File Content Preview */}
-        <div style={{
-          border: `1px solid ${getColor('border')}`,
-          borderRadius: '8px',
-          overflow: 'hidden',
-          backgroundColor: getColor('surface')
-        }}>
-          <div style={{
-            padding: '12px 16px',
-            backgroundColor: getColor('surface-variant'),
-            borderBottom: `1px solid ${getColor('border')}`,
-            fontWeight: '600',
-            fontSize: '14px',
-            color: getColor('text-primary')
-          }}>
+        <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden bg-white dark:bg-gray-800">
+          <div className="px-4 py-3 bg-gray-50 dark:bg-gray-800/80 border-b border-gray-200 dark:border-gray-700 font-semibold text-sm text-foreground">
             {files[selectedFile as keyof typeof files]?.name}
           </div>
-          <pre style={{
-            margin: 0,
-            padding: '20px',
-            fontSize: '13px',
-            lineHeight: '1.5',
-            overflow: 'auto',
-            maxHeight: '400px',
-            fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
-            color: getColor('text-primary'),
-            backgroundColor: getColor('surface')
-          }}>
-            <code>
+          <pre className="m-0 p-5 text-sm leading-relaxed overflow-auto max-h-96 font-mono text-foreground bg-white dark:bg-gray-900">
+            <code className="text-foreground">
               {files[selectedFile as keyof typeof files]?.content}
             </code>
           </pre>

@@ -1,5 +1,3 @@
-import { ExportOptions } from "../../types/ExportOptions";
-
 export const generateTypeDefinitions = (
   componentName: string
 ): string => {
