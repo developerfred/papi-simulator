@@ -1,0 +1,23 @@
+<svg viewBox="0 0 400 100" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    .papi-logo-primary-text { fill: #1e293b; }
+    .papi-logo-secondary-text { fill: #64748b; }
+
+    @media (prefers-color-scheme: dark) {
+      .papi-logo-primary-text { fill: #f8fafc; }
+      .papi-logo-secondary-text { fill: #94a3b8; }
+    }
+  </style>
+  <g id="logomark">
+    <path d="M 5 20 L 40 50 L 5 80 Z" fill="#E6007A"/>
+    <!-- The letter P uses the primary text color class -->
+    <text x="60" y="80" font-family="Inter, sans-serif" font-size="80" font-weight="800" class="papi-logo-primary-text">P</text>
+    <circle cx="88" cy="50" r="10" fill="#E6007A" />
+  </g>
+  <g id="logotype" transform="translate(170, 0)">
+    <!-- "PAPI" uses the primary text color class -->
+    <text x="0" y="55" font-family="Inter, sans-serif" font-size="40" font-weight="800" class="papi-logo-primary-text">PAPI</text>
+    <!-- "SIMULATOR" uses the secondary text color class -->
+    <text x="0" y="85" font-family="Inter, sans-serif" font-size="18" font-weight="500" letter-spacing="0.2em" class="papi-logo-secondary-text">SIMULATOR</text>
+  </g>
+</svg>

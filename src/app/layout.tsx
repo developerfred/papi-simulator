@@ -21,8 +21,32 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-	title: "Polkadot API Playground",
-	description: "Polkadot API Playground by @codingsh",
+	metadataBase: new URL("https://papi-simulator.aipop.fun"),
+	title: "PAPI Simulator: Just Ship It.",
+	description: "The React Playground for Polkadot. Build, test, and launch dApps instantly with zero-config, community templates, and production-ready exports.",
+	icons: {
+		icon: '/favicon.svg',
+	},
+	openGraph: {
+		title: "PAPI Simulator: Just Ship It.",
+		description: "The React Playground for Polkadot.",
+		url: "https://papi-simulator.aipop.fun",
+		siteName: "PAPI Simulator",
+		images: [
+			{
+				url: "/og-image-en.svg", 
+				width: 1200,
+				height: 630,
+			},
+		],
+		type: "website",
+	},
+	twitter: {
+		card: "summary_large_image",
+		title: "PAPI Simulator: Just Ship It.",
+		description: "The React Playground for Polkadot.",
+		images: ["/og-image-en.svg"], 
+	},
 };
 
 export default function RootLayout({
@@ -31,7 +55,7 @@ export default function RootLayout({
 	children: React.ReactNode;
 }>) {
 	return (
-		<html lang="en">
+		<html lang="en">			
 			<body
 				className={`${geistSans.variable} ${geistMono.variable} antialiased`}
 			>

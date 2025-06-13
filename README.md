@@ -1,3 +1,9 @@
+<p align="center">
+    <a href="https://papi-simulator.aipop.fun" target="_blank">
+        <img src="https://raw.githubusercontent.com/developerfred/papi-simulator/main/public/papi-simulator-logo.svg" alt="PAPI Simulator Logo" width="400">
+    </a>
+</p>
+
 # Polkadot API Playground
 
 A developer-friendly interactive learning environment for exploring the Polkadot API. This playground allows you to experiment with various Polkadot-API operations using real testnet connections without the complexity of setting up a local development environment.

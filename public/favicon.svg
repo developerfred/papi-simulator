@@ -1,0 +1,13 @@
+<svg viewBox="0 0 130 100" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    .p-letter { fill: #1e293b; }
+    @media (prefers-color-scheme: dark) {
+      .p-letter { fill: #f8fafc; }
+    }
+  </style>
+  <g>
+    <path d="M 5 20 L 40 50 L 5 80 Z" fill="#E6007A"/>
+    <text class="p-letter" x="60" y="80" font-family="Inter, sans-serif" font-size="80" font-weight="800">P</text>
+    <circle cx="88" cy="50" r="10" fill="#E6007A" />
+  </g>
+</svg>
