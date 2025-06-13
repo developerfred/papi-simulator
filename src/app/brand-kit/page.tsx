@@ -62,44 +62,60 @@ const LogoCard: React.FC<LogoCardProps> = ({ title, LogoComponent, svgContent, f
     };
 
     const handleDownload = (format: 'svg' | 'png', size?: number) => {
-        if (format === 'svg') {
-            const blob = new Blob([svgContent], { type: 'image/svg+xml' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `${fileName}.svg`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-        } else if (format === 'png' && size) {
-            const canvas = canvasRef.current;
-            const ctx = canvas?.getContext('2d');
-            if (!ctx || !canvas) return;
-            const img = new Image();
-            const svgBlob = new Blob([svgContent], { type: 'image/svg+xml' });
-            const url = URL.createObjectURL(svgBlob);
-            img.onload = () => {
-                const tempViewBox = svgContent.match(/viewBox="([^"]+)"/);
-                const dims = tempViewBox ? tempViewBox[1].split(' ').map(Number) : [0, 0, 400, 100];
-                const originalWidth = dims[2];
-                const originalHeight = dims[3];
-                const aspectRatio = originalWidth / originalHeight;
-                canvas.width = size;
-                canvas.height = size / aspectRatio;
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                const pngUrl = canvas.toDataURL('image/png');
+        let url: string | null = null;
+        try {
+            if (format === 'svg') {
+                const blob = new Blob([svgContent], { type: 'image/svg+xml' });
+                url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
-                a.href = pngUrl;
-                a.download = `${fileName}_${size}px.png`;
+                a.href = url;
+                a.download = `${fileName}.svg`;
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
+            } else if (format === 'png' && size) {
+                const canvas = canvasRef.current;
+                const ctx = canvas?.getContext('2d');
+                if (!ctx || !canvas) {
+                    console.error("Canvas context is not available.");
+                    return;
+                }
+                const img = new Image();
+                const svgBlob = new Blob([svgContent], { type: 'image/svg+xml' });
+                url = URL.createObjectURL(svgBlob);
+
+                img.onload = () => {
+                    // Validate image dimensions before calculations
+                    if (img.width > 0 && img.height > 0) {
+                        const aspectRatio = img.width / img.height;
+                        canvas.width = size;
+                        canvas.height = size / aspectRatio;
+                        ctx.clearRect(0, 0, canvas.width, canvas.height);
+                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                        const pngUrl = canvas.toDataURL('image/png');
+                        const a = document.createElement('a');
+                        a.href = pngUrl;
+                        a.download = `${fileName}_${size}px.png`;
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                    } else {
+                        console.error("Failed to process SVG: Invalid image dimensions (width or height is zero).");
+                    }
+                };
+
+                img.onerror = () => {
+                    console.error("Failed to load SVG image for canvas conversion.");
+                };
+
+                img.src = url;
+            }
+        } catch (error) {
+            console.error("An error occurred during the download process:", error);
+        } finally {            
+            if (url) {
                 URL.revokeObjectURL(url);
-            };
-            img.onerror = () => { console.error("Failed to load SVG image for canvas conversion."); URL.revokeObjectURL(url); };
-            img.src = url;
+            }
         }
     };
 
@@ -144,7 +160,6 @@ const ColorPalette = () => {
 
 
 export default function BrandKitPage() {
-
     const logoAssets: Omit<LogoCardProps, 'svgContent'>[] = [
         { title: 'Primary Logo', LogoComponent: LogoCompleto, fileName: 'papi_simulator_logo_primary' },
         { title: 'Primary Logo (White Version)', LogoComponent: LogoCompleto, fileName: 'papi_simulator_logo_primary_white', isDark: true },
