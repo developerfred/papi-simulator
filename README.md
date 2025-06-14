@@ -14,7 +14,7 @@ A developer-friendly interactive learning environment for exploring the Polkadot
 
 - **Live Code Execution**: Write, edit, and run Polkadot-API code directly in your browser
 - **Pre-built Examples**: Learn from curated examples covering common blockchain operations
-- **Multiple Test Networks**: Connect to Polkadot, Westend, Paseo, and Rococo testnets
+- **Multiple Test Networks**: Connect to Polkadot, Westend, and Paseo testnets
 - **Well-known Test Accounts**: Use Alice, Bob, and other test accounts with pre-funded balances
 - **Console Output**: View simulated execution results with detailed console output
 - **Responsive Design**: Use on desktop or mobile devices
@@ -68,7 +68,7 @@ Then open [http://localhost:3000](http://localhost:3000) in your browser to see 
 
 ## 👨‍💻 Usage
 
-1. Select a network (Westend, Paseo, Rococo, or Polkadot)
+1. Select a network (Westend, Paseo or Polkadot)
 2. Choose an example from the dropdown menu
 3. Edit the code in the editor if desired
 4. Click "Run Code" to execute

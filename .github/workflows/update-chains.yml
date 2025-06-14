@@ -40,7 +40,7 @@ jobs:
             echo "CHAINS=${{ github.event.inputs.specific_chain }}" >> $GITHUB_ENV
           else
             # Otherwise use the full list of chains
-            echo "CHAINS=polkadot kusama westend2 rococo_v2_2 paseo polkadot_asset_hub kusama_asset_hub westend_asset_hub rococo_asset_hub polkadot_bridge_hub kusama_bridge_hub westend_bridge_hub rococo_bridge_hub polkadot_collectives pendulum amplitude hydradx basilisk mangata" >> $GITHUB_ENV
+            echo "CHAINS=polkadot kusama westend2  paseo polkadot_asset_hub kusama_asset_hub westend_asset_hub rococo_asset_hub polkadot_bridge_hub kusama_bridge_hub westend_bridge_hub rococo_bridge_hub polkadot_collectives pendulum amplitude hydradx basilisk mangata" >> $GITHUB_ENV
           fi
       
       # Update all chains in the list
@@ -61,10 +61,7 @@ jobs:
                 ;;
               westend2)
                 descriptor_key="wnd"
-                ;;
-              rococo_v2_2)
-                descriptor_key="roc"
-                ;;
+                ;;              
               paseo)
                 descriptor_key="paseo"
                 ;;

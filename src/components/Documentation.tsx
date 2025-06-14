@@ -278,8 +278,7 @@ const transfers = typedApi.event.Balances.Transfer.filter(result.events);`}
           title="Getting Testnet Tokens"
           items={[
             `<strong>Westend</strong>: <a href="https://faucet.polkadot.io/?tab=westend" target="_blank" class="text-blue-600 hover:underline">https://faucet.polkadot.io/?tab=westend</a>`,
-            `<strong>Paseo</strong>: <a href="https://faucet.polkadot.io/?tab=paseo" target="_blank" class="text-blue-600 hover:underline">https://faucet.polkadot.io/?tab=paseo</a>`,
-            `<strong>Rococo</strong>: <a href="https://faucet.polkadot.io/?tab=rococo" target="_blank" class="text-blue-600 hover:underline">https://faucet.polkadot.io/?tab=rococo</a>`
+            `<strong>Paseo</strong>: <a href="https://faucet.polkadot.io/?tab=paseo" target="_blank" class="text-blue-600 hover:underline">https://faucet.polkadot.io/?tab=paseo</a>`,            
           ]}
         />
 
@@ -287,8 +286,7 @@ const transfers = typedApi.event.Balances.Transfer.filter(result.events);`}
           title="Explorer Links"
           items={[
             `<strong>Westend</strong>: <a href="https://westend.subscan.io/" target="_blank" class="text-blue-600 hover:underline">https://westend.subscan.io/</a>`,
-            `<strong>Paseo</strong>: <a href="https://paseo.subscan.io/" target="_blank" class="text-blue-600 hover:underline">https://paseo.subscan.io/</a>`,
-            `<strong>Rococo</strong>: <a href="https://rococo.subscan.io/" target="_blank" class="text-blue-600 hover:underline">https://rococo.subscan.io/</a>`
+            `<strong>Paseo</strong>: <a href="https://paseo.subscan.io/" target="_blank" class="text-blue-600 hover:underline">https://paseo.subscan.io/</a>`,            
           ]}
         />
 

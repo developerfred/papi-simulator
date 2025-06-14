@@ -61,8 +61,7 @@ The project is built with Next.js and follows a well-organized structure:
 
 1. Choose a network from the Network Selector panel:
    - **Westend**: Test network with similar parameters to Polkadot
-   - **Paseo**: Testing network for parachains
-   - **Rococo**: Testnet for parachain integration
+   - **Paseo**: Testing network for parachains   
    - **Polkadot**: Main production network
 
 Each network has its own token symbol, endpoint, and parameter configuration.
