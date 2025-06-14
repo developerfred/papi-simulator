@@ -17,21 +17,18 @@ export function CryptoSetup({ children, showDebugInfo = false }: CryptoSetupProp
     const [isInitialized, setIsInitialized] = useState(false);
     const [debugInfo, setDebugInfo] = useState<any>(null);
 
-    useEffect(() => {
-        // Only run in browser environment
+    useEffect(() => {        
         if (typeof window === 'undefined') return;
 
         let mounted = true;
 
         const initialize = async () => {
             try {
-                // Initialize crypto polyfills
                 initializeApp();
-
-                // Set up wallet support
+                
                 setupWalletSupport();
 
-                // Get debug info if requested
+                
                 if (showDebugInfo) {
                     const info = getDebugInfo();
                     if (mounted) {
@@ -45,12 +42,11 @@ export function CryptoSetup({ children, showDebugInfo = false }: CryptoSetupProp
             } catch (error) {
                 console.error('Failed to initialize crypto setup:', error);
                 if (mounted) {
-                    setIsInitialized(true); // Continue anyway
+                    setIsInitialized(true); 
                 }
             }
         };
-
-        // Small delay to ensure DOM is ready
+        
         const timeoutId = setTimeout(initialize, 100);
 
         return () => {
@@ -58,8 +54,7 @@ export function CryptoSetup({ children, showDebugInfo = false }: CryptoSetupProp
             clearTimeout(timeoutId);
         };
     }, [showDebugInfo]);
-
-    // Show loading state while initializing (optional)
+    
     if (!isInitialized) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-background">

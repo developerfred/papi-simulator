@@ -42,7 +42,8 @@ const CHAINS_CONFIG = [
   { id: 'westend_collectives', descriptor: 'westendcollectives', wellknownName: 'collectives_westend', rpcs: ['wss://westend-collectives-rpc.polkadot.io'] },
   { id: 'paseo', descriptor: 'paseo', wellknownName: 'paseo', rpcs: ['wss://pas-rpc.stakeworld.io', 'wss://paseo.dotters.network'] },
   
-  // --- Other Ecosystem Chains (updated via RPC endpoint) ---
+  // --- Other Ecosystem Chains (updated via RPC endpoint) --- 
+  { id: 'acala', descriptor: 'acala', rpcs: ['wss://api-acala.n.dwellir.com/1791deb9-183c-4d92-9c70-a9fba633bee4'] },
   { id: 'paseo_asset_hub', descriptor: 'paseoassethub', rpcs: ['wss://asset-hub-paseo-rpc.dwellir.com', 'wss://asset-hub-paseo.dotters.network', 'wss://sys.turboflakes.io/asset-hub-paseo'] },
   { id: 'paseo_bridge_hub', descriptor: 'paseobridgehub', rpcs: ['wss://bridge-hub-paseo.dotters.network'] },
   { id: 'paseo_coretime', descriptor: 'paseocoretime', rpcs: ['wss://coretime-paseo.dotters.network', 'wss://paseo-coretime.paranodes.io'] },

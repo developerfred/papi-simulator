@@ -122,7 +122,7 @@ const TransactionMonitor: React.FC<TransactionMonitorProps> = ({
             method: event.event.method,
             data: event.event.data.map((d: any) => d.toString())
           })),
-          
+
         });
       }
 
@@ -238,8 +238,8 @@ const TransactionMonitor: React.FC<TransactionMonitorProps> = ({
   // Memoized style helpers
   const getStatusStyles = useCallback((success: boolean) => {
     return success
-      ? 'text-green-600 bg-green-50 border-green-200'
-      : 'text-red-600 bg-red-50 border-red-200';
+      ? 'text-success bg-success/10 border-success/20'
+      : 'text-error bg-error/10 border-error/20';
   }, []);
 
   const getMethodBadgeStyles = useCallback((section: string) => {
@@ -256,10 +256,10 @@ const TransactionMonitor: React.FC<TransactionMonitorProps> = ({
   }, []);
 
   return (
-    <Card className="bg-theme-surface border-theme network-transition">
-      {/* Header com melhor design */}
-      <div className="p-6 border-b border-theme">
-        <div className="flex items-center justify-between mb-4">
+    <Card className="bg-theme-surface border border-theme rounded-xl overflow-hidden shadow-lg">
+      {/* Header com design aprimorado */}
+      <div className="p-6 border-b border-theme bg-theme-surface-variant">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-4">
           <div className="space-y-1">
             <h2 className="text-xl font-semibold text-theme-primary">
               Transaction Monitor
@@ -271,10 +271,10 @@ const TransactionMonitor: React.FC<TransactionMonitorProps> = ({
 
           <div className="flex items-center space-x-3">
             {/* Status indicator melhorado */}
-            <div className="flex items-center space-x-2 px-3 py-1.5 rounded-full bg-theme-surface-variant border border-theme">
+            <div className="flex items-center space-x-2 px-3 py-1.5 rounded-full bg-theme-surface border border-theme">
               <div className={`w-2 h-2 rounded-full transition-all duration-300 ${isMonitoring
-                  ? 'bg-green-500 animate-pulse-slow shadow-green-400/50 shadow-lg'
-                  : 'bg-gray-400'
+                ? 'bg-success animate-pulse-slow shadow-success/50 shadow-lg'
+                : 'bg-gray-400'
                 }`} />
               <span className="text-xs font-medium text-theme-secondary">
                 {isMonitoring ? 'Live' : 'Stopped'}
@@ -296,40 +296,41 @@ const TransactionMonitor: React.FC<TransactionMonitorProps> = ({
           </div>
         </div>
 
-        {/* Stats dashboard */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-          <div className="bg-theme-surface-variant border border-theme rounded-lg p-3 network-transition">
+        {/* Stats dashboard redesenhado */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+          <div className="bg-theme-surface border border-theme rounded-lg p-3 network-transition hover:bg-theme-surface-variant">
             <div className="text-lg font-bold text-theme-primary">{stats.totalTx}</div>
             <div className="text-xs text-theme-secondary">Total</div>
           </div>
-          <div className="bg-green-50 border border-green-200 rounded-lg p-3 network-transition">
-            <div className="text-lg font-bold text-green-700">{stats.successfulTx}</div>
-            <div className="text-xs text-green-600">Success</div>
+          <div className="bg-success/10 border border-success/20 rounded-lg p-3 network-transition hover:bg-success/15">
+            <div className="text-lg font-bold text-success">{stats.successfulTx}</div>
+            <div className="text-xs text-success/90">Success</div>
           </div>
-          <div className="bg-red-50 border border-red-200 rounded-lg p-3 network-transition">
-            <div className="text-lg font-bold text-red-700">{stats.failedTx}</div>
-            <div className="text-xs text-red-600">Failed</div>
+          <div className="bg-error/10 border border-error/20 rounded-lg p-3 network-transition hover:bg-error/15">
+            <div className="text-lg font-bold text-error">{stats.failedTx}</div>
+            <div className="text-xs text-error/90">Failed</div>
           </div>
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 network-transition">
-            <div className="text-lg font-bold text-blue-700">{stats.transferTx}</div>
-            <div className="text-xs text-blue-600">Transfers</div>
+          <div className="bg-network-light/50 border border-network-primary/20 rounded-lg p-3 network-transition hover:bg-network-light/70">
+            <div className="text-lg font-bold text-network-primary">{stats.transferTx}</div>
+            <div className="text-xs text-network-primary/90">Transfers</div>
           </div>
         </div>
 
         {/* Controls melhorados */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div className="flex flex-wrap items-center gap-3">
             <select
               value={filter}
               onChange={(e) => setFilter(e.target.value as typeof filter)}
-              className="px-3 py-2 border border-theme rounded-lg text-sm bg-theme-surface text-theme-primary network-transition focus:ring-2 focus:ring-network-primary focus:border-network-primary"
+              className="px-3 py-2 border border-theme rounded-lg text-sm bg-theme-surface text-theme-primary network-transition 
+                         focus:ring-2 focus:ring-network-primary focus:border-network-primary"
             >
               <option value="all">All Transactions</option>
               {userAddress && <option value="user">My Transactions</option>}
               <option value="transfers">Only Transfers</option>
             </select>
 
-            <div className="px-3 py-2 bg-network-light text-network-primary rounded-lg text-sm font-medium border border-network-primary/20">
+            <div className="px-3 py-2 bg-network-light/40 text-network-primary rounded-lg text-sm font-medium border border-network-primary/20">
               {filteredTransactions.length} shown
             </div>
           </div>
@@ -339,14 +340,14 @@ const TransactionMonitor: React.FC<TransactionMonitorProps> = ({
             variant="outline"
             size="sm"
             disabled={transactions.length === 0}
-            className="network-transition hover:bg-red-50 hover:text-red-600 hover:border-red-200"
+            className="network-transition hover:bg-error/10 hover:text-error hover:border-error/20"
           >
             Clear All
           </Button>
         </div>
       </div>
 
-      {/* Transaction list com melhor design */}
+      {/* Transaction list com design aprimorado */}
       <div className="max-h-[600px] overflow-y-auto">
         {filteredTransactions.length === 0 ? (
           <div className="p-12 text-center">
@@ -369,20 +370,23 @@ const TransactionMonitor: React.FC<TransactionMonitorProps> = ({
             </div>
           </div>
         ) : (
-          <div className="divide-y divide-theme">
+          <div className="divide-y divide-theme/50">
             {filteredTransactions.map((tx, index) => (
               <div
                 key={tx.uid}
-                className="network-transition hover:bg-theme-surface-variant animate-fadeIn"
+                className="network-transition hover:bg-theme-surface-variant animate-fadeIn relative group"
                 style={{ animationDelay: `${index * 50}ms` }}
               >
+                {/* Efeito de hover sutil */}
+                <div className="absolute inset-0 bg-network-primary opacity-0 group-hover:opacity-[0.03] transition-opacity duration-300"></div>
+
                 <div
-                  className="p-4 cursor-pointer"
+                  className="p-4 cursor-pointer relative"
                   onClick={() => toggleExpanded(tx.hash)}
                 >
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center space-x-3">
-                      <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border network-transition ${getMethodBadgeStyles(tx.section)}`}>
+                  <div className="flex flex-col md:flex-row md:items-center justify-between mb-3 gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${getMethodBadgeStyles(tx.section)}`}>
                         {tx.section}.{tx.method}
                       </span>
                       <div className={`flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-medium border ${getStatusStyles(tx.success)}`}>
@@ -391,40 +395,50 @@ const TransactionMonitor: React.FC<TransactionMonitorProps> = ({
                       </div>
                     </div>
 
-                    <div className="text-right space-y-1">
-                      <div className="flex items-center space-x-2">
-                        <span className="text-xs text-theme-tertiary">Block</span>
-                        <span className="text-sm font-mono bg-theme-surface-variant px-2 py-0.5 rounded border border-theme">
-                          #{tx.blockNumber}
-                        </span>
+                    <div className="flex items-center gap-3">
+                      <div className="text-right space-y-1">
+                        <div className="flex items-center space-x-2">
+                          <span className="text-xs text-theme-tertiary">Block</span>
+                          <span className="text-xs font-mono bg-theme-surface px-2 py-0.5 rounded border border-theme">
+                            #{tx.blockNumber}
+                          </span>
+                        </div>
+                        <div className="text-xs text-theme-secondary">
+                          {formatTimestamp(tx.timestamp)}
+                        </div>
                       </div>
-                      <div className="text-xs text-theme-secondary">
-                        {formatTimestamp(tx.timestamp)}
+
+                      {/* Indicador de expansão */}
+                      <div className="ml-2">
+                        <svg
+                          className={`w-4 h-4 text-theme-tertiary transition-transform duration-200 ${expandedTx === tx.hash ? 'rotate-180' : ''
+                            }`}
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
                       </div>
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-4 text-sm">
-                      <div className="flex items-center space-x-2">
-                        <span className="text-theme-tertiary">From:</span>
-                        <code className="text-xs bg-theme-surface-variant px-2 py-1 rounded border border-theme font-mono">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-4 text-sm">
+                      <div className="flex items-start sm:items-center gap-2">
+                        <span className="text-theme-tertiary text-xs w-10">From:</span>
+                        <code className="text-xs bg-theme-surface px-2 py-1 rounded border border-theme font-mono">
                           {formatAddress(tx.from)}
                         </code>
                       </div>
 
                       {tx.to && (
-                        <>
-                          <svg className="w-4 h-4 text-theme-tertiary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                          </svg>
-                          <div className="flex items-center space-x-2">
-                            <span className="text-theme-tertiary">To:</span>
-                            <code className="text-xs bg-theme-surface-variant px-2 py-1 rounded border border-theme font-mono">
-                              {formatAddress(tx.to)}
-                            </code>
-                          </div>
-                        </>
+                        <div className="flex items-start sm:items-center gap-2">
+                          <span className="text-theme-tertiary text-xs w-10">To:</span>
+                          <code className="text-xs bg-theme-surface px-2 py-1 rounded border border-theme font-mono">
+                            {formatAddress(tx.to)}
+                          </code>
+                        </div>
                       )}
                     </div>
 
@@ -435,27 +449,14 @@ const TransactionMonitor: React.FC<TransactionMonitorProps> = ({
                       </div>
                     )}
                   </div>
-
-                  {/* Expand indicator */}
-                  <div className="flex justify-center mt-3">
-                    <svg
-                      className={`w-4 h-4 text-theme-tertiary transition-transform duration-200 ${expandedTx === tx.hash ? 'rotate-180' : ''
-                        }`}
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </div>
                 </div>
 
                 {/* Expandable details com smooth animation */}
                 <div className={`overflow-hidden transition-all duration-300 ease-in-out ${expandedTx === tx.hash
-                    ? 'max-h-[2000px] opacity-100'
-                    : 'max-h-0 opacity-0'
+                  ? 'max-h-[2000px] opacity-100'
+                  : 'max-h-0 opacity-0'
                   }`}>
-                  <div className="border-t border-theme bg-theme-surface-variant p-4 space-y-4">
+                  <div className="border-t border-theme/50 bg-theme-surface-variant p-4 space-y-4">
                     <div className="grid md:grid-cols-2 gap-4">
                       <div className="space-y-3">
                         <div>
@@ -475,7 +476,7 @@ const TransactionMonitor: React.FC<TransactionMonitorProps> = ({
                         {tx.fee !== '0' && (
                           <div>
                             <span className="text-sm font-medium text-theme-primary mb-1 block">Transaction Fee</span>
-                            <span className="text-sm bg-amber-50 text-amber-800 px-3 py-2 rounded border border-amber-200 block">
+                            <span className="text-sm bg-warning/10 text-warning px-3 py-2 rounded border border-warning/20 block">
                               {tx.fee}
                             </span>
                           </div>
