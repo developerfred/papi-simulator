@@ -38,7 +38,7 @@ export const SUPPORTED_CHAINS: Readonly<Record<string, ChainConfig>> = {
   paseo: {
     chainId: 'paseo',
     descriptorKey: 'paseo',
-    endpoint: 'wss://paseo-rpc.dwellir.com',
+    endpoint: 'wss://pas-rpc.stakeworld.io',
     alternativeEndpoints: [
       'wss://paseo.api.onfinality.io/public-ws'
     ],

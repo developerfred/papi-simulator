@@ -59,27 +59,13 @@ export const CHAIN_CONFIG: Record<string, ChainMetadata> = {
         description: 'Westend test network'
     },
 
-    rococo_v2_2: {
-        id: 'rococo_v2_2',
-        name: 'Rococo',
-        displayName: 'Rococo Testnet',
-        tokenSymbol: 'ROC',
-        tokenDecimals: 12,
-        endpoint: 'wss://rococo-rpc.polkadot.io',
-        explorer: 'https://rococo.subscan.io',
-        faucet: 'https://faucet.polkadot.io',
-        isTest: true,
-        category: 'relay',
-        description: 'Rococo test network'
-    },
-
     paseo: {
         id: 'paseo',
         name: 'Paseo',
         displayName: 'Paseo Testnet',
         tokenSymbol: 'PAS',
         tokenDecimals: 10,
-        endpoint: 'wss://paseo-rpc.polkadot.io',
+        endpoint: 'wss://pas-rpc.stakeworld.io',
         explorer: 'https://paseo.subscan.io',
         faucet: 'https://faucet.polkadot.io',
         isTest: true,

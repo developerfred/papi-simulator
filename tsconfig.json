@@ -23,6 +23,7 @@
       "@/providers/*": ["./src/providers/*"],
       "@/stores/*": ["./src/stores/*"],
       "@/hooks/*": ["./src/hooks/*"],
+      "@/simulator/constants/*": ["./src/lib/constants/*"],
       "@/blockchain/*": [
         "./src/components/blockchain/components/*"
       ]

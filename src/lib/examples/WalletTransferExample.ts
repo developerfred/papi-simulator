@@ -43,8 +43,8 @@ export default function RealWalletTransfer() {
     tokenDecimals: ${network.tokenDecimals},
     endpoint: "${network.endpoint}",
     explorer: "${network.explorer}",
-    isTest: ${network.isTest || false
-  };
+    isTest: ${network.isTest || false}, 
+  }
 
 
   const handleReset = () => {
