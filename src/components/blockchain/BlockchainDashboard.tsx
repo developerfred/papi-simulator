@@ -1,4 +1,4 @@
-/* eslint-disable  @typescript-eslint/ban-ts-comment, @typescript-eslint/no-unused-vars, react/display-name, react-hooks/exhaustive-deps, prefer-const, @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/ban-ts-comment, @typescript-eslint/no-unused-vars, react/display-name, react-hooks/exhaustive-deps,  @typescript-eslint/no-explicit-any */
 // @ts-nocheck
 "use client";
 
@@ -12,34 +12,13 @@ import { ApiPromise, WsProvider } from "@polkadot/api";
 import { Button, Card, NetworkBadge } from "@/components/ui";
 import { NotificationContainer, NotificationProvider } from "@/blockchain/Notification";
 import {
-	Minimize2,
-	Maximize2,
-	Layout,
-	Zap,
-	Search,
-	Filter,
-	Globe,
-	Layers,
-	TestTube,
-	Coins,
-	Sun,
-	Moon,
-	Command,
-	Option,
-	Monitor,
-	Smartphone,
-	Check,
-	X,
-	Wifi,
-	WifiOff,
-	AlertCircle
+	Minimize2, Maximize2, Layout, Zap, Search, Filter, Globe, Layers, TestTube,
+	Coins, Sun, Moon, Monitor, Check, X, Wifi, WifiOff, AlertCircle
 } from "lucide-react";
 import dynamic from "next/dynamic";
-
-// Import the dynamic network configuration
 import { networkManager, type Network, NetworkSchema } from "./dynamic-blockchain-config";
 
-// Types
+
 const WalletAccountSchema = z.object({
 	address: z.string(),
 	meta: z.object({
@@ -51,6 +30,7 @@ const WalletAccountSchema = z.object({
 
 type WalletAccount = z.infer<typeof WalletAccountSchema>;
 type ConnectionStatus = "connected" | "connecting" | "disconnected" | "error";
+type LayoutMode = "normal" | "transaction-focused" | "transaction-fullscreen";
 
 interface ChainConnectionState {
 	api: ApiPromise | null;
@@ -58,36 +38,30 @@ interface ChainConnectionState {
 	error: string | null;
 }
 
-// Layout modes for better UX
-type LayoutMode = "normal" | "transaction-focused" | "transaction-fullscreen";
-
-// Platform detection
 const isMac = typeof navigator !== 'undefined' && navigator.platform.toUpperCase().indexOf('MAC') >= 0;
 const modifierKey = isMac ? '⌘' : 'Ctrl';
-const optionKey = isMac ? '⌥' : 'Alt';
 
-// Enhanced dynamic imports with better loading states
-const createDynamicComponent = (importFn: () => Promise<any>, height = "200px") =>
+const createDynamicComponent = (importFn: () => Promise<any>, displayName: string) =>
 	dynamic(importFn, {
 		loading: () => (
-			<div className={`min-h-[${height}] flex items-center justify-center bg-theme-surface rounded-lg border border-theme`}>
-				<div className="text-center">
+			<div className="min-h-[200px] flex items-center justify-center bg-theme-surface rounded-lg border border-theme">
+				<div className="text-center" role="status" aria-label={`Loading ${displayName}`}>
 					<div className="animate-spin rounded-full h-8 w-8 border-2 border-network-primary border-t-transparent mx-auto" />
-					<p className="mt-3 text-theme-secondary text-sm">Loading component...</p>
+					<p className="mt-3 text-theme-secondary text-sm">Loading {displayName}...</p>
 				</div>
 			</div>
 		),
 		ssr: false,
 	});
 
-const ChainStatus = createDynamicComponent(() => import("./components/ChainStatus"));
-const EventMonitor = createDynamicComponent(() => import("./EventMonitor"), "300px");
-const AccountBalance = createDynamicComponent(() => import("./components/AccountBalance"), "150px");
-const BlockExplorer = createDynamicComponent(() => import("./components/BlockExplorer"), "400px");
-const TransactionMonitor = createDynamicComponent(() => import("./components/TransactionMonitor"), "300px");
-const TransactionBuilder = createDynamicComponent(() => import("./components/TransactionBuilder"), "500px");
+const ChainStatus = createDynamicComponent(() => import("./components/ChainStatus"), "Chain Status");
+const EventMonitor = createDynamicComponent(() => import("./EventMonitor"), "Event Monitor");
+const AccountBalance = createDynamicComponent(() => import("./components/AccountBalance"), "Account Balance");
+const BlockExplorer = createDynamicComponent(() => import("./components/BlockExplorer"), "Block Explorer");
+const TransactionMonitor = createDynamicComponent(() => import("./components/TransactionMonitor"), "Transaction Monitor");
+const TransactionBuilder = createDynamicComponent(() => import("./components/TransactionBuilder"), "Transaction Builder");
 
-// Enhanced Polkadot API hook with better connection management
+// Enhanced Polkadot API hook
 const usePolkadotApi = (network: Network, isWalletConnected: boolean): ChainConnectionState => {
 	const [state, setState] = useState<ChainConnectionState>({
 		api: null,
@@ -97,12 +71,15 @@ const usePolkadotApi = (network: Network, isWalletConnected: boolean): ChainConn
 
 	const mountedRef = useRef(true);
 	const connectionAttemptRef = useRef<string | null>(null);
-	const { isDarkTheme } = useTheme();
+	const abortControllerRef = useRef<AbortController | null>(null);
 
 	useEffect(() => {
 		mountedRef.current = true;
 		return () => {
 			mountedRef.current = false;
+			if (abortControllerRef.current) {
+				abortControllerRef.current.abort();
+			}
 		};
 	}, []);
 
@@ -113,37 +90,27 @@ const usePolkadotApi = (network: Network, isWalletConnected: boolean): ChainConn
 		}
 
 		const connectionKey = `${network.rpcUrl}-${isWalletConnected}`;
+		if (connectionAttemptRef.current === connectionKey) return;
 
-		if (connectionAttemptRef.current === connectionKey) {
-			return;
+		// Abort previous connection
+		if (abortControllerRef.current) {
+			abortControllerRef.current.abort();
 		}
 
+		abortControllerRef.current = new AbortController();
 		connectionAttemptRef.current = connectionKey;
 
 		let isMounted = true;
 		let apiInstance: ApiPromise | null = null;
 		let provider: WsProvider | null = null;
-		let timeoutId: NodeJS.Timeout;
-		let connectionTimeout: NodeJS.Timeout;
 
 		const connectToChain = async () => {
 			try {
-				if (!isMounted || !mountedRef.current) return;
+				if (!isMounted || !mountedRef.current || abortControllerRef.current?.signal.aborted) return;
 
 				setState(prev => ({ ...prev, status: "connecting", error: null }));
 
-				connectionTimeout = setTimeout(() => {
-					if (isMounted && mountedRef.current) {
-						setState(prev => ({ ...prev, status: "error", error: "Connection timeout - please check network settings" }));
-					}
-				}, 15000);
-
 				provider = new WsProvider(network.rpcUrl, 1000);
-
-				// Enhanced provider event listeners
-				provider.on('connected', () => {
-					if (connectionTimeout) clearTimeout(connectionTimeout);
-				});
 
 				provider.on('disconnected', () => {
 					if (isMounted && mountedRef.current) {
@@ -152,7 +119,6 @@ const usePolkadotApi = (network: Network, isWalletConnected: boolean): ChainConn
 				});
 
 				provider.on('error', (error) => {
-					console.warn('Provider error:', error);
 					if (isMounted && mountedRef.current) {
 						setState(prev => ({ ...prev, status: "error", error: error.message }));
 					}
@@ -166,17 +132,17 @@ const usePolkadotApi = (network: Network, isWalletConnected: boolean): ChainConn
 						types: {},
 					}),
 					new Promise<never>((_, reject) =>
-						setTimeout(() => reject(new Error("API creation timeout")), 12000)
+						setTimeout(() => reject(new Error("Connection timeout")), 12000)
 					)
 				]);
 
-				if (connectionTimeout) clearTimeout(connectionTimeout);
+				if (abortControllerRef.current?.signal.aborted) return;
 
 				if (isMounted && mountedRef.current) {
 					setState({ api: apiInstance, status: "connected", error: null });
 				}
 			} catch (err) {
-				if (connectionTimeout) clearTimeout(connectionTimeout);
+				if (abortControllerRef.current?.signal.aborted) return;
 
 				if (isMounted && mountedRef.current) {
 					const error = err instanceof Error ? err.message : "Failed to connect to network";
@@ -185,12 +151,11 @@ const usePolkadotApi = (network: Network, isWalletConnected: boolean): ChainConn
 			}
 		};
 
-		timeoutId = setTimeout(connectToChain, 100);
+		const timeoutId = setTimeout(connectToChain, 100);
 
 		return () => {
 			isMounted = false;
 			clearTimeout(timeoutId);
-			clearTimeout(connectionTimeout);
 
 			if (connectionAttemptRef.current === connectionKey) {
 				connectionAttemptRef.current = null;
@@ -200,12 +165,11 @@ const usePolkadotApi = (network: Network, isWalletConnected: boolean): ChainConn
 				try {
 					if (provider) {
 						provider.removeAllListeners();
+						await provider.disconnect();
 					}
-
-					await Promise.all([
-						apiInstance?.disconnect().catch(() => { }),
-						provider?.disconnect().catch(() => { })
-					]);
+					if (apiInstance) {
+						await apiInstance.disconnect();
+					}
 				} catch (error) {
 					console.warn("Cleanup error:", error);
 				}
@@ -213,7 +177,7 @@ const usePolkadotApi = (network: Network, isWalletConnected: boolean): ChainConn
 
 			cleanup();
 		};
-	}, [network.rpcUrl, isWalletConnected, isDarkTheme]);
+	}, [network.rpcUrl, isWalletConnected]);
 
 	return state;
 };
@@ -238,13 +202,23 @@ const getStatusMessage = (walletStatus: string, chainStatus: ConnectionStatus): 
 	return messages.default;
 };
 
+const getNetworkTypeIcon = (type: Network["type"], className = "w-4 h-4") => {
+	const icons = {
+		relay: <Globe className={className} aria-hidden="true" />,
+		system: <Layers className={className} aria-hidden="true" />,
+		parachain: <Coins className={className} aria-hidden="true" />,
+		testnet: <TestTube className={className} aria-hidden="true" />,
+	};
+	return icons[type] || <Globe className={className} aria-hidden="true" />;
+};
 
+// UI Components
 const StatusIndicator = memo<{ status: ConnectionStatus; showLabel?: boolean }>(({ status, showLabel = true }) => {
 	const colors = {
-		connected: "bg-success",
-		connecting: "bg-warning animate-pulse",
+		connected: "bg-green-500",
+		connecting: "bg-yellow-500 animate-pulse",
 		disconnected: "bg-gray-400",
-		error: "bg-error",
+		error: "bg-red-500",
 	};
 
 	const labels = {
@@ -255,17 +229,17 @@ const StatusIndicator = memo<{ status: ConnectionStatus; showLabel?: boolean }>(
 	};
 
 	const icons = {
-		connected: <Wifi className="w-3 h-3" />,
+		connected: <Wifi className="w-3 h-3" aria-hidden="true" />,
 		connecting: <div className="w-3 h-3 animate-spin rounded-full border border-gray-300 border-t-white" />,
-		disconnected: <WifiOff className="w-3 h-3" />,
-		error: <AlertCircle className="w-3 h-3" />,
+		disconnected: <WifiOff className="w-3 h-3" aria-hidden="true" />,
+		error: <AlertCircle className="w-3 h-3" aria-hidden="true" />,
 	};
 
 	return (
-		<div className="flex items-center space-x-2">
+		<div className="flex items-center space-x-2" role="status" aria-label={`${labels[status]} status`}>
 			<div className={`w-2 h-2 rounded-full ${colors[status]} relative overflow-hidden`}>
 				{status === "connecting" && (
-					<div className="absolute inset-0 bg-warning animate-ping" />
+					<div className="absolute inset-0 bg-yellow-500 animate-ping" />
 				)}
 			</div>
 			{showLabel && (
@@ -279,13 +253,13 @@ const StatusIndicator = memo<{ status: ConnectionStatus; showLabel?: boolean }>(
 });
 
 const ErrorDisplay = memo<{ error: string; onRetry?: () => void }>(({ error, onRetry }) => (
-	<div className="mb-6 p-4 bg-error/10 border border-error/20 rounded-lg text-error animate-slideInDown">
+	<div className="mb-6 p-4 bg-red-50/80 dark:bg-red-900/40 border border-red-200/70 dark:border-red-600/70 rounded-lg backdrop-blur-sm" role="alert">
 		<div className="flex items-start justify-between">
 			<div className="flex items-start space-x-3">
-				<AlertCircle className="w-5 h-5 mt-0.5 flex-shrink-0" />
+				<AlertCircle className="w-5 h-5 mt-0.5 flex-shrink-0 text-red-600 dark:text-red-400" aria-hidden="true" />
 				<div>
-					<p className="font-medium">Connection Error</p>
-					<p className="text-sm text-error/80 mt-1">{error}</p>
+					<p className="font-medium text-red-800 dark:text-red-300">Connection Error</p>
+					<p className="text-sm text-red-700 dark:text-red-400 mt-1">{error}</p>
 				</div>
 			</div>
 			{onRetry && (
@@ -298,7 +272,7 @@ const ErrorDisplay = memo<{ error: string; onRetry?: () => void }>(({ error, onR
 ));
 
 const LoadingSpinner = memo<{ message?: string }>(({ message = "Initializing blockchain connection..." }) => (
-	<div className="flex justify-center items-center min-h-[300px]">
+	<div className="flex justify-center items-center min-h-[300px]" role="status" aria-label="Loading">
 		<div className="text-center">
 			<div className="relative">
 				<div className="animate-spin rounded-full h-12 w-12 border-2 border-network-primary border-t-transparent mx-auto" />
@@ -308,27 +282,6 @@ const LoadingSpinner = memo<{ message?: string }>(({ message = "Initializing blo
 		</div>
 	</div>
 ));
-
-const NetworkDisconnectedIcon = memo(() => (
-	<div className="relative">
-		<Monitor className="w-16 h-16 mx-auto text-theme-tertiary" />
-		<div className="absolute -bottom-1 -right-1 w-6 h-6 bg-error rounded-full flex items-center justify-center">
-			<X className="w-3 h-3 text-white" />
-		</div>
-	</div>
-));
-
-
-const getNetworkTypeIcon = (type: Network["type"], className = "w-4 h-4") => {
-	const icons = {
-		relay: <Globe className={className} />,
-		system: <Layers className={className} />,
-		parachain: <Coins className={className} />,
-		testnet: <TestTube className={className} />,
-	};
-	return icons[type] || <Globe className={className} />;
-};
-
 
 const ThemeToggle = memo(() => {
 	const { isDarkTheme, toggleTheme } = useTheme();
@@ -340,15 +293,15 @@ const ThemeToggle = memo(() => {
 			onClick={toggleTheme}
 			className="flex items-center space-x-2 network-transition"
 			title={`Switch to ${isDarkTheme ? 'light' : 'dark'} theme`}
+			aria-label={`Switch to ${isDarkTheme ? 'light' : 'dark'} theme`}
 		>
-			{isDarkTheme ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+			{isDarkTheme ? <Sun className="w-4 h-4" aria-hidden="true" /> : <Moon className="w-4 h-4" aria-hidden="true" />}
 			<span className="hidden sm:inline">
 				{isDarkTheme ? 'Light' : 'Dark'}
 			</span>
 		</Button>
 	);
 });
-
 
 const NetworkSelector = memo<{
 	selectedNetwork: Network;
@@ -358,7 +311,7 @@ const NetworkSelector = memo<{
 	const [isOpen, setIsOpen] = useState(false);
 	const [searchQuery, setSearchQuery] = useState("");
 	const [selectedFilter, setSelectedFilter] = useState<"all" | Network["type"]>("all");
-	const { isDarkTheme } = useTheme();
+	const searchInputRef = useRef<HTMLInputElement>(null);
 
 	const networks = useMemo(() => {
 		let filtered = networkManager.getAllNetworks();
@@ -395,7 +348,6 @@ const NetworkSelector = memo<{
 		return groups;
 	}, [networks, selectedFilter, searchQuery]);
 
-	
 	useEffect(() => {
 		const handleKeyDown = (e: KeyboardEvent) => {
 			if (e.key === 'Escape' && isOpen) {
@@ -406,6 +358,7 @@ const NetworkSelector = memo<{
 
 		if (isOpen) {
 			document.addEventListener('keydown', handleKeyDown);
+			setTimeout(() => searchInputRef.current?.focus(), 100);
 			return () => document.removeEventListener('keydown', handleKeyDown);
 		}
 	}, [isOpen]);
@@ -418,6 +371,9 @@ const NetworkSelector = memo<{
 				variant="outline"
 				onClick={() => setIsOpen(!isOpen)}
 				className="flex items-center space-x-2 min-w-[220px] justify-between network-transition hover:border-network-primary/50"
+				aria-expanded={isOpen}
+				aria-haspopup="listbox"
+				aria-label="Select network"
 			>
 				<div className="flex items-center space-x-2">
 					{getNetworkTypeIcon(selectedNetwork.type)}
@@ -436,25 +392,27 @@ const NetworkSelector = memo<{
 
 			{isOpen && (
 				<>
-					<div className="absolute top-full mt-2 left-0 z-50 w-96 bg-theme-surface border border-theme rounded-lg shadow-lg max-h-96 overflow-hidden animate-slideInDown">
-						{/* Enhanced Search and Filter Header */}
+					<div className="absolute top-full mt-2 left-0 z-50 w-96 bg-theme-surface border border-theme rounded-lg shadow-xl max-h-96 overflow-hidden backdrop-blur-sm"
+						role="listbox" aria-label="Network selection">
 						<div className="p-4 border-b border-theme bg-theme-surface-variant">
 							<div className="flex items-center space-x-2 mb-3">
 								<div className="relative flex-1">
-									<Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-theme-tertiary" />
+									<Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-theme-tertiary" aria-hidden="true" />
 									<input
+										ref={searchInputRef}
 										type="text"
 										placeholder="Search networks..."
 										value={searchQuery}
 										onChange={(e) => setSearchQuery(e.target.value)}
 										className="w-full pl-10 pr-4 py-2 text-sm bg-theme-surface border border-theme rounded-md focus:outline-none focus:ring-2 focus:ring-network-primary/50 focus:border-network-primary network-transition"
-										autoFocus
+										aria-label="Search networks"
 									/>
 								</div>
 								<select
 									value={selectedFilter}
 									onChange={(e) => setSelectedFilter(e.target.value as any)}
 									className="text-sm bg-theme-surface border border-theme rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-network-primary/50 network-transition"
+									aria-label="Filter by network type"
 								>
 									<option value="all">All Types</option>
 									<option value="relay">Relay Chains</option>
@@ -472,7 +430,6 @@ const NetworkSelector = memo<{
 							</div>
 						</div>
 
-						{/* Network Groups */}
 						<div className="max-h-72 overflow-y-auto">
 							{Object.entries(networkGroups).map(([groupName, groupNetworks]) => (
 								<div key={groupName} className="border-b border-theme last:border-b-0">
@@ -492,9 +449,11 @@ const NetworkSelector = memo<{
 												setSearchQuery("");
 											}}
 											className={`w-full px-4 py-3 text-left hover:bg-theme-surface-variant flex items-center justify-between transition-colors network-transition group ${selectedNetwork.name === network.name
-													? 'bg-network-primary/10 border-r-2 border-network-primary'
-													: ''
+												? 'bg-network-primary/10 border-r-2 border-network-primary'
+												: ''
 												}`}
+											role="option"
+											aria-selected={selectedNetwork.name === network.name}
 										>
 											<div className="flex items-center space-x-3 flex-1 min-w-0">
 												{getNetworkTypeIcon(network.type)}
@@ -502,7 +461,7 @@ const NetworkSelector = memo<{
 													<div className="font-medium text-sm text-theme-primary flex items-center space-x-2">
 														<span className="truncate">{network.name}</span>
 														{selectedNetwork.name === network.name && (
-															<Check className="w-4 h-4 text-network-primary flex-shrink-0" />
+															<Check className="w-4 h-4 text-network-primary flex-shrink-0" aria-hidden="true" />
 														)}
 													</div>
 													<div className="text-xs text-theme-secondary truncate">
@@ -531,7 +490,7 @@ const NetworkSelector = memo<{
 
 							{networks.length === 0 && (
 								<div className="p-8 text-center text-theme-secondary">
-									<Filter className="w-8 h-8 mx-auto mb-3 opacity-50" />
+									<Filter className="w-8 h-8 mx-auto mb-3 opacity-50" aria-hidden="true" />
 									<p className="text-sm font-medium">No networks found</p>
 									<p className="text-xs text-theme-tertiary mt-1">Try adjusting your search or filter</p>
 								</div>
@@ -539,20 +498,19 @@ const NetworkSelector = memo<{
 						</div>
 					</div>
 
-					{/* Enhanced backdrop */}
 					<div
 						className="fixed inset-0 z-40 bg-black/20 backdrop-blur-sm"
 						onClick={() => {
 							setIsOpen(false);
 							setSearchQuery("");
 						}}
+						aria-hidden="true"
 					/>
 				</>
 			)}
 		</div>
 	);
 });
-
 
 const DashboardHeader = memo<{
 	selectedNetwork: Network;
@@ -561,15 +519,13 @@ const DashboardHeader = memo<{
 	onNetworkChange: (network: Network) => void;
 	onLayoutToggle: () => void;
 }>(({ selectedNetwork, wallet, layoutMode, onNetworkChange, onLayoutToggle }) => {
-	const { isDarkTheme } = useTheme();
-
 	const WalletButton = useMemo(() => {
 		if (wallet.status === "connected") {
 			return (
 				<div className="flex items-center space-x-2">
-					<div className="hidden sm:flex items-center space-x-2 px-3 py-1 bg-success/10 border border-success/20 rounded-lg">
-						<div className="w-2 h-2 bg-success rounded-full animate-pulse" />
-						<span className="text-sm text-success font-medium">
+					<div className="hidden sm:flex items-center space-x-2 px-3 py-1 bg-green-50/80 dark:bg-green-900/40 border border-green-200/70 dark:border-green-600/70 rounded-lg">
+						<div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+						<span className="text-sm text-green-700 dark:text-green-300 font-medium">
 							{getAccountDisplayName(wallet.activeAccount)}
 						</span>
 					</div>
@@ -599,13 +555,13 @@ const DashboardHeader = memo<{
 	if (layoutMode === "transaction-fullscreen") return null;
 
 	return (
-		<div className={`dashboard-header mb-6 p-4 bg-theme-surface/80 backdrop-blur-sm border-b border-theme rounded-lg transition-all duration-300 ${layoutMode === "transaction-focused" ? "opacity-75 scale-95" : ""
+		<header className={`dashboard-header mb-6 p-4 bg-theme-surface/80 backdrop-blur-sm border-b border-theme rounded-lg transition-all duration-300 ${layoutMode === "transaction-focused" ? "opacity-75 scale-95" : ""
 			}`}>
 			<div className="flex justify-between items-center">
 				<div className="flex items-center space-x-4">
 					<div>
 						<h1 className="text-2xl font-bold mb-1 flex items-center space-x-2 text-theme-primary">
-							<Layout className="w-6 h-6 text-network-primary" />
+							<Layout className="w-6 h-6 text-network-primary" aria-hidden="true" />
 							<span>Blockchain Explorer</span>
 						</h1>
 						<div className="flex items-center space-x-2 text-sm text-theme-secondary">
@@ -623,38 +579,34 @@ const DashboardHeader = memo<{
 				</div>
 
 				<div className="flex items-center space-x-3">
-					{/* Layout Toggle Button */}
 					<Button
 						variant="outline"
 						size="sm"
 						onClick={onLayoutToggle}
 						className="flex items-center space-x-1 group"
 						title={`Toggle layout mode (${modifierKey}+F)`}
+						aria-label="Toggle layout mode"
 					>
 						{layoutMode === "normal" ? (
-							<Maximize2 className="w-4 h-4 group-hover:text-network-primary transition-colors" />
+							<Maximize2 className="w-4 h-4 group-hover:text-network-primary transition-colors" aria-hidden="true" />
 						) : (
-							<Minimize2 className="w-4 h-4 group-hover:text-network-primary transition-colors" />
+							<Minimize2 className="w-4 h-4 group-hover:text-network-primary transition-colors" aria-hidden="true" />
 						)}
 						<span className="hidden lg:inline">Layout</span>
 					</Button>
 
-					{/* Theme Toggle */}
 					<ThemeToggle />
 
-					{/* Network Selector */}
 					<NetworkSelector
 						selectedNetwork={selectedNetwork}
 						onNetworkChange={onNetworkChange}
 						layoutMode={layoutMode}
 					/>
 
-					{/* Network Badge */}
 					<div className="hidden md:block">
 						<NetworkBadge network={selectedNetwork} />
 					</div>
 
-					{/* Wallet Button */}
 					{WalletButton}
 
 					<Link href="/">
@@ -664,10 +616,9 @@ const DashboardHeader = memo<{
 					</Link>
 				</div>
 			</div>
-		</div>
+		</header>
 	);
 });
-
 
 const ConnectionStatusDisplay = memo<{
 	walletStatus: string;
@@ -679,9 +630,9 @@ const ConnectionStatusDisplay = memo<{
 
 	const getStatusColor = (status: string) => {
 		switch (status) {
-			case "connected": return "border-success/20 bg-success/5";
-			case "connecting": return "border-warning/20 bg-warning/5";
-			case "error": return "border-error/20 bg-error/5";
+			case "connected": return "border-green-200/70 dark:border-green-600/70 bg-green-50/80 dark:bg-green-900/40";
+			case "connecting": return "border-yellow-200/70 dark:border-yellow-600/70 bg-yellow-50/80 dark:bg-yellow-900/40";
+			case "error": return "border-red-200/70 dark:border-red-600/70 bg-red-50/80 dark:bg-red-900/40";
 			default: return "border-theme bg-theme-surface";
 		}
 	};
@@ -727,7 +678,6 @@ const ConnectionStatusDisplay = memo<{
 	);
 });
 
-
 const NotConnectedState = memo<{
 	walletStatus: string;
 	chainStatus: ConnectionStatus;
@@ -742,10 +692,15 @@ const NotConnectedState = memo<{
 	const showConnectButton = walletStatus === "disconnected";
 
 	return (
-		<Card className="p-8 text-center bg-theme-surface border border-theme animate-fadeIn">
+		<Card className="p-8 text-center bg-theme-surface border border-theme">
 			<div className="max-w-lg mx-auto">
 				<div className="mb-6">
-					<NetworkDisconnectedIcon />
+					<div className="relative mx-auto w-16 h-16">
+						<Monitor className="w-16 h-16 text-theme-tertiary" aria-hidden="true" />
+						<div className="absolute -bottom-1 -right-1 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center">
+							<X className="w-3 h-3 text-white" aria-hidden="true" />
+						</div>
+					</div>
 				</div>
 
 				<h2 className="text-xl font-semibold mb-3 text-theme-primary">Blockchain Explorer</h2>
@@ -799,7 +754,6 @@ const NotConnectedState = memo<{
 	);
 });
 
-
 const MainDashboardContent = memo<{
 	api: ApiPromise;
 	network: Network;
@@ -807,7 +761,6 @@ const MainDashboardContent = memo<{
 	layoutMode: LayoutMode;
 	onTransactionFocus: (focused: boolean) => void;
 }>(({ api, network, account, layoutMode, onTransactionFocus }) => {
-	// Transaction Builder Props
 	const transactionBuilderProps = {
 		api,
 		network,
@@ -816,7 +769,6 @@ const MainDashboardContent = memo<{
 		onMinimize: () => onTransactionFocus(false),
 	};
 
-	// Fullscreen Transaction Builder
 	if (layoutMode === "transaction-fullscreen") {
 		return (
 			<div className="fixed inset-0 z-50 bg-theme-surface">
@@ -825,16 +777,13 @@ const MainDashboardContent = memo<{
 		);
 	}
 
-	// Focused Layout - Transaction Builder takes most space
 	if (layoutMode === "transaction-focused") {
 		return (
 			<div className="space-y-6">
-				{/* Transaction Builder - Full width, enhanced */}
 				<div className="w-full">
 					<TransactionBuilder {...transactionBuilderProps} />
 				</div>
 
-				{/* Compact secondary components */}
 				<div className="grid grid-cols-1 lg:grid-cols-3 gap-4 opacity-75">
 					<AccountBalance network={network} api={api} account={account} />
 					<div className="lg:col-span-2">
@@ -842,7 +791,6 @@ const MainDashboardContent = memo<{
 					</div>
 				</div>
 
-				{/* Collapsible advanced tools */}
 				<details className="group bg-theme-surface border border-theme rounded-lg overflow-hidden">
 					<summary className="cursor-pointer p-4 bg-theme-surface-variant hover:bg-theme-surface-variant/80 transition-colors flex items-center justify-between">
 						<div className="flex items-center space-x-2">
@@ -851,7 +799,7 @@ const MainDashboardContent = memo<{
 								Explorer, Events, Transactions
 							</span>
 						</div>
-						<span className="text-theme-tertiary group-open:rotate-180 transition-transform duration-200">
+						<span className="text-theme-tertiary group-open:rotate-180 transition-transform duration-200" aria-hidden="true">
 							▼
 						</span>
 					</summary>
@@ -867,22 +815,21 @@ const MainDashboardContent = memo<{
 		);
 	}
 
-	
 	return (
 		<div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 			<div className="space-y-6">
 				<AccountBalance network={network} api={api} account={account} />
 				<div className="relative group">
 					<TransactionBuilder {...transactionBuilderProps} />
-					{/* Enhanced focus button overlay */}
 					<Button
 						variant="outline"
 						size="sm"
 						onClick={() => onTransactionFocus(true)}
 						className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-all duration-200 z-10 flex items-center space-x-1 bg-theme-surface/90 backdrop-blur-sm border-network-primary/50 hover:border-network-primary"
 						title={`Focus Transaction Builder (${modifierKey}+F)`}
+						aria-label="Focus Transaction Builder"
 					>
-						<Zap className="w-4 h-4" />
+						<Zap className="w-4 h-4" aria-hidden="true" />
 						<span className="hidden sm:inline">Focus</span>
 					</Button>
 				</div>
@@ -898,10 +845,8 @@ const MainDashboardContent = memo<{
 	);
 });
 
-
 const KeyboardShortcutsHelp = memo<{ layoutMode: LayoutMode; selectedNetwork: Network }>(({ layoutMode, selectedNetwork }) => {
 	const [isVisible, setIsVisible] = useState(true);
-	const { isDarkTheme } = useTheme();
 
 	useEffect(() => {
 		const timer = setTimeout(() => setIsVisible(false), 5000);
@@ -912,7 +857,6 @@ const KeyboardShortcutsHelp = memo<{ layoutMode: LayoutMode; selectedNetwork: Ne
 
 	return (
 		<div className="fixed bottom-4 right-4 space-y-2 z-10">
-			{/* Network info pill */}
 			<div className="bg-theme-surface/90 backdrop-blur-sm border border-theme text-theme-primary px-3 py-2 rounded-lg text-xs opacity-75 hover:opacity-100 transition-all duration-300 group">
 				<div className="flex items-center space-x-2">
 					{getNetworkTypeIcon(selectedNetwork.type)}
@@ -931,7 +875,6 @@ const KeyboardShortcutsHelp = memo<{ layoutMode: LayoutMode; selectedNetwork: Ne
 				)}
 			</div>
 
-			{/* Keyboard shortcuts help */}
 			<div className="bg-theme-surface/90 backdrop-blur-sm border border-theme text-theme-primary text-xs rounded-lg opacity-75 hover:opacity-100 transition-all duration-300 overflow-hidden">
 				<div className="p-3 space-y-2">
 					<div className="flex items-center justify-between">
@@ -956,23 +899,21 @@ const KeyboardShortcutsHelp = memo<{ layoutMode: LayoutMode; selectedNetwork: Ne
 				<button
 					onClick={() => setIsVisible(false)}
 					className="w-full p-2 bg-theme-surface-variant hover:bg-theme-surface-variant/80 transition-colors text-center text-theme-tertiary"
+					aria-label="Close shortcuts help"
 				>
-					<X className="w-3 h-3 mx-auto" />
+					<X className="w-3 h-3 mx-auto" aria-hidden="true" />
 				</button>
 			</div>
 		</div>
 	);
 });
 
-
 function BlockchainDashboard() {
 	const wallet = useWallet();
-	const { isDarkTheme } = useTheme();
 	const [selectedNetwork, setSelectedNetwork] = useState<Network>(() =>
 		networkManager.getNetworkByName("Polkadot") || networkManager.getFeaturedNetworks()[0]
 	);
 	const [layoutMode, setLayoutMode] = useState<LayoutMode>("normal");
-	const [networkSelectorOpen, setNetworkSelectorOpen] = useState(false);
 
 	const mountedRef = useRef(true);
 	const autoConnectAttemptedRef = useRef(false);
@@ -989,7 +930,6 @@ function BlockchainDashboard() {
 		wallet.status === "connected"
 	);
 
-	// Auto-connect wallet on mount with enhanced logic
 	useEffect(() => {
 		if (!autoConnectAttemptedRef.current &&
 			wallet.status === "disconnected" &&
@@ -1013,7 +953,6 @@ function BlockchainDashboard() {
 		}
 	}, [wallet.status]);
 
-	// Enhanced layout management
 	const handleLayoutToggle = useCallback(() => {
 		setLayoutMode(prev => {
 			switch (prev) {
@@ -1033,36 +972,24 @@ function BlockchainDashboard() {
 		try {
 			const validatedNetwork = NetworkSchema.parse(network);
 			setSelectedNetwork(validatedNetwork);
-
-			// Update document data attribute for network-specific theming
 			document.documentElement.setAttribute('data-network', network.name.toLowerCase().replace(/\s+/g, '-'));
 		} catch (error) {
 			console.error('Invalid network:', error);
 		}
 	}, []);
 
-	// Enhanced keyboard shortcuts with Mac support
 	useEffect(() => {
 		const handleKeyboard = (e: KeyboardEvent) => {
 			const isCmdOrCtrl = isMac ? e.metaKey : e.ctrlKey;
 
-			if (isCmdOrCtrl) {
-				switch (e.key.toLowerCase()) {
-					case 'f':
-						e.preventDefault();
-						handleLayoutToggle();
-						break;
-					case 'k':
-						e.preventDefault();
-						setNetworkSelectorOpen(true);
-						break;
-				}
+			if (isCmdOrCtrl && e.key.toLowerCase() === 'f') {
+				e.preventDefault();
+				handleLayoutToggle();
 			}
 
 			if (e.key === 'Escape') {
 				e.preventDefault();
 				setLayoutMode("normal");
-				setNetworkSelectorOpen(false);
 			}
 		};
 
@@ -1070,7 +997,6 @@ function BlockchainDashboard() {
 		return () => window.removeEventListener('keydown', handleKeyboard);
 	}, [handleLayoutToggle]);
 
-	// Update network-specific CSS variables
 	useEffect(() => {
 		const networkColors = {
 			polkadot: { primary: '#e6007a', secondary: '#bc318f', light: '#fae6f2', dark: '#9c0054' },
@@ -1087,7 +1013,6 @@ function BlockchainDashboard() {
 		});
 	}, [selectedNetwork.name]);
 
-	// Memoized computed values
 	const displayError = useMemo(() => error || wallet.error, [error, wallet.error]);
 	const isFullyConnected = useMemo(() =>
 		wallet.status === "connected" && chainStatus === "connected" && api,
@@ -1128,7 +1053,6 @@ function BlockchainDashboard() {
 		[chainStatus, wallet.status]
 	);
 
-	// Container classes based on layout mode and theme
 	const containerClasses = useMemo(() => {
 		const base = "transition-all duration-300 ease-in-out min-h-screen bg-background";
 
@@ -1167,32 +1091,21 @@ function BlockchainDashboard() {
 					MainContent
 				)}
 
-				{/* Keyboard shortcuts help */}
 				<KeyboardShortcutsHelp layoutMode={layoutMode} selectedNetwork={selectedNetwork} />
 
-				{/* Enhanced fullscreen mode indicator */}
 				{layoutMode === "transaction-fullscreen" && (
-					<div className="fixed top-4 left-4 z-50 animate-slideInDown">
+					<div className="fixed top-4 left-4 z-50">
 						<div className="bg-network-primary text-white px-4 py-2 rounded-lg text-sm flex items-center space-x-3 shadow-lg">
-							<Maximize2 className="w-4 h-4" />
+							<Maximize2 className="w-4 h-4" aria-hidden="true" />
 							<span className="font-medium">Transaction Builder - Fullscreen Mode</span>
 							<button
 								onClick={() => setLayoutMode("normal")}
 								className="ml-3 hover:bg-white/20 p-1 rounded transition-colors"
 								title={`Exit Fullscreen (${modifierKey}+F)`}
+								aria-label="Exit fullscreen mode"
 							>
-								<Minimize2 className="w-4 h-4" />
+								<Minimize2 className="w-4 h-4" aria-hidden="true" />
 							</button>
-						</div>
-					</div>
-				)}
-
-				{/* Mobile responsiveness indicator */}
-				{typeof window !== 'undefined' && window.innerWidth < 768 && (
-					<div className="fixed bottom-4 left-4 z-10">
-						<div className="bg-info/20 border border-info/40 text-info px-3 py-2 rounded-lg text-xs flex items-center space-x-2">
-							<Smartphone className="w-4 h-4" />
-							<span>Mobile optimized</span>
 						</div>
 					</div>
 				)}

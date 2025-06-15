@@ -15,13 +15,17 @@ import React, {
 import { ErrorBoundary } from "react-error-boundary";
 import * as ts from "typescript";
 import type { Network } from "@/lib/types/network";
-import { MultiAddress, paseo, roc, wnd } from "@polkadot-api/descriptors";
+import { MultiAddress, paseo, wnd, ksm, acala, paseoassethub, popnetworkpaseo } from "@polkadot-api/descriptors";
 import { getWsProvider } from "polkadot-api/ws-provider/web";
 import { withPolkadotSdkCompat } from "polkadot-api/polkadot-sdk-compat";
 import { createClient } from "polkadot-api";
 import { useWallet } from '@/hooks/useWallet';
 import { useTheme } from "@/lib/theme/ThemeProvider";
 import { getInjectedExtensions, connectInjectedExtension } from "polkadot-api/pjs-signer";
+import { getSmProvider } from "polkadot-api/sm-provider";
+import { chainSpec } from "polkadot-api/chains/polkadot";
+import { startFromWorker } from "polkadot-api/smoldot/from-worker";
+import { createConvictionVotingSdk } from "@polkadot-api/sdk-governance";
 
 const ALLOWED_MODULES: Record<string, unknown> = {
 	react: React,
@@ -32,11 +36,14 @@ const ALLOWED_MODULES: Record<string, unknown> = {
 	},
 	"polkadot-api/ws-provider/web": { getWsProvider },
 	"polkadot-api/polkadot-sdk-compat": { withPolkadotSdkCompat },
-	"@polkadot-api/descriptors": { paseo, roc, wnd, MultiAddress },	
+	"@polkadot-api/descriptors": { paseo, ksm, acala, wnd, paseoassethub, MultiAddress, popnetworkpaseo },	
 	"polkadot-api": { createClient },
 	"@/hooks/useWallet": { useWallet },
 	"@/lib/theme/ThemeProvider": { useTheme },
-	"polkadot-api/pjs-signer": { getInjectedExtensions, connectInjectedExtension }
+	"polkadot-api/pjs-signer": { getInjectedExtensions, connectInjectedExtension },
+	"polkadot-api/chains/polkadot": { getSmProvider, chainSpec },
+	"polkadot-api/smoldot/from-worker": { startFromWorker },
+	"@polkadot-api/sdk-governance": { createConvictionVotingSdk },
 };
 
 const COMPILER_OPTIONS: ts.CompilerOptions = {
@@ -297,8 +304,7 @@ const evaluateComponent = (code: string, network?: Network) => {
 			useLayoutEffect,
 			useImperativeHandle,
 		};
-
-		// Inject network data into the global scope
+		
 		const networkCode = network ? `
 		  // Inject network data from props
 		  const __network__ = ${JSON.stringify(network)};
