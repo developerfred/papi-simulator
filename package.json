@@ -1,6 +1,6 @@
 {
   "name": "papi-simulator",
-  "version": "0.2.1",
+  "version": "0.4.2",
   "author": "codingsh <codingsh@pm.me>",
   "private": true,
   "scripts": {
