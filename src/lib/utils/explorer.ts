@@ -1,3 +1,4 @@
+/* eslint-disable  @typescript-eslint/no-unused-vars*/
 interface Network {
     name: string;
     symbol: string;
