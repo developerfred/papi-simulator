@@ -1,7 +1,7 @@
 {
   "name": "papi-simulator",
   "version": "0.2.1",
-  "author": "codingsh <codinsh@pm.me>",
+  "author": "codingsh <codingsh@pm.me>",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",

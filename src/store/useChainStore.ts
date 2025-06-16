@@ -10,6 +10,7 @@ import {
 	of,
 	throwError,
 	timer,
+	EMPTY,
 } from "rxjs";
 import {
 	switchMap,
@@ -18,14 +19,13 @@ import {
 	shareReplay,
 	finalize,
 	retry,
+	takeUntil,
 } from "rxjs/operators";
 import { useState, useEffect, useMemo } from "react";
 import type { Network } from "@/lib/types/network";
 import { DEFAULT_NETWORK } from "@/lib/constants/networks";
 
-/**
- * Chain client and typed API interfaces
- */
+
 interface ChainClient {
 	destroy: () => void;
 	getTypedApi: (descriptor: unknown) => TypedApi;
@@ -37,26 +37,20 @@ interface TypedApi {
 	[key: string]: unknown;
 }
 
-/**
- * Connection result with client and API
- */
+
 interface ConnectionResult {
 	client: ChainClient;
 	typedApi: TypedApi;
 }
 
-/**
- * Chain connection status
- */
+
 export type ConnectionStatus =
 	| { state: "disconnected" }
 	| { state: "connecting" }
 	| { state: "connected" }
 	| { state: "error"; error: Error };
 
-/**
- * Chain store state interface
- */
+
 interface ChainState {
 	// Connection state
 	network: Network;
@@ -68,23 +62,23 @@ interface ChainState {
 	connection$: Observable<ConnectionResult> | null;
 	networkEvents$: Subject<Network>;
 	connectionStatus$: BehaviorSubject<ConnectionStatus>;
+	destroy$: Subject<void>; 
 
-	// Actions
+	
 	connect: (network: Network) => Observable<void>;
 	disconnect: () => void;
 	setNetwork: (network: Network) => void;
 
-	// Lazy loading helpers
+	
 	getTypedApi: () => Observable<TypedApi>;
 	getClient: () => Observable<ChainClient>;
 }
 
-// Dynamic import function with caching for descriptors
+
 let descriptorsPromise: Promise<Record<string, unknown>> | null = null;
 const getDescriptors = () => {
 	if (!descriptorsPromise) {
-		descriptorsPromise = import("@polkadot-api/descriptors").catch((err) => {
-			// Reset cache on error to allow retrying
+		descriptorsPromise = import("@polkadot-api/descriptors").catch((err) => {			
 			descriptorsPromise = null;
 			throw err;
 		});
@@ -92,10 +86,18 @@ const getDescriptors = () => {
 	return descriptorsPromise;
 };
 
-/**
- * Create a Polkadot-API client for a network using RxJS
- */
-const createChainClient = (network: Network): Observable<ConnectionResult> => {
+
+const isDisjointError = (error: unknown): boolean => {
+	if (error instanceof Error) {
+		return error.message.includes('ChainHead disjointed') ||
+			error.message.includes('DisjointError') ||
+			error.name === 'DisjointError';
+	}
+	return false;
+};
+
+
+const createChainClient = (network: Network, destroy$: Observable<void>): Observable<ConnectionResult> => {
 	if (!network || !network.endpoint || !network.descriptorKey) {
 		return throwError(() => new Error("Invalid network configuration"));
 	}
@@ -112,13 +114,13 @@ const createChainClient = (network: Network): Observable<ConnectionResult> => {
 			if (!client) {
 				throw new Error("Failed to create client");
 			}
-
-			// Use cached descriptors import
+			
 			const subscription = from(getDescriptors())
 				.pipe(
+					takeUntil(destroy$), 
 					switchMap((descriptors) => {
 						if (destroyed) {
-							return throwError(() => new Error("Connection was destroyed"));
+							return EMPTY; 
 						}
 
 						const descriptor = descriptors[network.descriptorKey];
@@ -132,8 +134,7 @@ const createChainClient = (network: Network): Observable<ConnectionResult> => {
 							);
 						}
 
-						try {
-							// Create the typed API
+						try {							
 							const typedApi = client!.getTypedApi(descriptor) as TypedApi;
 
 							if (!typedApi) {
@@ -149,16 +150,30 @@ const createChainClient = (network: Network): Observable<ConnectionResult> => {
 							);
 						}
 					}),
-					// Add retry with exponential backoff for WASM loading issues
+					
 					retry({
 						count: 3,
-						delay: (error, retryCount) =>
-							timer(Math.min(1000 * 2 ** retryCount, 10000)),
+						delay: (error, retryCount) => {					
+							if (isDisjointError(error)) {
+								return throwError(() => error);
+							}
+							return timer(Math.min(1000 * 2 ** retryCount, 10000));
+						},
 					}),
 					catchError((error) => {
+						
+						if (isDisjointError(error)) {
+							console.warn("ChainHead disjointed, this is expected during reconnection:", error.message);
+							return EMPTY; 
+						}
+
 						console.error("Failed to create chain client:", error);
 						if (client && !destroyed) {
-							client.destroy();
+							try {
+								client.destroy();
+							} catch (destroyError) {
+								console.warn("Error destroying client:", destroyError);
+							}
 							client = null;
 						}
 						return throwError(() => error);
@@ -175,29 +190,47 @@ const createChainClient = (network: Network): Observable<ConnectionResult> => {
 						}
 					},
 					error: (err) => {
-						if (!destroyed) {
+						if (!destroyed && !isDisjointError(err)) {
 							subscriber.error(err);
 						}
 					},
+					complete: () => {
+						if (!destroyed) {
+							subscriber.complete();
+						}
+					},
 				});
-
-			// Return cleanup function
+			
 			return () => {
 				destroyed = true;
 				subscription.unsubscribe();
 				if (client) {
-					client.destroy();
+					try {
+						client.destroy();
+					} catch (destroyError) {						
+						if (!isDisjointError(destroyError)) {
+							console.warn("Error destroying client during cleanup:", destroyError);
+						}
+					}
 					client = null;
 				}
 			};
-		} catch (err) {
-			// Handle synchronous errors during setup
-			subscriber.error(err instanceof Error ? err : new Error(String(err)));
+		} catch (err) {			
+			const error = err instanceof Error ? err : new Error(String(err));
+			if (!isDisjointError(error)) {
+				subscriber.error(error);
+			}
 
 			return () => {
 				destroyed = true;
 				if (client) {
-					client.destroy();
+					try {
+						client.destroy();
+					} catch (destroyError) {
+						if (!isDisjointError(destroyError)) {
+							console.warn("Error destroying client in sync error handler:", destroyError);
+						}
+					}
 					client = null;
 				}
 			};
@@ -205,40 +238,57 @@ const createChainClient = (network: Network): Observable<ConnectionResult> => {
 	});
 };
 
-/**
- * Chain connection store with Zustand and RxJS
- */
-export const useChainStore = create<ChainState>((set, get) => {
-	// Create subjects for network events and connection status
+
+export const useChainStore = create<ChainState>((set, get) => {	
 	const networkEvents$ = new Subject<Network>();
 	const connectionStatus$ = new BehaviorSubject<ConnectionStatus>({
 		state: "disconnected",
 	});
+	const destroy$ = new Subject<void>(); 
 
-	// Create shared connection observable with improved caching
+	
+	if (typeof window !== 'undefined') {
+		const originalHandler = window.onunhandledrejection;
+		window.onunhandledrejection = (event) => {
+			if (isDisjointError(event.reason)) {
+				console.warn("Handled disjoint error:", event.reason?.message || event.reason);
+				event.preventDefault(); 
+				return;
+			}
+			
+			if (originalHandler) {
+				originalHandler.call(window, event);
+			}
+		};
+	}
+
+	
 	const connection$ = networkEvents$.pipe(
 		tap(() => {
 			connectionStatus$.next({ state: "connecting" });
 			set({ connectionStatus: { state: "connecting" } });
 		}),
 		switchMap((network) =>
-			createChainClient(network).pipe(
+			createChainClient(network, destroy$).pipe(
 				tap({
 					next: () => {
 						connectionStatus$.next({ state: "connected" });
 						set({ connectionStatus: { state: "connected" } });
 					},
 					error: (error) => {
-						const errorState = {
-							state: "error",
-							error: error instanceof Error ? error : new Error(String(error)),
-						} as const;
-						connectionStatus$.next(errorState);
-						set({
-							client: null,
-							typedApi: null,
-							connectionStatus: errorState,
-						});
+						
+						if (!isDisjointError(error)) {
+							const errorState = {
+								state: "error",
+								error: error instanceof Error ? error : new Error(String(error)),
+							} as const;
+							connectionStatus$.next(errorState);
+							set({
+								client: null,
+								typedApi: null,
+								connectionStatus: errorState,
+							});
+						}
 					},
 				}),
 				finalize(() => {
@@ -249,71 +299,94 @@ export const useChainStore = create<ChainState>((set, get) => {
 					}
 				}),
 				catchError((error) => {
+					
+					if (isDisjointError(error)) {
+						console.warn("Connection disjoint error handled:", error.message);
+						return EMPTY; 
+					}
 					console.error("Connection error:", error);
 					return throwError(() => error);
 				}),
 			),
 		),
-		// Improved caching strategy for better performance
+		
 		shareReplay({ bufferSize: 1, refCount: true }),
+		takeUntil(destroy$), 
 	);
 
 	return {
-		// Initial state
+		
 		network: DEFAULT_NETWORK,
 		connectionStatus: { state: "disconnected" },
 		client: null,
 		typedApi: null,
 
-		// RxJS subjects and observables
+		
 		networkEvents$,
 		connectionStatus$,
 		connection$,
+		destroy$,
 
-		// Connect to a network
+		
 		connect: (network) => {
 			const { disconnect } = get();
-
-			// Set the current network
-			set({ network });
-
-			// Clean up any existing connections
+			set({ network });			
 			disconnect();
 
-			// Emit network event
 			networkEvents$.next(network);
-
-			// Create an observable that tracks the connection
-			return new Observable<void>((subscriber) => {
-				// Subscribe to the shared connection observable
+			
+			return new Observable<void>((subscriber) => {			
 				const subscription = (
 					get().connection$ || of<ConnectionResult | null>(null)
-				).subscribe({
-					next: (result) => {
-						if (result) {
-							set({
-								client: result.client,
-								typedApi: result.typedApi,
-							});
-						}
-						subscriber.next();
-						subscriber.complete();
-					},
-					error: (err) => subscriber.error(err),
-					complete: () => subscriber.complete(),
-				});
-
-				// Return cleanup function
+				)
+					.pipe(
+						takeUntil(destroy$),
+						catchError((error) => {
+							if (isDisjointError(error)) {
+								console.warn("Connect disjoint error handled:", error.message);
+								return EMPTY;
+							}
+							return throwError(() => error);
+						})
+					)
+					.subscribe({
+						next: (result) => {
+							if (result) {
+								set({
+									client: result.client,
+									typedApi: result.typedApi,
+								});
+							}
+							subscriber.next();
+							subscriber.complete();
+						},
+						error: (err) => {
+							if (!isDisjointError(err)) {
+								subscriber.error(err);
+							}
+						},
+						complete: () => subscriber.complete(),
+					});
+				
 				return () => subscription.unsubscribe();
 			});
 		},
 
-		// Disconnect from the network
+		
 		disconnect: () => {
 			const { client } = get();
 
+			
+			destroy$.next();
+
 			if (client) {
-				client.destroy();
+				try {
+					client.destroy();
+				} catch (error) {
+					if (!isDisjointError(error)) {
+						console.warn("Error during disconnect:", error);
+					}
+				}
 			}
 
 			set({
@@ -330,7 +403,7 @@ export const useChainStore = create<ChainState>((set, get) => {
 			set({ network });
 		},
 
-		// Lazy loading getters that return observables with improved caching
+		// Lazy loading getters that return observables with improved error handling
 		getTypedApi: () => {
 			const { typedApi, connection$, connect, network } = get();
 
@@ -342,27 +415,43 @@ export const useChainStore = create<ChainState>((set, get) => {
 				// Connect first and then get the typed API
 				const connectObservable = connect(network);
 				return new Observable<TypedApi>((subscriber) => {
-					const subscription = connectObservable.subscribe({
-						next: () => {
-							const api = get().typedApi;
-							if (api) {
-								subscriber.next(api);
-								subscriber.complete();
-							} else {
-								subscriber.error(
-									new Error("TypedApi not available after connection"),
-								);
-							}
-						},
-						error: (err) => subscriber.error(err),
-						complete: () => {},
-					});
+					const subscription = connectObservable
+						.pipe(
+							takeUntil(destroy$),
+							catchError((error) => {
+								if (isDisjointError(error)) {
+									console.warn("getTypedApi disjoint error handled:", error.message);
+									return EMPTY;
+								}
+								return throwError(() => error);
+							})
+						)
+						.subscribe({
+							next: () => {
+								const api = get().typedApi;
+								if (api) {
+									subscriber.next(api);
+									subscriber.complete();
+								} else {
+									subscriber.error(
+										new Error("TypedApi not available after connection"),
+									);
+								}
+							},
+							error: (err) => {
+								if (!isDisjointError(err)) {
+									subscriber.error(err);
+								}
+							},
+							complete: () => { },
+						});
 
 					return () => subscription.unsubscribe();
 				});
 			}
 
 			return connection$.pipe(
+				takeUntil(destroy$),
 				switchMap((result) => {
 					if (result && result.typedApi) {
 						return of(result.typedApi);
@@ -370,6 +459,13 @@ export const useChainStore = create<ChainState>((set, get) => {
 					return throwError(
 						() => new Error("TypedApi not available in connection"),
 					);
+				}),
+				catchError((error) => {
+					if (isDisjointError(error)) {
+						console.warn("getTypedApi connection disjoint error handled:", error.message);
+						return EMPTY;
+					}
+					return throwError(() => error);
 				}),
 			);
 		},
@@ -385,27 +481,43 @@ export const useChainStore = create<ChainState>((set, get) => {
 				// Connect first and then get the client
 				const connectObservable = connect(network);
 				return new Observable<ChainClient>((subscriber) => {
-					const subscription = connectObservable.subscribe({
-						next: () => {
-							const currentClient = get().client;
-							if (currentClient) {
-								subscriber.next(currentClient);
-								subscriber.complete();
-							} else {
-								subscriber.error(
-									new Error("Client not available after connection"),
-								);
-							}
-						},
-						error: (err) => subscriber.error(err),
-						complete: () => {},
-					});
+					const subscription = connectObservable
+						.pipe(
+							takeUntil(destroy$),
+							catchError((error) => {
+								if (isDisjointError(error)) {
+									console.warn("getClient disjoint error handled:", error.message);
+									return EMPTY;
+								}
+								return throwError(() => error);
+							})
+						)
+						.subscribe({
+							next: () => {
+								const currentClient = get().client;
+								if (currentClient) {
+									subscriber.next(currentClient);
+									subscriber.complete();
+								} else {
+									subscriber.error(
+										new Error("Client not available after connection"),
+									);
+								}
+							},
+							error: (err) => {
+								if (!isDisjointError(err)) {
+									subscriber.error(err);
+								}
+							},
+							complete: () => { },
+						});
 
 					return () => subscription.unsubscribe();
 				});
 			}
 
 			return connection$.pipe(
+				takeUntil(destroy$),
 				switchMap((result) => {
 					if (result && result.client) {
 						return of(result.client);
@@ -414,14 +526,19 @@ export const useChainStore = create<ChainState>((set, get) => {
 						() => new Error("Client not available in connection"),
 					);
 				}),
+				catchError((error) => {
+					if (isDisjointError(error)) {
+						console.warn("getClient connection disjoint error handled:", error.message);
+						return EMPTY;
+					}
+					return throwError(() => error);
+				}),
 			);
 		},
 	};
 });
 
-/**
- * Hook to use RxJS observables in React with performance optimizations
- */
+
 export const useObservable = <T>(
 	observable$: Observable<T> | null,
 	initialValue: T,
@@ -433,7 +550,11 @@ export const useObservable = <T>(
 
 		const subscription = observable$.subscribe({
 			next: (val) => setValue(val),
-			error: (err) => console.error("Observable error:", err),
+			error: (err) => {
+				if (!isDisjointError(err)) {
+					console.error("Observable error:", err);
+				}
+			},
 		});
 
 		return () => subscription.unsubscribe();
@@ -442,9 +563,7 @@ export const useObservable = <T>(
 	return value;
 };
 
-/**
- * Memoized connection status hook to prevent unnecessary renders
- */
+
 export const useConnectionStatus = () => {
 	const connectionStatus$ = useChainStore((state) => state.connectionStatus$);
 	const fallbackStatus = useChainStore((state) => state.connectionStatus);
@@ -452,24 +571,20 @@ export const useConnectionStatus = () => {
 	return useObservable(connectionStatus$, fallbackStatus);
 };
 
-/**
- * API hook result interface
- */
+
 interface ApiHookResult {
 	api: TypedApi | null;
 	loading: boolean;
 	error: Error | null;
 }
 
-/**
- * Optimized hook for typed API access
- */
+
 export const useTypedApi = (): ApiHookResult => {
 	const [api, setApi] = useState<TypedApi | null>(null);
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState<Error | null>(null);
 
-	// Use selectors to minimize re-renders
+	
 	const getTypedApi = useChainStore((state) => state.getTypedApi);
 	const currentApi = useChainStore((state) => state.typedApi);
 
@@ -481,7 +596,7 @@ export const useTypedApi = (): ApiHookResult => {
 			return;
 		}
 
-		// Otherwise, get via observable
+		
 		setLoading(true);
 
 		const subscription = getTypedApi().subscribe({
@@ -491,30 +606,28 @@ export const useTypedApi = (): ApiHookResult => {
 				setError(null);
 			},
 			error: (err) => {
-				setError(err instanceof Error ? err : new Error(String(err)));
-				setLoading(false);
+				if (!isDisjointError(err)) {
+					setError(err instanceof Error ? err : new Error(String(err)));
+					setLoading(false);
+				}
 			},
 		});
 
 		return () => subscription.unsubscribe();
 	}, [getTypedApi, currentApi]);
 
-	// Return memoized result to prevent unnecessary re-renders
+	
 	return useMemo(() => ({ api, loading, error }), [api, loading, error]);
 };
 
-/**
- * Client hook result interface
- */
+
 interface ClientHookResult {
 	client: ChainClient | null;
 	loading: boolean;
 	error: Error | null;
 }
 
-/**
- * Optimized hook for chain client with memoization
- */
+
 export const useChainClient = (): ClientHookResult => {
 	const [client, setClient] = useState<ChainClient | null>(null);
 	const [loading, setLoading] = useState(false);
@@ -540,14 +653,15 @@ export const useChainClient = (): ClientHookResult => {
 				setError(null);
 			},
 			error: (err) => {
-				setError(err instanceof Error ? err : new Error(String(err)));
-				setLoading(false);
+				if (!isDisjointError(err)) {
+					setError(err instanceof Error ? err : new Error(String(err)));
+					setLoading(false);
+				}
 			},
 		});
 
 		return () => subscription.unsubscribe();
 	}, [getClient, currentClient]);
-
-	// Return memoized result
+	
 	return useMemo(() => ({ client, loading, error }), [client, loading, error]);
 };

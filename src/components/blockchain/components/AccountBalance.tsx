@@ -10,6 +10,7 @@ import Badge from "@/components/ui/Badge";
 import { Search, ExternalLink, Wallet, RefreshCw, AlertCircle, Eye, Copy, Check, Hash } from "lucide-react";
 import type { ApiPromise } from "@polkadot/api";
 import { formatBalance } from "@polkadot/util";
+import { buildSubscanUrl } from "@/lib/utils/explorer";
 
 // Types
 interface Network {
@@ -35,17 +36,6 @@ interface BalanceInfo {
 }
 
 
-const buildSubscanUrl = (network: Network, type: 'account' | 'block' | 'extrinsic', identifier: string | number): string => {
-	const baseUrl = network.explorer?.replace(/\/$/, '') || '';
-
-	if (!baseUrl || baseUrl === 'undefined' || !baseUrl.includes('subscan.io')) {
-		const networkName = network.name?.toLowerCase() || 'polkadot';
-		const fallbackUrl = `https://${networkName}.subscan.io`;
-		return `${fallbackUrl}/${type}/${identifier}`;
-	}
-
-	return `${baseUrl}/${type}/${identifier}`;
-};
 
 
 const useAccountBalance = (api: ApiPromise, address: string, network: Network) => {
