@@ -8,7 +8,7 @@ import Badge, { type BadgeVariant } from "@/components/ui/Badge";
 import { Button } from "@/components/ui";
 import { Activity, Pause, Play, Trash2, Eye, EyeOff, Filter, AlertCircle } from "lucide-react";
 import type { ApiPromise } from "@polkadot/api";
-
+import { buildSubscanUrl } from "@/lib/utils/explorer";
 
 interface ChainEvent {
 	id: string;
@@ -39,28 +39,7 @@ interface EventMonitorProps {
 }
 
 
-const buildSubscanUrl = (network: Network, type: 'block' | 'extrinsic' | 'account', identifier: string | number): string => {	
-	const baseUrl = network.explorer?.replace(/\/$/, '') || '';
 
-	
-	if (!baseUrl || baseUrl === 'undefined' || !baseUrl.includes('subscan.io')) {
-		console.warn('Invalid explorer URL:', network.explorer);	
-		const networkName = network.name?.toLowerCase() || 'polkadot';
-		const fallbackUrl = `https://${networkName}.subscan.io`;
-		return `${fallbackUrl}/${type}/${identifier}`;
-	}
-
-	switch (type) {
-		case 'block':
-			return `${baseUrl}/block/${identifier}`;
-		case 'extrinsic':
-			return `${baseUrl}/extrinsic/${identifier}`;
-		case 'account':
-			return `${baseUrl}/account/${identifier}`;
-		default:
-			return baseUrl;
-	}
-};
 
 
 const useEventMonitor = (api: ApiPromise, limit: number) => {

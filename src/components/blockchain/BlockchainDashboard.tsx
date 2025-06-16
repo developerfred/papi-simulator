@@ -18,7 +18,6 @@ import {
 import dynamic from "next/dynamic";
 import { networkManager, type Network, NetworkSchema } from "./dynamic-blockchain-config";
 
-
 const WalletAccountSchema = z.object({
 	address: z.string(),
 	meta: z.object({
@@ -61,7 +60,6 @@ const BlockExplorer = createDynamicComponent(() => import("./components/BlockExp
 const TransactionMonitor = createDynamicComponent(() => import("./components/TransactionMonitor"), "Transaction Monitor");
 const TransactionBuilder = createDynamicComponent(() => import("./components/TransactionBuilder"), "Transaction Builder");
 
-// Enhanced Polkadot API hook
 const usePolkadotApi = (network: Network, isWalletConnected: boolean): ChainConnectionState => {
 	const [state, setState] = useState<ChainConnectionState>({
 		api: null,
@@ -92,7 +90,6 @@ const usePolkadotApi = (network: Network, isWalletConnected: boolean): ChainConn
 		const connectionKey = `${network.rpcUrl}-${isWalletConnected}`;
 		if (connectionAttemptRef.current === connectionKey) return;
 
-		// Abort previous connection
 		if (abortControllerRef.current) {
 			abortControllerRef.current.abort();
 		}
@@ -111,18 +108,24 @@ const usePolkadotApi = (network: Network, isWalletConnected: boolean): ChainConn
 				setState(prev => ({ ...prev, status: "connecting", error: null }));
 
 				provider = new WsProvider(network.rpcUrl, 1000);
-
-				provider.on('disconnected', () => {
+				
+				const handleDisconnect = () => {
 					if (isMounted && mountedRef.current) {
 						setState(prev => ({ ...prev, status: "disconnected" }));
 					}
-				});
+				};
 
-				provider.on('error', (error) => {
+				const handleError = (error: any) => {
 					if (isMounted && mountedRef.current) {
 						setState(prev => ({ ...prev, status: "error", error: error.message }));
 					}
-				});
+				};
+
+				
+				if (typeof provider.on === 'function') {
+					provider.on('disconnected', handleDisconnect);
+					provider.on('error', handleError);
+				}
 
 				apiInstance = await Promise.race([
 					ApiPromise.create({
@@ -163,11 +166,16 @@ const usePolkadotApi = (network: Network, isWalletConnected: boolean): ChainConn
 
 			const cleanup = async () => {
 				try {
+					
 					if (provider) {
-						provider.removeAllListeners();
-						await provider.disconnect();
+						if (typeof provider.removeAllListeners === 'function') {
+							provider.removeAllListeners();
+						}
+						if (typeof provider.disconnect === 'function') {
+							await provider.disconnect();
+						}
 					}
-					if (apiInstance) {
+					if (apiInstance && typeof apiInstance.disconnect === 'function') {
 						await apiInstance.disconnect();
 					}
 				} catch (error) {
@@ -182,7 +190,6 @@ const usePolkadotApi = (network: Network, isWalletConnected: boolean): ChainConn
 	return state;
 };
 
-// Utility functions
 const getAccountDisplayName = (account: WalletAccount | null): string =>
 	account?.meta?.name ||
 	account?.name ||
@@ -212,40 +219,27 @@ const getNetworkTypeIcon = (type: Network["type"], className = "w-4 h-4") => {
 	return icons[type] || <Globe className={className} aria-hidden="true" />;
 };
 
-// UI Components
 const StatusIndicator = memo<{ status: ConnectionStatus; showLabel?: boolean }>(({ status, showLabel = true }) => {
-	const colors = {
-		connected: "bg-green-500",
-		connecting: "bg-yellow-500 animate-pulse",
-		disconnected: "bg-gray-400",
-		error: "bg-red-500",
+	const config = {
+		connected: { color: "bg-green-500", label: "Connected", icon: <Wifi className="w-3 h-3" /> },
+		connecting: { color: "bg-yellow-500 animate-pulse", label: "Connecting", icon: <div className="w-3 h-3 animate-spin rounded-full border border-gray-300 border-t-white" /> },
+		disconnected: { color: "bg-gray-400", label: "Disconnected", icon: <WifiOff className="w-3 h-3" /> },
+		error: { color: "bg-red-500", label: "Error", icon: <AlertCircle className="w-3 h-3" /> },
 	};
 
-	const labels = {
-		connected: "Connected",
-		connecting: "Connecting",
-		disconnected: "Disconnected",
-		error: "Error",
-	};
-
-	const icons = {
-		connected: <Wifi className="w-3 h-3" aria-hidden="true" />,
-		connecting: <div className="w-3 h-3 animate-spin rounded-full border border-gray-300 border-t-white" />,
-		disconnected: <WifiOff className="w-3 h-3" aria-hidden="true" />,
-		error: <AlertCircle className="w-3 h-3" aria-hidden="true" />,
-	};
+	const { color, label, icon } = config[status];
 
 	return (
-		<div className="flex items-center space-x-2" role="status" aria-label={`${labels[status]} status`}>
-			<div className={`w-2 h-2 rounded-full ${colors[status]} relative overflow-hidden`}>
+		<div className="flex items-center space-x-2" role="status" aria-label={`${label} status`}>
+			<div className={`w-2 h-2 rounded-full ${color} relative overflow-hidden`}>
 				{status === "connecting" && (
 					<div className="absolute inset-0 bg-yellow-500 animate-ping" />
 				)}
 			</div>
 			{showLabel && (
 				<div className="flex items-center space-x-1">
-					<span className="text-xs text-theme-secondary">{labels[status]}</span>
-					<span className="text-theme-tertiary">{icons[status]}</span>
+					<span className="text-xs text-theme-secondary">{label}</span>
+					<span className="text-theme-tertiary">{icon}</span>
 				</div>
 			)}
 		</div>
@@ -315,15 +309,12 @@ const NetworkSelector = memo<{
 
 	const networks = useMemo(() => {
 		let filtered = networkManager.getAllNetworks();
-
 		if (selectedFilter !== "all") {
 			filtered = networkManager.getNetworksByType(selectedFilter);
 		}
-
 		if (searchQuery) {
 			filtered = networkManager.searchNetworks(searchQuery);
 		}
-
 		return filtered;
 	}, [searchQuery, selectedFilter]);
 
@@ -331,9 +322,7 @@ const NetworkSelector = memo<{
 		if (selectedFilter !== "all") {
 			return { [selectedFilter]: networks };
 		}
-
 		const groups = networkManager.getNetworkGroups();
-
 		if (searchQuery) {
 			Object.keys(groups).forEach(key => {
 				groups[key] = groups[key].filter(network =>
@@ -344,7 +333,6 @@ const NetworkSelector = memo<{
 				}
 			});
 		}
-
 		return groups;
 	}, [networks, selectedFilter, searchQuery]);
 
@@ -629,12 +617,13 @@ const ConnectionStatusDisplay = memo<{
 	if (layoutMode === "transaction-fullscreen") return null;
 
 	const getStatusColor = (status: string) => {
-		switch (status) {
-			case "connected": return "border-green-200/70 dark:border-green-600/70 bg-green-50/80 dark:bg-green-900/40";
-			case "connecting": return "border-yellow-200/70 dark:border-yellow-600/70 bg-yellow-50/80 dark:bg-yellow-900/40";
-			case "error": return "border-red-200/70 dark:border-red-600/70 bg-red-50/80 dark:bg-red-900/40";
-			default: return "border-theme bg-theme-surface";
-		}
+		const colors = {
+			connected: "border-green-200/70 dark:border-green-600/70 bg-green-50/80 dark:bg-green-900/40",
+			connecting: "border-yellow-200/70 dark:border-yellow-600/70 bg-yellow-50/80 dark:bg-yellow-900/40",
+			error: "border-red-200/70 dark:border-red-600/70 bg-red-50/80 dark:bg-red-900/40",
+			default: "border-theme bg-theme-surface",
+		};
+		return colors[status] || colors.default;
 	};
 
 	return (
@@ -887,12 +876,6 @@ const KeyboardShortcutsHelp = memo<{ layoutMode: LayoutMode; selectedNetwork: Ne
 						<span className="text-theme-secondary">Reset Layout:</span>
 						<kbd className="bg-theme-surface-variant px-2 py-1 rounded border text-theme-primary font-mono">
 							Esc
-						</kbd>
-					</div>
-					<div className="flex items-center justify-between">
-						<span className="text-theme-secondary">Search Networks:</span>
-						<kbd className="bg-theme-surface-variant px-2 py-1 rounded border text-theme-primary font-mono">
-							{modifierKey}+K
 						</kbd>
 					</div>
 				</div>
