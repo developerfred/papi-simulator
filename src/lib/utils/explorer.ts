@@ -2,99 +2,106 @@ interface Network {
     name: string;
     symbol: string;
     decimals: number;
-    explorer?: string; // Opcional para evitar erros
+    explorer?: string;
     rpcUrl?: string;
     endpoint?: string;
 }
 
-export const buildSubscanUrl = (
-    network: Network,
-    type: 'block' | 'extrinsic' | 'account' | 'runtime',
+type UrlType = 'block' | 'extrinsic' | 'account' | 'runtime';
+
+
+const SUBSCAN_DOMAIN = 'subscan.io';
+const DEFAULT_NETWORK = 'polkadot';
+const DEFAULT_FALLBACK_URL = `https://${DEFAULT_NETWORK}.${SUBSCAN_DOMAIN}`;
+
+
+const URL_PATHS: Record<UrlType, { singular: string; plural: string }> = {
+    block: { singular: 'block', plural: 'blocks' },
+    extrinsic: { singular: 'extrinsic', plural: 'extrinsics' },
+    account: { singular: 'account', plural: '' },
+    runtime: { singular: '', plural: '' }
+} as const;
+
+
+const isValidExplorerUrl = (explorerUrl?: string): explorerUrl is string => {
+    return Boolean(
+        explorerUrl?.trim() &&
+        explorerUrl !== 'undefined' &&
+        explorerUrl !== 'null'
+    );
+};
+
+
+const normalizeNetworkName = (name?: string): string =>
+    name?.toLowerCase().replace(/\s+/g, '-') || DEFAULT_NETWORK;
+
+
+const extractNetworkFromUrl = (url: string, fallbackName?: string): string => {
+    try {
+        const { hostname } = new URL(url);
+        return hostname.split('.')[0] || normalizeNetworkName(fallbackName);
+    } catch {
+        return normalizeNetworkName(fallbackName);
+    }
+};
+
+
+const buildUrlPath = (type: UrlType, identifier?: string | number): string => {
+    const { singular, plural } = URL_PATHS[type];
+
+    if (!identifier) {
+        return plural ? `/${plural}` : '';
+    }
+
+    return singular ? `/${singular}/${identifier}` : '';
+};
+
+
+const createFallbackUrl = (
+    networkName: string,
+    type: UrlType,
     identifier?: string | number
 ): string => {
-    // Verificação de segurança inicial
+    const baseUrl = `https://${networkName}.${SUBSCAN_DOMAIN}`;
+    return `${baseUrl}${buildUrlPath(type, identifier)}`;
+};
+
+
+const resolveBaseUrl = (network: Network): string => {
+    if (!isValidExplorerUrl(network.explorer)) {
+        console.debug('Using fallback explorer URL for network:', network.name, 'explorer was:', network.explorer);
+        return `https://${normalizeNetworkName(network.name)}.${SUBSCAN_DOMAIN}`;
+    }
+
+    const baseUrl = network.explorer.replace(/\/$/, '');
+
+    if (!baseUrl.includes(SUBSCAN_DOMAIN)) {
+        console.debug('Explorer URL is not a Subscan URL, creating fallback:', baseUrl);
+        const networkName = extractNetworkFromUrl(baseUrl, network.name);
+        return `https://${networkName}.${SUBSCAN_DOMAIN}`;
+    }
+
+    return baseUrl;
+};
+
+/**
+ * Builds Subscan URL for different resource types
+ * 
+ * @param network - Network configuration object
+ * @param type - Type of resource to link to
+ * @param identifier - Optional identifier for the resource
+ * @returns Complete Subscan URL
+ */
+export const buildSubscanUrl = (
+    network: Network | null | undefined,
+    type: UrlType,
+    identifier?: string | number
+): string => {    
     if (!network) {
         console.warn('Network object is null or undefined');
-        return `https://polkadot.subscan.io/${type}${identifier ? `/${identifier}` : ''}`;
+        return `${DEFAULT_FALLBACK_URL}${buildUrlPath(type, identifier)}`;
     }
 
-    // Validação robusta do explorer URL
-    const explorerUrl = network.explorer;
-
-    // Verifica se o explorer URL é válido
-    if (!explorerUrl ||
-        typeof explorerUrl !== 'string' ||
-        explorerUrl.trim() === '' ||
-        explorerUrl === 'undefined' ||
-        explorerUrl === 'null') {
-
-        console.debug('Using fallback explorer URL for network:', network.name, 'explorer was:', explorerUrl);
-
-        // Fallback usando o nome da rede
-        const networkName = network.name?.toLowerCase()?.replace(/\s+/g, '-') || 'polkadot';
-        const fallbackUrl = `https://${networkName}.subscan.io`;
-
-        // Retorna URL baseado no tipo
-        switch (type) {
-            case 'block':
-                return identifier ? `${fallbackUrl}/block/${identifier}` : `${fallbackUrl}/blocks`;
-            case 'extrinsic':
-                return identifier ? `${fallbackUrl}/extrinsic/${identifier}` : `${fallbackUrl}/extrinsics`;
-            case 'account':
-                return identifier ? `${fallbackUrl}/account/${identifier}` : fallbackUrl;
-            case 'runtime':
-                return fallbackUrl;
-            default:
-                return fallbackUrl;
-        }
-    }
-
-    // Remove barra final do URL base
-    const baseUrl = explorerUrl.replace(/\/$/, '');
-
-    // Verifica se é um URL válido do Subscan
-    if (!baseUrl.includes('subscan.io')) {
-        console.debug('Explorer URL is not a Subscan URL, creating fallback:', baseUrl);
-
-        // Tenta extrair o nome da rede do URL ou usa o nome da rede
-        let networkName = 'polkadot';
-
-        try {
-            const urlObj = new URL(baseUrl);
-            const subdomain = urlObj.hostname.split('.')[0];
-            networkName = subdomain || network.name?.toLowerCase()?.replace(/\s+/g, '-') || 'polkadot';
-        } catch {
-            networkName = network.name?.toLowerCase()?.replace(/\s+/g, '-') || 'polkadot';
-        }
-
-        const fallbackUrl = `https://${networkName}.subscan.io`;
-
-        // Retorna URL baseado no tipo
-        switch (type) {
-            case 'block':
-                return identifier ? `${fallbackUrl}/block/${identifier}` : `${fallbackUrl}/blocks`;
-            case 'extrinsic':
-                return identifier ? `${fallbackUrl}/extrinsic/${identifier}` : `${fallbackUrl}/extrinsics`;
-            case 'account':
-                return identifier ? `${fallbackUrl}/account/${identifier}` : fallbackUrl;
-            case 'runtime':
-                return fallbackUrl;
-            default:
-                return fallbackUrl;
-        }
-    }
-
-    // URL válido do Subscan - constrói o URL final
-    switch (type) {
-        case 'block':
-            return identifier ? `${baseUrl}/block/${identifier}` : `${baseUrl}/blocks`;
-        case 'extrinsic':
-            return identifier ? `${baseUrl}/extrinsic/${identifier}` : `${baseUrl}/extrinsics`;
-        case 'account':
-            return identifier ? `${baseUrl}/account/${identifier}` : baseUrl;
-        case 'runtime':
-            return baseUrl;
-        default:
-            return baseUrl;
-    }
+    const baseUrl = resolveBaseUrl(network);
+    return `${baseUrl}${buildUrlPath(type, identifier)}`;
 };
