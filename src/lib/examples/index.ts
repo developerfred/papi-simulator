@@ -1,5 +1,7 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 import { exampleRegistry } from "./factory";
+import { StakingOperationsExample } from "./StakingOperationsExample";
+
 import { SimpleTransferExample } from "./SimpleTransferExample";
 import { NetworkDashboardExample } from "./NetworkDashboardExample";
 import { AccountBalanceCheckerExample } from "./AccountBalanceCheckerExample";
@@ -7,6 +9,8 @@ import { WalletTransferExample } from "./WalletTransferExample";
 import { AcalaDeFiExample } from "./AcalaDeFiExample";
 import type { Example, ExampleLevel } from "../types/example";
 import { PolkadotGovernanceExample } from "./PolkadotGovernanceExample";
+
+	new StakingOperationsExample(),
 
 exampleRegistry.registerMany([
 	new AccountBalanceCheckerExample(),
