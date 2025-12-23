@@ -4,6 +4,8 @@ import { StakingOperationsExample } from "./StakingOperationsExample";
 import { AssetHubExample } from "./AssetHubExample";
 import { OpenGovExample } from "./OpenGovExample";
 import { CoretimeExample } from "./CoretimeExample";
+import { PeopleChainExample } from "./PeopleChainExample";
+
 
 
 
@@ -13,6 +15,8 @@ import { NetworkDashboardExample } from "./NetworkDashboardExample";
 import { AccountBalanceCheckerExample } from "./AccountBalanceCheckerExample";
 import { WalletTransferExample } from "./WalletTransferExample";
 import { AcalaDeFiExample } from "./AcalaDeFiExample";
+	new PeopleChainExample(),
+
 import type { Example, ExampleLevel } from "../types/example";
 	new CoretimeExample(),
 
