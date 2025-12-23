@@ -5,6 +5,8 @@ import { AssetHubExample } from "./AssetHubExample";
 import { OpenGovExample } from "./OpenGovExample";
 import { CoretimeExample } from "./CoretimeExample";
 import { PeopleChainExample } from "./PeopleChainExample";
+import { XcmV4Example } from "./XcmV4Example";
+
 
 
 
@@ -14,6 +16,8 @@ import { SimpleTransferExample } from "./SimpleTransferExample";
 import { NetworkDashboardExample } from "./NetworkDashboardExample";
 import { AccountBalanceCheckerExample } from "./AccountBalanceCheckerExample";
 import { WalletTransferExample } from "./WalletTransferExample";
+	new XcmV4Example(),
+
 import { AcalaDeFiExample } from "./AcalaDeFiExample";
 	new PeopleChainExample(),
 
