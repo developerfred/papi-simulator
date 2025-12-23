@@ -3,6 +3,8 @@ import { exampleRegistry } from "./factory";
 import { StakingOperationsExample } from "./StakingOperationsExample";
 import { AssetHubExample } from "./AssetHubExample";
 import { OpenGovExample } from "./OpenGovExample";
+import { CoretimeExample } from "./CoretimeExample";
+
 
 
 
@@ -12,6 +14,8 @@ import { AccountBalanceCheckerExample } from "./AccountBalanceCheckerExample";
 import { WalletTransferExample } from "./WalletTransferExample";
 import { AcalaDeFiExample } from "./AcalaDeFiExample";
 import type { Example, ExampleLevel } from "../types/example";
+	new CoretimeExample(),
+
 import { PolkadotGovernanceExample } from "./PolkadotGovernanceExample";
 	new OpenGovExample(),
 
