@@ -1,6 +1,8 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 import { exampleRegistry } from "./factory";
 import { StakingOperationsExample } from "./StakingOperationsExample";
+import { AssetHubExample } from "./AssetHubExample";
+
 
 import { SimpleTransferExample } from "./SimpleTransferExample";
 import { NetworkDashboardExample } from "./NetworkDashboardExample";
@@ -9,6 +11,8 @@ import { WalletTransferExample } from "./WalletTransferExample";
 import { AcalaDeFiExample } from "./AcalaDeFiExample";
 import type { Example, ExampleLevel } from "../types/example";
 import { PolkadotGovernanceExample } from "./PolkadotGovernanceExample";
+
+	new AssetHubExample(),
 
 	new StakingOperationsExample(),
 
