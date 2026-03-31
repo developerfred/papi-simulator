@@ -63,6 +63,9 @@
     "zod": "^4.3.6",
     "zustand": "^5.0.12"
   },
+  "overrides": {
+    "dompurify": "^3.3.3"
+  },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
     "@eslint/eslintrc": "^3.3.1",
