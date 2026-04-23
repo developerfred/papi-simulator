@@ -57,7 +57,7 @@
     "rxjs": "^7.8.2",
     "tailwind-merge": "^3.2.0",
     "tw-animate-css": "^1.2.8",
-    "uuid": "^9.0.1",
+    "uuid": "^14.0.0",
     "webpack": "^5.99.7",
     "webpack-bundle-analyzer": "^4.10.2",
     "zod": "^4.3.6",
